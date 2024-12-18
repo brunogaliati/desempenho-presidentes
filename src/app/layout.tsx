@@ -16,6 +16,18 @@ export const metadata: Metadata = {
   title: "Desempenho por Presidente 🇧🇷",
   description:
     "Acompanhe a evolução dos principais indicadores econômicos durante cada mandato presidencial do Brasil.",
+  openGraph: {
+    title: "Desempenho por Presidente 🇧🇷",
+    description:
+      "Acompanhe a evolução dos principais indicadores econômicos durante cada mandato presidencial do Brasil.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Desempenho por Presidente 🇧🇷",
+    description:
+      "Acompanhe a evolução dos principais indicadores econômicos durante cada mandato presidencial do Brasil.",
+  },
   icons: {
     icon: [
       {
