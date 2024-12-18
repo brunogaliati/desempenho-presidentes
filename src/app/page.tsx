@@ -16,7 +16,7 @@ export default async function Home() {
           </div>
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600">
-              Desempenho Econômico dos Presidentes Brasileiros
+              Desempenho por Presidente
             </span>{" "}
             <span className="text-black">🇧🇷</span>
           </h1>
@@ -26,16 +26,16 @@ export default async function Home() {
           </p>
           <div className="flex flex-wrap justify-center gap-2 mb-4">
             <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm text-sm">
-              <span className="text-black">📈</span> Inflação
+              <span className="text-black">📈</span> Variação da Inflação
             </div>
             <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm text-sm">
-              <span className="text-black">💵</span> Câmbio
+              <span className="text-black">💵</span> Variação do Dólar
             </div>
             <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm text-sm">
-              <span className="text-black">🏦</span> SELIC
+              <span className="text-black">🏦</span> Variação da SELIC
             </div>
             <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm text-sm">
-              <span className="text-black">👥</span> Desemprego
+              <span className="text-black">👥</span> Variação do Desemprego
             </div>
           </div>
           <TwitterFollow />
@@ -103,13 +103,13 @@ export default async function Home() {
                       type="bar"
                     />
                     <MetricCard
-                      title="Câmbio"
+                      title="Variação do Dólar"
                       value={`${indicator.variacaoCambial.toFixed(2)}%`}
                       label={`até ${new Date(
                         indicator.dataFinalDolar
                       ).toLocaleDateString("pt-BR")}`}
                       icon="💵"
-                      tooltip="Variação cambial do dólar no período"
+                      tooltip="Variação percentual do dólar durante o mandato"
                       initialValue={`R$ ${indicator.valorInicialDolar?.toFixed(
                         2
                       )}`}
@@ -119,13 +119,13 @@ export default async function Home() {
                       chartColor="#10b981"
                     />
                     <MetricCard
-                      title="SELIC"
+                      title="Variação da SELIC"
                       value={`${indicator.variacaoSelic.toFixed(2)}%`}
                       label={`até ${new Date(
                         indicator.dataFinalSelic
                       ).toLocaleDateString("pt-BR")}`}
                       icon="🏦"
-                      tooltip="Variação da taxa SELIC no período"
+                      tooltip="Variação percentual da taxa SELIC durante o mandato"
                       initialValue={`${
                         indicator.valorInicialSelic?.toFixed(2) ?? 0
                       }%`}
@@ -138,13 +138,13 @@ export default async function Home() {
                     />
                     {indicator.variacaoDesemprego !== null && (
                       <MetricCard
-                        title="Desemprego"
+                        title="Variação do Desemprego"
                         value={`${indicator.variacaoDesemprego.toFixed(2)}%`}
                         label={`até ${new Date(
                           indicator.dataFinalDesemprego!
                         ).toLocaleDateString("pt-BR")}`}
                         icon="👥"
-                        tooltip="Variação da taxa de desemprego no período"
+                        tooltip="Variação percentual da taxa de desemprego durante o mandato"
                         initialValue={`${indicator.valorInicialDesemprego?.toFixed(
                           2
                         )}%`}
@@ -161,6 +161,20 @@ export default async function Home() {
               </div>
             );
           })}
+        </div>
+
+        <div className="text-center text-sm text-gray-500 mt-8">
+          <p>
+            Fonte:{" "}
+            <a
+              href="https://www.bcb.gov.br/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-600 hover:text-gray-800 underline"
+            >
+              Banco Central do Brasil
+            </a>
+          </p>
         </div>
       </main>
     </div>
