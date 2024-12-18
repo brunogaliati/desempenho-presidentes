@@ -7,15 +7,38 @@ export default async function Home() {
   const { presidents, indicators } = await getSheetData();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-4 md:p-6">
       <main className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold mb-2 text-center text-gray-800">
-          🏛️ Desempenho Econômico dos Presidentes
-        </h1>
-        <p className="text-center text-gray-600 mb-2">
-          Acompanhamento dos principais indicadores econômicos por mandato
-        </p>
-        <TwitterFollow />
+        <div className="text-center mb-8">
+          <div className="inline-block animate-bounce mb-2">
+            <span className="text-4xl text-black">🏛️</span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600">
+              Desempenho Econômico dos Presidentes Brasileiros
+            </span>{" "}
+            <span className="text-black">🇧🇷</span>
+          </h1>
+          <p className="text-base md:text-lg text-gray-600 mb-4 max-w-2xl mx-auto">
+            Acompanhe a evolução dos principais indicadores econômicos durante
+            cada mandato presidencial do Brasil.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 mb-4">
+            <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm text-sm">
+              <span className="text-black">📈</span> Inflação
+            </div>
+            <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm text-sm">
+              <span className="text-black">💵</span> Câmbio
+            </div>
+            <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm text-sm">
+              <span className="text-black">🏦</span> SELIC
+            </div>
+            <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm text-sm">
+              <span className="text-black">👥</span> Desemprego
+            </div>
+          </div>
+          <TwitterFollow />
+        </div>
 
         <div className="space-y-8">
           {presidents.map((president) => {

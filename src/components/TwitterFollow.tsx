@@ -1,6 +1,6 @@
 export function TwitterFollow() {
   return (
-    <div className="text-center mb-8">
+    <div className="text-center mb-4">
       <a
         href="https://x.com/neuronz101"
         target="_blank"
