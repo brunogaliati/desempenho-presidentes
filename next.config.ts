@@ -20,5 +20,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
-customElements.define('background-chart', BackgroundChart);
