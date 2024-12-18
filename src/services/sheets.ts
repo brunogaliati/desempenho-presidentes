@@ -27,6 +27,10 @@ interface Indicator {
   dataFinalDesemprego: string | null;
   valorInicialDesemprego: number | null;
   valorFinalDesemprego: number | null;
+  historicoIPCA: { date: string; value: number }[];
+  historicoCambio: { date: string; value: number }[];
+  historicoSelic: { date: string; value: number }[];
+  historicoDesemprego: { date: string; value: number }[];
 }
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID;
@@ -131,6 +135,34 @@ async function getSheetData() {
           findValueByDate(historicoRows, 'Data Desemprego', 'Desemprego', president.inicio) : null,
         valorFinalDesemprego: row.get('Data Final Desemprego') ? 
           findValueByDate(historicoRows, 'Data Desemprego', 'Desemprego', row.get('Data Final Desemprego')) : null,
+        historicoIPCA: getHistoricalData(
+          historicoRows,
+          'Data IPCA',
+          'IPCA',
+          president.inicio,
+          row.get('Data Final IPCA')
+        ),
+        historicoCambio: getHistoricalData(
+          historicoRows,
+          'Data Câmbio',
+          'Câmbio',
+          president.inicio,
+          row.get('Data Final Dólar')
+        ),
+        historicoSelic: getHistoricalData(
+          historicoRows,
+          'Data SELIC',
+          'SELIC',
+          president.inicio,
+          row.get('Data Final SELIC')
+        ),
+        historicoDesemprego: getHistoricalData(
+          historicoRows,
+          'Data Desemprego',
+          'Desemprego',
+          president.inicio,
+          row.get('Data Final Desemprego')
+        ),
       };
     }).filter(Boolean);
 
@@ -139,6 +171,19 @@ async function getSheetData() {
     console.error('Error accessing Google Sheets:', error);
     throw error;
   }
+}
+
+function getHistoricalData(rows: any[], dateColumn: string, valueColumn: string, startDate: string, endDate: string) {
+  return rows
+    .filter(row => {
+      const date = new Date(row.get(dateColumn));
+      return date >= new Date(startDate) && date <= new Date(endDate);
+    })
+    .map(row => ({
+      date: row.get(dateColumn),
+      value: parseNumber(row.get(valueColumn)) || 0
+    }))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
 
 export default getSheetData;
