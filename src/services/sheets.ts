@@ -33,6 +33,10 @@ interface Indicator {
   historicoDesemprego: { date: string; value: number }[];
 }
 
+interface SheetRow {
+  get(columnName: string): string;
+}
+
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID;
 const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
 const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
@@ -77,7 +81,7 @@ async function getSheetData() {
     const historicoRows = await historicoSheet.getRows();
 
     // Function to find the closest date value
-    function findValueByDate(rows: any[], dateColumn: string, valueColumn: string, targetDate: string): number | null {
+    function findValueByDate(rows: SheetRow[], dateColumn: string, valueColumn: string, targetDate: string): number | null {
       const date = new Date(targetDate);
       
       // For exchange rate, ignore dates before July 1994
@@ -173,7 +177,7 @@ async function getSheetData() {
   }
 }
 
-function getHistoricalData(rows: any[], dateColumn: string, valueColumn: string, startDate: string, endDate: string) {
+function getHistoricalData(rows: SheetRow[], dateColumn: string, valueColumn: string, startDate: string, endDate: string) {
   return rows
     .filter(row => {
       const date = new Date(row.get(dateColumn));

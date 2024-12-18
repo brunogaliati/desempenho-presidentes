@@ -2,6 +2,7 @@ import getSheetData from "@/services/sheets";
 import { MetricCard } from "@/components/MetricCard";
 import { ShareButtons } from "@/components/ShareButtons";
 import { TwitterFollow } from "@/components/TwitterFollow";
+import Image from "next/image";
 
 export default async function Home() {
   const { presidents, indicators } = await getSheetData();
@@ -54,7 +55,7 @@ export default async function Home() {
               >
                 <div className="flex flex-col md:flex-row gap-8">
                   <div className="md:w-1/4 text-center">
-                    <img
+                    <Image
                       src={president.foto}
                       alt={president.nome}
                       width={160}
