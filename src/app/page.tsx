@@ -44,7 +44,7 @@ export default async function Home() {
         <div className="space-y-8">
           {presidents.map((president) => {
             const indicator = indicators.find(
-              (i) => i.presidente === president.id
+              (i): i is NonNullable<typeof i> => i?.presidente === president.id
             );
             if (!indicator) return null;
 
@@ -126,10 +126,12 @@ export default async function Home() {
                       ).toLocaleDateString("pt-BR")}`}
                       icon="🏦"
                       tooltip="Variação da taxa SELIC no período"
-                      initialValue={`${indicator.valorInicialSelic.toFixed(
-                        2
-                      )}%`}
-                      finalValue={`${indicator.valorFinalSelic.toFixed(2)}%`}
+                      initialValue={`${
+                        indicator.valorInicialSelic?.toFixed(2) ?? 0
+                      }%`}
+                      finalValue={`${
+                        indicator.valorFinalSelic?.toFixed(2) ?? 0
+                      }%`}
                       showInitialValue={true}
                       historicalData={indicator.historicoSelic}
                       chartColor="#f59e0b"

@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 interface ShareButtonsProps {
   president: string;
   indicators: {
@@ -16,6 +18,12 @@ export function ShareButtons({
   indicators,
   period,
 }: ShareButtonsProps) {
+  const [url, setUrl] = useState("");
+
+  useEffect(() => {
+    setUrl(window.location.href);
+  }, []);
+
   const message = `Desempenho econômico de ${president} (${period}):
 🎯 Inflação: ${indicators.inflacao}
 💱 Câmbio: ${indicators.cambio}
@@ -26,7 +34,7 @@ export function ShareButtons({
       : ""
   }
 
-Veja mais em: ${typeof window !== "undefined" ? window.location.href : ""}`;
+Veja mais em: ${url}`;
 
   const shareOnTwitter = () => {
     window.open(
@@ -45,7 +53,7 @@ Veja mais em: ${typeof window !== "undefined" ? window.location.href : ""}`;
   const shareOnTelegram = () => {
     window.open(
       `https://telegram.me/share/url?url=${encodeURIComponent(
-        typeof window !== "undefined" ? window.location.href : ""
+        url
       )}&text=${encodeURIComponent(message)}`,
       "_blank"
     );

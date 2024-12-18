@@ -65,7 +65,7 @@ const jwt = new JWT({
 
 async function getSheetData() {
   try {
-    const doc = new GoogleSpreadsheet(SPREADSHEET_ID, jwt);
+    const doc = new GoogleSpreadsheet(SPREADSHEET_ID!, jwt);
     await doc.loadInfo();
 
     const periodsSheet = doc.sheetsByTitle['periodos_presidenciais'];
