@@ -9,25 +9,25 @@ export default async function Home() {
   const { presidents, indicators } = await getSheetData();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-3 md:p-6">
       <main className="max-w-5xl mx-auto">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 md:mb-8">
           <div className="inline-block animate-bounce mb-2">
-            <span className="text-4xl text-black">🏛️</span>
+            <span className="text-3xl md:text-4xl text-black">🏛️</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">
+          <h1 className="text-2xl md:text-4xl font-bold mb-2">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600">
               Desempenho por Presidente
             </span>{" "}
             <span className="text-black">🇧🇷</span>
           </h1>
-          <p className="text-base md:text-lg text-gray-600 mb-4 max-w-2xl mx-auto">
+          <p className="text-sm md:text-lg text-gray-600 mb-4 max-w-2xl mx-auto px-2">
             Acompanhe a evolução dos principais indicadores econômicos durante
             cada mandato presidencial do Brasil.
           </p>
-          <div className="flex flex-wrap justify-center gap-2 mb-4">
-            <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm text-sm">
-              <span className="text-black">📈</span> Variação da Inflação
+          <div className="flex flex-wrap justify-center gap-2 mb-4 px-2">
+            <div className="flex items-center gap-1 text-gray-600 bg-white px-2 py-1 md:px-3 md:py-1.5 rounded-full shadow-sm text-xs md:text-sm">
+              <span className="text-black">📈</span> Inflação
             </div>
             <div className="flex items-center gap-2 text-gray-600 bg-white px-3 py-1.5 rounded-full shadow-sm text-sm">
               <span className="text-black">💵</span> Variação do Dólar
@@ -42,7 +42,7 @@ export default async function Home() {
           <TwitterFollow />
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-4 md:space-y-8">
           {presidents.map((president) => {
             const indicator = indicators.find(
               (i): i is NonNullable<typeof i> => i?.presidente === president.id
@@ -52,28 +52,28 @@ export default async function Home() {
             return (
               <div
                 key={president.id}
-                className="bg-white rounded-2xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
+                className="bg-white rounded-xl md:rounded-2xl px-4 py-3 md:px-5 md:py-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
               >
-                <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex flex-col md:flex-row gap-3 md:gap-4">
                   <div className="md:w-1/4 text-center">
                     <Image
                       src={president.foto}
                       alt={president.nome}
-                      width={160}
-                      height={160}
-                      className="rounded-full object-cover border-4 border-gray-100 mx-auto mb-4 shadow-md"
+                      width={120}
+                      height={120}
+                      className="rounded-full object-cover border-4 border-gray-100 mx-auto mb-3 shadow-md md:w-[160px] md:h-[160px]"
                     />
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                    <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-1 md:mb-2">
                       {president.nome}
                     </h2>
-                    <p className="text-sm text-gray-500 flex items-center justify-center gap-1 mb-2">
+                    <p className="text-xs md:text-sm text-gray-500 flex items-center justify-center gap-1 mb-2">
                       📅 {new Date(president.inicio).getFullYear()} →{" "}
                       {new Date(president.fim).getFullYear()}
                     </p>
                   </div>
 
                   <div className="md:w-3/4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                       <MetricCard
                         title="Inflação acumulada (IPCA)"
                         value={`${indicator.inflacaoAcumulada.toFixed(2)}%`}
@@ -168,7 +168,7 @@ export default async function Home() {
                         />
                       )}
                     </div>
-                    <div className="mt-1 flex justify-end">
+                    <div className="mt-2 md:mt-1 flex justify-end">
                       <MetricShareButtons president={president.nome} />
                     </div>
                   </div>
@@ -178,7 +178,7 @@ export default async function Home() {
           })}
         </div>
 
-        <div className="text-center text-sm text-gray-500 mt-8">
+        <div className="text-center text-xs md:text-sm text-gray-500 mt-6 md:mt-8">
           <p>
             Fonte:{" "}
             <a
