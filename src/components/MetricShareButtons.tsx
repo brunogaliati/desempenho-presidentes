@@ -2,25 +2,108 @@
 
 import { useEffect, useState } from "react";
 
-export function MetricShareButtons({ president }: { president: string }) {
+interface MetricShareButtonsProps {
+  president: string;
+  indicators: {
+    inflacao: {
+      valor: string;
+      inicial?: string;
+      final?: string;
+    };
+    dolar: {
+      valor: string;
+      inicial?: string;
+      final?: string;
+    };
+    selic: {
+      valor: string;
+      inicial?: string;
+      final?: string;
+    };
+    desemprego?: {
+      valor: string;
+      inicial?: string;
+      final?: string;
+    };
+  };
+  period: string;
+}
+
+export function MetricShareButtons({
+  president,
+  indicators,
+  period,
+}: MetricShareButtonsProps) {
   const [url, setUrl] = useState("");
 
   useEffect(() => {
     setUrl(window.location.href);
   }, []);
 
+  const getArrow = (value: string) => (value.includes("-") ? "↘️" : "↗️");
+
+  const formatShareMessage = () => {
+    const formatValue = (value: string) => {
+      const isNegative = value.includes("-");
+      const cleanValue = value.replace("-", "");
+      return isNegative ? `-${cleanValue}` : `+${cleanValue}`;
+    };
+
+    const message = `📊 Indicadores do Governo ${president} (${period}):
+
+📈 Inflação: ${getArrow(indicators.inflacao.valor)} ${formatValue(
+      indicators.inflacao.valor
+    )}
+💵 Dólar: ${getArrow(indicators.dolar.valor)} ${formatValue(
+      indicators.dolar.valor
+    )}
+🏦 SELIC: ${getArrow(indicators.selic.valor)} ${formatValue(
+      indicators.selic.valor
+    )}${
+      indicators.desemprego
+        ? `\n👥 Desemprego: ${getArrow(
+            indicators.desemprego.valor
+          )} ${formatValue(indicators.desemprego.valor)}`
+        : ""
+    }
+
+${url}`;
+
+    return message;
+  };
+
+  const shareOnTwitter = () => {
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+        formatShareMessage()
+      )}`,
+      "_blank"
+    );
+  };
+
+  const shareOnWhatsApp = () => {
+    window.open(
+      `https://api.whatsapp.com/send?text=${encodeURIComponent(
+        formatShareMessage()
+      )}`,
+      "_blank"
+    );
+  };
+
+  const shareOnTelegram = () => {
+    window.open(
+      `https://telegram.me/share/url?url=${encodeURIComponent(
+        url
+      )}&text=${encodeURIComponent(formatShareMessage())}`,
+      "_blank"
+    );
+  };
+
   return (
     <div className="flex items-center gap-2 text-gray-500 text-sm">
       <span>Compartilhe:</span>
       <button
-        onClick={() =>
-          window.open(
-            `https://twitter.com/intent/tweet?text=Confira os indicadores econômicos do governo ${president}&url=${encodeURIComponent(
-              url
-            )}`,
-            "_blank"
-          )
-        }
+        onClick={shareOnTwitter}
         className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
         title="Compartilhar no X (Twitter)"
       >
@@ -29,14 +112,7 @@ export function MetricShareButtons({ president }: { president: string }) {
         </svg>
       </button>
       <button
-        onClick={() =>
-          window.open(
-            `https://api.whatsapp.com/send?text=Confira os indicadores econômicos do governo ${president} ${encodeURIComponent(
-              url
-            )}`,
-            "_blank"
-          )
-        }
+        onClick={shareOnWhatsApp}
         className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
         title="Compartilhar no WhatsApp"
       >
@@ -45,14 +121,7 @@ export function MetricShareButtons({ president }: { president: string }) {
         </svg>
       </button>
       <button
-        onClick={() =>
-          window.open(
-            `https://telegram.me/share/url?url=${encodeURIComponent(
-              url
-            )}&text=Confira os indicadores econômicos do governo ${president}`,
-            "_blank"
-          )
-        }
+        onClick={shareOnTelegram}
         className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
         title="Compartilhar no Telegram"
       >

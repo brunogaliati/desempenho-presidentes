@@ -196,7 +196,52 @@ export function MainContent({ presidents, indicators }: any) {
                       )}
                     </div>
                     <div className="mt-2 md:mt-1 flex justify-end">
-                      <MetricShareButtons president={president.nome} />
+                      <MetricShareButtons
+                        president={president.nome}
+                        indicators={{
+                          inflacao: {
+                            valor: `${indicator.inflacaoAcumulada.toFixed(2)}%`,
+                            inicial:
+                              indicator.valorInicialIPCA?.toFixed(2) + "%",
+                            final: indicator.valorFinalIPCA?.toFixed(2) + "%",
+                          },
+                          dolar: {
+                            valor: `${indicator.variacaoCambial.toFixed(2)}%`,
+                            inicial: `R$ ${indicator.valorInicialDolar?.toFixed(
+                              2
+                            )}`,
+                            final: `R$ ${indicator.valorFinalDolar?.toFixed(
+                              2
+                            )}`,
+                          },
+                          selic: {
+                            valor: `${indicator.variacaoSelic.toFixed(2)}%`,
+                            inicial: `${indicator.valorInicialSelic?.toFixed(
+                              2
+                            )}%`,
+                            final: `${indicator.valorFinalSelic?.toFixed(2)}%`,
+                          },
+                          desemprego:
+                            indicator.variacaoDesemprego !== null
+                              ? {
+                                  valor: `${indicator.variacaoDesemprego.toFixed(
+                                    2
+                                  )}%`,
+                                  inicial: `${indicator.valorInicialDesemprego?.toFixed(
+                                    2
+                                  )}%`,
+                                  final: `${indicator.valorFinalDesemprego?.toFixed(
+                                    2
+                                  )}%`,
+                                }
+                              : undefined,
+                        }}
+                        period={`${new Date(
+                          president.inicio
+                        ).getFullYear()} - ${new Date(
+                          president.fim
+                        ).getFullYear()}`}
+                      />
                     </div>
                   </div>
                 </div>
