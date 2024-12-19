@@ -10,6 +10,22 @@ import Image from "next/image";
 export function MainContent({ presidents, indicators }: any) {
   const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
 
+  const getIndicatorDescription = (title: string) => {
+    if (title.includes("Dólar")) {
+      return "Taxa de câmbio PTAX - média diária calculada pelo Banco Central do Brasil. A variação é calculada entre a PTAX do primeiro e último dia útil do período.";
+    }
+    if (title.includes("Inflação")) {
+      return "IPCA acumulado durante o período do mandato. Mandatos mais longos tendem a apresentar inflação acumulada maior devido ao maior período de acumulação.";
+    }
+    if (title.includes("SELIC")) {
+      return "Taxa SELIC - taxa básica de juros da economia brasileira, definida pelo Comitê de Política Monetária (Copom).";
+    }
+    if (title.includes("Desemprego")) {
+      return "Taxa de desemprego medida pela Pesquisa Nacional por Amostra de Domicílios Contínua (PNAD Contínua) do IBGE.";
+    }
+    return "";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-3 md:p-6">
       <main className="max-w-5xl mx-auto">

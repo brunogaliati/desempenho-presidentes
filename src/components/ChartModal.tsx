@@ -24,7 +24,7 @@ interface ChartModalProps {
   value: string;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label, title }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white border border-gray-200 shadow-lg rounded-lg p-3">
@@ -32,13 +32,31 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           {formatDate(label)}
         </p>
         <p className="text-sm text-gray-600">
-          Valor:{" "}
+          {title?.includes("Dólar") || title?.includes("Câmbio")
+            ? "PTAX: "
+            : "Valor: "}
           <span className="font-medium">{payload[0].value.toFixed(2)}</span>
         </p>
       </div>
     );
   }
   return null;
+};
+
+const getIndicatorDescription = (title: string) => {
+  if (title.includes("Dólar") || title.includes("Câmbio")) {
+    return "Taxa de câmbio PTAX - média diária calculada pelo Banco Central do Brasil. A variação é calculada entre a PTAX do primeiro e último dia útil do período.";
+  }
+  if (title.includes("Inflação")) {
+    return "IPCA acumulado durante o período do mandato. Mandatos mais longos tendem a apresentar inflação acumulada maior devido ao maior período de acumulação.";
+  }
+  if (title.includes("SELIC")) {
+    return "Taxa SELIC - taxa básica de juros da economia brasileira, definida pelo Comitê de Política Monetária (Copom).";
+  }
+  if (title.includes("Desemprego")) {
+    return "Taxa de desemprego medida pela Pesquisa Nacional por Amostra de Domicílios Contínua (PNAD Contínua) do IBGE.";
+  }
+  return "";
 };
 
 const formatShareMessage = (
@@ -127,7 +145,12 @@ export function ChartModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+            {title.includes("Câmbio") && (
+              <p className="text-sm text-gray-600">Cotação PTAX</p>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -162,7 +185,9 @@ export function ChartModal({
                 height={70}
               />
               <YAxis />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip
+                content={(props) => <CustomTooltip {...props} title={title} />}
+              />
               <DataComponent
                 type="monotone"
                 dataKey="value"
@@ -172,6 +197,11 @@ export function ChartModal({
               />
             </Chart>
           </ResponsiveContainer>
+        </div>
+        <div className="px-4 pb-2">
+          <p className="text-sm text-gray-600 italic">
+            {getIndicatorDescription(title)}
+          </p>
         </div>
         <div className="p-4 border-t border-gray-100">
           <div className="flex items-center justify-end gap-3">
