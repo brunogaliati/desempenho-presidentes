@@ -3,6 +3,7 @@ import { MetricCard } from "@/components/MetricCard";
 import { ShareButtons } from "@/components/ShareButtons";
 import { TwitterFollow } from "@/components/TwitterFollow";
 import Image from "next/image";
+import { MetricShareButtons } from "@/components/MetricShareButtons";
 
 export default async function Home() {
   const { presidents, indicators } = await getSheetData();
@@ -51,9 +52,9 @@ export default async function Home() {
             return (
               <div
                 key={president.id}
-                className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
+                className="bg-white rounded-2xl px-5 py-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
               >
-                <div className="flex flex-col md:flex-row gap-8">
+                <div className="flex flex-col md:flex-row gap-4">
                   <div className="md:w-1/4 text-center">
                     <Image
                       src={president.foto}
@@ -69,93 +70,107 @@ export default async function Home() {
                       📅 {new Date(president.inicio).getFullYear()} →{" "}
                       {new Date(president.fim).getFullYear()}
                     </p>
-                    <ShareButtons
-                      president={president.nome}
-                      period={`${new Date(
-                        president.inicio
-                      ).getFullYear()} - ${new Date(
-                        president.fim
-                      ).getFullYear()}`}
-                      indicators={{
-                        inflacao: `${indicator.inflacaoAcumulada.toFixed(2)}%`,
-                        cambio: `${indicator.variacaoCambial.toFixed(2)}%`,
-                        selic: `${indicator.variacaoSelic.toFixed(2)}%`,
-                        desemprego:
-                          indicator.variacaoDesemprego !== null
-                            ? `${indicator.variacaoDesemprego.toFixed(2)}%`
-                            : undefined,
-                      }}
-                    />
                   </div>
 
-                  <div className="md:w-3/4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <MetricCard
-                      title="Inflação acumulada (IPCA)"
-                      value={`${indicator.inflacaoAcumulada.toFixed(2)}%`}
-                      label={`até ${new Date(
-                        indicator.dataFinalIPCA
-                      ).toLocaleDateString("pt-BR")}`}
-                      icon="📈"
-                      tooltip="Inflação acumulada no período (IPCA)"
-                      showInitialValue={false}
-                      historicalData={indicator.historicoIPCA}
-                      chartColor="#ef4444"
-                      type="bar"
-                    />
-                    <MetricCard
-                      title="Variação do Dólar"
-                      value={`${indicator.variacaoCambial.toFixed(2)}%`}
-                      label={`até ${new Date(
-                        indicator.dataFinalDolar
-                      ).toLocaleDateString("pt-BR")}`}
-                      icon="💵"
-                      tooltip="Variação percentual do dólar durante o mandato"
-                      initialValue={`R$ ${indicator.valorInicialDolar?.toFixed(
-                        2
-                      )}`}
-                      finalValue={`R$ ${indicator.valorFinalDolar?.toFixed(2)}`}
-                      showInitialValue={true}
-                      historicalData={indicator.historicoCambio}
-                      chartColor="#10b981"
-                    />
-                    <MetricCard
-                      title="Variação da SELIC"
-                      value={`${indicator.variacaoSelic.toFixed(2)}%`}
-                      label={`até ${new Date(
-                        indicator.dataFinalSelic
-                      ).toLocaleDateString("pt-BR")}`}
-                      icon="🏦"
-                      tooltip="Variação percentual da taxa SELIC durante o mandato"
-                      initialValue={`${
-                        indicator.valorInicialSelic?.toFixed(2) ?? 0
-                      }%`}
-                      finalValue={`${
-                        indicator.valorFinalSelic?.toFixed(2) ?? 0
-                      }%`}
-                      showInitialValue={true}
-                      historicalData={indicator.historicoSelic}
-                      chartColor="#f59e0b"
-                    />
-                    {indicator.variacaoDesemprego !== null && (
+                  <div className="md:w-3/4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <MetricCard
-                        title="Variação do Desemprego"
-                        value={`${indicator.variacaoDesemprego.toFixed(2)}%`}
+                        title="Inflação acumulada (IPCA)"
+                        value={`${indicator.inflacaoAcumulada.toFixed(2)}%`}
                         label={`até ${new Date(
-                          indicator.dataFinalDesemprego!
+                          indicator.dataFinalIPCA
                         ).toLocaleDateString("pt-BR")}`}
-                        icon="👥"
-                        tooltip="Variação percentual da taxa de desemprego durante o mandato"
-                        initialValue={`${indicator.valorInicialDesemprego?.toFixed(
-                          2
-                        )}%`}
-                        finalValue={`${indicator.valorFinalDesemprego?.toFixed(
-                          2
-                        )}%`}
-                        showInitialValue={true}
-                        historicalData={indicator.historicoDesemprego}
+                        icon="📈"
+                        tooltip="Inflação acumulada no período (IPCA)"
+                        showInitialValue={false}
+                        historicalData={indicator.historicoIPCA}
                         chartColor="#ef4444"
+                        type="bar"
+                        president={president.nome}
+                        period={`${new Date(
+                          president.inicio
+                        ).getFullYear()} - ${new Date(
+                          president.fim
+                        ).getFullYear()}`}
                       />
-                    )}
+                      <MetricCard
+                        title="Variação do Dólar"
+                        value={`${indicator.variacaoCambial.toFixed(2)}%`}
+                        label={`até ${new Date(
+                          indicator.dataFinalDolar
+                        ).toLocaleDateString("pt-BR")}`}
+                        icon="💵"
+                        tooltip="Variação percentual do dólar durante o mandato"
+                        initialValue={`R$ ${indicator.valorInicialDolar?.toFixed(
+                          2
+                        )}`}
+                        finalValue={`R$ ${indicator.valorFinalDolar?.toFixed(
+                          2
+                        )}`}
+                        showInitialValue={true}
+                        historicalData={indicator.historicoCambio}
+                        chartColor="#10b981"
+                        president={president.nome}
+                        period={`${new Date(
+                          president.inicio
+                        ).getFullYear()} - ${new Date(
+                          president.fim
+                        ).getFullYear()}`}
+                      />
+                      <MetricCard
+                        title="Variação da SELIC"
+                        value={`${indicator.variacaoSelic.toFixed(2)}%`}
+                        label={`até ${new Date(
+                          indicator.dataFinalSelic
+                        ).toLocaleDateString("pt-BR")}`}
+                        icon="🏦"
+                        tooltip="Variação percentual da taxa SELIC durante o mandato"
+                        initialValue={`${
+                          indicator.valorInicialSelic?.toFixed(2) ?? 0
+                        }%`}
+                        finalValue={`${
+                          indicator.valorFinalSelic?.toFixed(2) ?? 0
+                        }%`}
+                        showInitialValue={true}
+                        historicalData={indicator.historicoSelic}
+                        chartColor="#f59e0b"
+                        president={president.nome}
+                        period={`${new Date(
+                          president.inicio
+                        ).getFullYear()} - ${new Date(
+                          president.fim
+                        ).getFullYear()}`}
+                      />
+                      {indicator.variacaoDesemprego !== null && (
+                        <MetricCard
+                          title="Variação do Desemprego"
+                          value={`${indicator.variacaoDesemprego.toFixed(2)}%`}
+                          label={`até ${new Date(
+                            indicator.dataFinalDesemprego!
+                          ).toLocaleDateString("pt-BR")}`}
+                          icon="👥"
+                          tooltip="Variação percentual da taxa de desemprego durante o mandato"
+                          initialValue={`${indicator.valorInicialDesemprego?.toFixed(
+                            2
+                          )}%`}
+                          finalValue={`${indicator.valorFinalDesemprego?.toFixed(
+                            2
+                          )}%`}
+                          showInitialValue={true}
+                          historicalData={indicator.historicoDesemprego}
+                          chartColor="#ef4444"
+                          president={president.nome}
+                          period={`${new Date(
+                            president.inicio
+                          ).getFullYear()} - ${new Date(
+                            president.fim
+                          ).getFullYear()}`}
+                        />
+                      )}
+                    </div>
+                    <div className="mt-1 flex justify-end">
+                      <MetricShareButtons president={president.nome} />
+                    </div>
                   </div>
                 </div>
               </div>
