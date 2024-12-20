@@ -83,7 +83,7 @@ export function SubscribeModal({ isOpen, onClose }: SubscribeModalProps) {
               name="email"
               required
               placeholder="Seu email"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 bg-white"
             />
             <div id="message" className="text-sm"></div>
             <SubmitButton />
