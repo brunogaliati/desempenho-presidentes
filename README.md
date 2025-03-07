@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Desempenho do Governo
 
-## Getting Started
+![Desempenho do Governo](https://img.shields.io/badge/Status-Em%20Desenvolvimento-brightgreen)
 
-First, run the development server:
+Uma plataforma interativa para visualização e comparação de indicadores econômicos durante diferentes governos brasileiros.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 📊 Sobre o Projeto
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Este projeto apresenta uma análise visual dos principais indicadores econômicos do Brasil durante diferentes mandatos presidenciais, permitindo aos cidadãos comparar o desempenho econômico de cada governo de forma objetiva e transparente.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Indicadores Disponíveis
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Inflação (IPCA)**: Índice acumulado durante o período do mandato
+- **Taxa de Câmbio (Dólar)**: Variação da taxa PTAX calculada pelo Banco Central
+- **Taxa SELIC**: Variação da taxa básica de juros da economia brasileira
+- **Desemprego**: Variação da taxa de desemprego medida pela PNAD Contínua (IBGE)
 
-## Learn More
+## 🚀 Funcionalidades
 
-To learn more about Next.js, take a look at the following resources:
+- Visualização de indicadores econômicos por presidente
+- Comparação direta entre diferentes governos
+- Dashboard interativo com gráficos temporais
+- Gráficos de radar para análise multidimensional
+- Compartilhamento de métricas específicas nas redes sociais
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 💻 Tecnologias Utilizadas
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- [Next.js 15](https://nextjs.org/) - Framework React com renderização híbrida
+- [React 19](https://react.dev/) - Biblioteca para construção de interfaces
+- [TypeScript](https://www.typescriptlang.org/) - Superset tipado de JavaScript
+- [Tailwind CSS](https://tailwindcss.com/) - Framework CSS utilitário
+- [Recharts](https://recharts.org/) - Biblioteca de gráficos para React
+- [Google Sheets API](https://developers.google.com/sheets/api) - Fonte de dados
 
-## Deploy on Vercel
+## 🛠️ Como Executar
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Pré-requisitos
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Node.js (versão 18 ou superior)
+- Yarn ou npm
+
+### Configuração
+
+1. Clone o repositório:
+
+   ```bash
+   git clone https://github.com/seu-usuario/desempenho-do-governo.git
+   cd desempenho-do-governo
+   ```
+
+2. Instale as dependências:
+
+   ```bash
+   yarn install
+   # ou
+   npm install
+   ```
+
+3. Configure as variáveis de ambiente:
+   Crie um arquivo `.env.local` na raiz do projeto com as seguintes variáveis:
+
+   ```
+   GOOGLE_SERVICE_ACCOUNT_EMAIL=seu-email@google-service-account.com
+   GOOGLE_PRIVATE_KEY=sua-chave-privada
+   GOOGLE_SHEET_ID=id-da-sua-planilha
+   ```
+
+4. Execute o servidor de desenvolvimento:
+
+   ```bash
+   yarn dev
+   # ou
+   npm run dev
+   ```
+
+5. Acesse `http://localhost:3000` no seu navegador.
+
+## 📝 Contribuindo
+
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar pull requests com melhorias.
+
+1. Faça um fork do projeto
+2. Crie sua branch de feature (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está licenciado sob a Licença MIT - veja o arquivo LICENSE para detalhes.
+
+## 📊 Fonte dos Dados
+
+Os dados utilizados neste projeto são obtidos de fontes oficiais como Banco Central do Brasil e IBGE, através de uma planilha Google Sheets que é atualizada regularmente.
+
+---
+
+Desenvolvido com ❤️ para promover transparência e análise objetiva dos indicadores econômicos brasileiros.
