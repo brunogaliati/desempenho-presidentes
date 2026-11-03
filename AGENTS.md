@@ -6,7 +6,7 @@
 - Antes de subir um, veja se já há um ligado: `netstat -ano | findstr :3000`. Se houver, use esse.
 - Não suba outro servidor em outra porta. Se o da 3000 estiver quebrado, feche-o e suba de novo na mesma porta.
 - Terminou de usar um servidor que você mesmo abriu para teste? Feche-o.
-- Se o navegador abrir outro app em `localhost:3000`, use o endereço "Network" que o `next dev` imprime.
+- Se o navegador abrir outro app ou recusar a conexão em `localhost:3000`, use o endereço "Network" que o `next dev` imprime.
 
 ## Build com o servidor ligado
 
