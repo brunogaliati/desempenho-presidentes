@@ -7,10 +7,12 @@ import { Cabecalho } from "@/app/prototipo/_componentes/Topo";
 import { FiltroRefracao, useVidro } from "@/app/prototipo/_componentes/Vidro";
 import { buscarPaginaEconomia, PAGINAS_ECONOMIA, rotaEconomia } from "@/lib/catalogoEconomia";
 import styles from "./indicador.module.css";
+import { idsMunicipais } from "@/lib/indicadoresMunicipais";
 
 export function EstruturaEconomia({ children }: { children: React.ReactNode }) {
   const caminho = usePathname();
   const atual = buscarPaginaEconomia(caminho.replace(/^\/economia\//, "").split("/"));
+  const municipal=caminho.startsWith("/economia/municipios") || idsMunicipais.some(id=>caminho.startsWith(`/economia/${id}/`));
   const router = useRouter();
   const cabecalho = useRef<HTMLDivElement>(null);
   useVidro();
@@ -30,6 +32,7 @@ export function EstruturaEconomia({ children }: { children: React.ReactNode }) {
       <Cabecalho aba="economia" aoTrocar={(aba) => router.push(`/prototipo${aba === "economia" ? "" : `?aba=${aba}`}`)} mandato={
         <nav aria-label="Indicadores de economia" className={styles.indicadores}>
           {PAGINAS_ECONOMIA.map((p) => <Link key={p.slug} href={rotaEconomia(p)} aria-current={atual?.id === p.id ? "page" : undefined}>{p.rotulo}</Link>)}
+          <Link href="/economia/municipios" aria-current={municipal?"page":undefined}>Municípios</Link>
         </nav>
       } />
     </div>

@@ -6,6 +6,8 @@ import { compararPontosPublicos, deslocarMes, rotuloPeriodoPublico } from "@/app
 import { comSinal, numero, reais } from "@/lib/formatar";
 import { HistoricoIndicador } from "./HistoricoIndicador";
 import styles from "./indicador.module.css";
+import { buscarPaginaMunicipal } from "@/lib/catalogoMunicipal";
+import { idsMunicipais,INDICADORES_MUNICIPAIS,rotaMunicipal } from "@/lib/indicadoresMunicipais";
 
 export function resumoIndicador(d: DadosPaginaEconomia): string {
   const referencia = rotuloPeriodoPublico(d.ultimo.mes,d.trimestral);
@@ -40,6 +42,7 @@ export function PaginaIndicador({dados:d}:{dados:DadosPaginaEconomia}) {
   const estadoAtual = uf ? d.comparacao.find((r) => r.codigo === uf.codigo) : null;
   const localAtual = d.comparacao.find((r) => r.codigo === d.pagina.territorio?.codigo);
   const relacionados = PAGINAS_ECONOMIA.filter((p) => p.slug !== d.pagina.slug);
+  const outrosMunicipais=uf?idsMunicipais.flatMap(id=>{const p=buscarPaginaMunicipal([id,uf.slug,d.pagina.slug.split('/').at(-1)!]);return p?[p]:[];}):[];
   const validos = d.comparacao.filter((r) => r.valor !== null);
   const schema = {"@context":"https://schema.org","@graph":[
     {"@type":"BreadcrumbList",itemListElement:[{name:"Início",item:URL_SITE},...(pai ? [{name:pai.rotulo,item:`${URL_SITE}${rotaEconomia(pai)}`}] : []),...(paginaUf ? [{name:paginaUf.rotulo,item:`${URL_SITE}${rotaEconomia(paginaUf)}`}] : []),{name:d.pagina.rotulo,item:url}].map((item,i) => ({"@type":"ListItem",position:i+1,...item}))},
@@ -102,6 +105,6 @@ export function PaginaIndicador({dados:d}:{dados:DadosPaginaEconomia}) {
     </section>
     {municipios.length>0 && <section id="municipios" className="vidro" data-lustro="fixo"><h2 className="font-semibold">Gasolina nos municípios de {uf?.nome ?? d.territorio}</h2><p className="mt-3 max-w-prose leading-relaxed">Médias mensais municipais com histórico. Explore {uf ? "outras cidades da mesma UF" : "as cidades da UF"}.</p><ul className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">{(uf ? municipios.slice(0,9) : municipios).map((p) => <li key={p.slug}><Link href={rotaEconomia(p)}>{p.rotulo}</Link></li>)}</ul>{paginaUf && <p className="mt-5"><Link href={`${rotaEconomia(paginaUf)}#municipios`}>Ver todos os municípios disponíveis na UF</Link></p>}</section>}
     {locais.some((p) => p.slug !== d.pagina.slug) && <section className="vidro" data-lustro="fixo"><h2 className="font-semibold">Explore {moeda ? "a gasolina" : "o desemprego"} por estado</h2><ul className="mt-4 flex flex-wrap gap-x-6 gap-y-3">{locais.filter((p) => p.slug !== d.pagina.slug).map((p) => <li key={p.slug}><Link href={rotaEconomia(p)}>{p.rotulo}</Link></li>)}</ul></section>}
-    <section className="vidro" data-lustro="fixo"><h2 className="font-semibold">Continue explorando</h2><ul className="mt-4 flex flex-wrap gap-x-6 gap-y-3">{[...mesmoEstado,...relacionados].map((p) => <li key={p.slug}><Link href={rotaEconomia(p)}>{p.territorio ? p.titulo : p.rotulo}</Link></li>)}</ul></section>
+    <section className="vidro" data-lustro="fixo"><h2 className="font-semibold">Continue explorando</h2><ul className="mt-4 flex flex-wrap gap-x-6 gap-y-3">{outrosMunicipais.map(p=><li key={p.id}><Link href={rotaMunicipal(p.id,p.municipio)}>{INDICADORES_MUNICIPAIS[p.id].nome} · {p.municipio.nome}</Link></li>)}{[...mesmoEstado,...relacionados].map((p) => <li key={p.slug}><Link href={rotaEconomia(p)}>{p.territorio ? p.titulo : p.rotulo}</Link></li>)}</ul></section>
   </main>;
 }

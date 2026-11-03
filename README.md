@@ -40,8 +40,9 @@ revisão editorial e de demanda, por exemplo:
 ```
 
 O catálogo cobre as 27 UFs nas duas famílias (54 páginas estaduais) e 305
-municípios com gasolina mensal da ANP. Com as cinco páginas principais, são 364
-páginas de economia. As UFs são cadastradas uma vez e compartilhadas pelas duas famílias;
+municípios com gasolina mensal da ANP: 364 páginas de indicadores nesse catálogo.
+O catálogo municipal adicional descrito abaixo amplia o total para 12.795 páginas
+de indicadores, além de 70 diretórios. As UFs são cadastradas uma vez e compartilhadas pelas duas famílias;
 cada página continua sujeita à validação real da sua própria fonte. Cada endereço
 segue `/economia/{indicador}/{estado}`, com metadados, imagem, comparação com o
 Brasil, histórico e entrada no sitemap próprios. As páginas principais e tabelas
@@ -80,8 +81,45 @@ o cache antes do próximo recorte e não multiplicar consultas idênticas ao ban
 Desemprego permanece nacional/estadual: não recebe páginas municipais sem fonte.
 Novos indicadores ou fontes exigem um adaptador e
 revisão das unidades, frequência, regras de cobertura e texto de interpretação.
-O mecanismo suporta ampliar o catálogo; não promete mil recortes úteis com as
-fontes atuais. O sitemap atual cabe no formato único nativo do Next.js.
+O sitemap atual cabe no formato único nativo do Next.js.
+
+### Outros indicadores municipais
+
+`src/lib/catalogoMunicipal.ts` e `municipiosIndicadores.json` cadastram 12.431
+URLs adicionais: população (5.571), emprego formal/Caged (5.570), CadÚnico (645)
+e BPC (645). Os dois últimos usam a cobertura municipal paulista da Fundação
+Seade. Não há publicação de Bolsa Família com total atual ausente nem de taxa
+municipal de desemprego inferida do Caged.
+
+`mart.publicacao_indicador_municipal`, definida em `backend/sql/079_publicacao_municipal.sql`,
+centraliza os critérios: dois anos recentes de população positivos; 12 meses
+completos de emprego com estoque, admissões, desligamentos e saldo consistente;
+12 meses de CadÚnico/BPC com campos documentados e contagens consistentes.
+Depois de atualizar as fontes, executar
+`node --env-file=.env.local scripts/cadastrar-indicadores-municipais.mjs` e revisar
+o JSON gerado. Valores e datas continuam vindo do banco; a cobertura é revalidada
+em bloco para o sitemap e na leitura de cada página.
+
+As rotas seguem `/economia/{populacao|emprego-formal|cadunico|bpc}/{uf}/{municipio}`.
+São renderizadas no primeiro acesso, com ISR horário; quatro cidades de maior
+população por família são pré-geradas no build. Isso evita gerar mais de 12 mil
+páginas em toda implantação. O adaptador compartilha blocos pelo prefixo de quatro
+dígitos do código IBGE, com até 100 municípios, para respeitar o limite do cache.
+Tudo usa a tag e o webhook de invalidação já existentes.
+
+`/economia/municipios` permite escolher a UF. Os diretórios estaduais mostram até
+100 cidades por página e ligam a todas as URLs elegíveis. Páginas subsequentes têm
+canônica própria e entram no sitemap; busca por texto recebe `noindex,follow` e
+canônica do diretório. A lista prioriza população como proxy de alcance, sem
+afirmar volume de busca medido. Links de indicadores do diretório não disparam
+pré-carregamento de centenas de páginas. O cadastro completo fica no servidor.
+
+Verificação de integração reutilizável:
+`node --env-file=.env.local scripts/verificar-indicadores-municipais.mjs`.
+Por padrão usa `http://localhost:3130`; `SEO_PREVIEW_URL` permite outra origem.
+Confere cobertura e descoberta de todas as URLs, sitemap e diretórios, amostra
+de todas as UFs com valores e imagens, limites de publicação e rotas existentes.
+Pesquisa e validação estão registradas na seção 17 do documento SEO na raiz.
 
 - `SITE_URL`: origem canônica de produção; padrão `https://desempenhodogoverno.com.br`.
 - `SEO_INDEXING=false`: desativa indexação em homologação. Desenvolvimento e

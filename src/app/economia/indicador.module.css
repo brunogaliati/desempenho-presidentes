@@ -4,7 +4,7 @@
 .pagina h1 { max-width: 850px; margin-top: 24px; font-size: clamp(30px, 3.8vw, 48px); font-weight: 600; letter-spacing: -.035em; }
 .pagina > header > p { max-width: 72ch; }
 .pagina > section { margin-top: 18px; padding: 26px; border-radius: 26px; }
-.pagina h2 { font-size: 22px; letter-spacing: -.025em; }
+.pagina h2 { font-size: 22px; font-weight: 600; letter-spacing: -.025em; }
 .pagina > header > nav:last-child { gap: 8px; }
 .pagina > header > nav:last-child a { padding: 9px 14px; border: 1px solid var(--borda); border-radius: 999px; background: var(--vidro-tinta); text-decoration: none; font-size: 12px; font-weight: 500; }
 .indicadores { grid-area: mandato; display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; }
