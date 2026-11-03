@@ -15,6 +15,14 @@
 
 # next.js
 /.next/
+/.next-marcos-check/
+/.next-seo-check/
+/.next-inflacao-check/
+/.next-escala-check/
+/.next-estados-check/
+/.next-ufs-check/
+/.next-municipios-check/
+/.cache/
 /out/
 
 # production
@@ -32,6 +40,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +48,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/.next-dinheiro-check/
+.dev.log

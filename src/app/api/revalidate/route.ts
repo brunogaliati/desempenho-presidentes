@@ -1,4 +1,4 @@
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
@@ -10,8 +10,12 @@ export async function POST(request: NextRequest) {
 
   try {
     revalidatePath('/');
+    revalidateTag('painel-economia');
+    revalidatePath('/prototipo');
+    revalidatePath('/economia', 'layout');
+    revalidatePath('/sitemap.xml');
     return NextResponse.json({ revalidated: true, now: Date.now() });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ message: 'Error revalidating' }, { status: 500 });
   }
 }

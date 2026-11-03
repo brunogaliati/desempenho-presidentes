@@ -1,0 +1,37 @@
+.estrutura { position: relative; }
+.pagina { color: var(--tinta); padding-top: 28px; }
+.pagina > header { border: 0; padding: 20px 24px 30px; }
+.pagina h1 { max-width: 850px; margin-top: 24px; font-size: clamp(30px, 3.8vw, 48px); font-weight: 600; letter-spacing: -.035em; }
+.pagina > header > p { max-width: 72ch; }
+.pagina > section { margin-top: 18px; padding: 26px; border-radius: 26px; }
+.pagina h2 { font-size: 22px; letter-spacing: -.025em; }
+.pagina > header > nav:last-child { gap: 8px; }
+.pagina > header > nav:last-child a { padding: 9px 14px; border: 1px solid var(--borda); border-radius: 999px; background: var(--vidro-tinta); text-decoration: none; font-size: 12px; font-weight: 500; }
+.indicadores { grid-area: mandato; display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap; }
+.indicadores a { padding: 9px 12px; border-radius: 999px; color: var(--tinta-2); font-size: 12px; white-space: nowrap; }
+.indicadores a:hover { background: var(--faixa-a); }
+.indicadores a[aria-current="page"] { background: var(--faixa-ativa); color: var(--tinta); font-weight: 650; }
+.indicadores a:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+.pagina a { text-decoration: underline; text-underline-offset: .2em; }
+.pagina a:hover { text-decoration-thickness: 2px; }
+.pagina :is(a, input, select, summary, [tabindex]):focus-visible { outline: 2px solid var(--serie); outline-offset: 4px; }
+.pagina ::selection { background: var(--serie-fraca); color: var(--tinta); }
+.pagina section { scroll-margin-top: 24px; }
+.pagina input { min-width: 0; max-width: 100%; color: var(--tinta); }
+.pagina :is(input, select) { border-radius: 999px; background: var(--vidro-tinta); color: var(--tinta); padding: 10px 14px; }
+.pagina :is(td, tbody th) { font-family: var(--fonte-mono), monospace; font-size: 12px; }
+.pagina tbody tr:hover { background: var(--faixa-a); }
+.pagina table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .875rem; }
+.pagina caption { padding: 12px 0; text-align: left; color: var(--tinta-2); }
+.pagina th, .pagina td { padding: 12px 10px; border-bottom: 1px solid var(--borda); text-align: right; white-space: nowrap; }
+.pagina th:first-child { padding-left: 0; text-align: left; }
+.pagina tbody th { font-weight: 400; }
+.pagina thead th { color: var(--tinta-2); font-weight: 500; }
+.tabelaRolagem { max-width: 100%; overflow-x: auto; }
+@media (max-width: 640px) {
+  .pagina { padding-top: 12px; }
+  .pagina > header { padding: 16px 6px 22px; }
+  .pagina > section { margin-top: 12px; padding: 20px 16px; border-radius: 22px; }
+  .pagina h2 { font-size: 20px; }
+  .indicadores { justify-content: flex-start; }
+}

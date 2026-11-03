@@ -1,0 +1,9 @@
+"use client";
+
+export default function ErroSalario({ reset }: { reset: () => void }) {
+  return <main className="mx-auto max-w-3xl px-5 py-16">
+    <h1 className="text-2xl font-semibold">Não foi possível carregar o salário mínimo</h1>
+    <p className="my-4">Os dados estão temporariamente indisponíveis. Tente carregar a página novamente.</p>
+    <button onClick={reset} className="rounded-md border px-4 py-2 focus-visible:outline focus-visible:outline-2">Tentar novamente</button>
+  </main>;
+}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { jsonLd, NOME_SITE, podeIndexar, URL_SITE } from "@/lib/seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,21 +13,31 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const TITULO = "Desempenho do Governo";
+const DESCRICAO =
+  "Os indicadores econômicos de cada mandato presidencial desde o Plano Real, " +
+  "calculados do mesmo jeito para todos e comparados com o resto do mundo.";
+
 export const metadata: Metadata = {
-  title: "Desempenho por Presidente 🇧🇷",
-  description:
-    "Acompanhe a evolução dos principais indicadores econômicos durante cada mandato presidencial do Brasil.",
+  metadataBase: new URL(URL_SITE),
+  title: TITULO,
+  description: DESCRICAO,
+  robots: { index: podeIndexar(), follow: true },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+    other: process.env.BING_SITE_VERIFICATION ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION } : undefined,
+  },
   openGraph: {
-    title: "Desempenho por Presidente 🇧🇷",
-    description:
-      "Acompanhe a evolução dos principais indicadores econômicos durante cada mandato presidencial do Brasil.",
+    title: TITULO,
+    description: DESCRICAO,
     type: "website",
+    locale: "pt_BR",
+    siteName: TITULO,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Desempenho por Presidente 🇧🇷",
-    description:
-      "Acompanhe a evolução dos principais indicadores econômicos durante cada mandato presidencial do Brasil.",
+    title: TITULO,
+    description: DESCRICAO,
   },
   icons: {
     icon: [
@@ -45,7 +56,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({
+          "@context": "https://schema.org",
+          "@graph": [
+            { "@type": "Organization", "@id": `${URL_SITE}/#organizacao`, name: NOME_SITE, url: URL_SITE },
+            { "@type": "WebSite", "@id": `${URL_SITE}/#site`, name: NOME_SITE, url: URL_SITE, inLanguage: "pt-BR", publisher: { "@id": `${URL_SITE}/#organizacao` } },
+          ],
+        }) }} />
+        {children}
+      </body>
     </html>
   );
 }

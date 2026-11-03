@@ -1,0 +1,22 @@
+{
+  "nome": "Gray Earth with Shaded Relief and Hypsography",
+  "versao": "2.0.0",
+  "fonte": "https://naturalearth.s3.amazonaws.com/10m_raster/GRAY_LR_SR.zip",
+  "pagina": "https://www.naturalearthdata.com/downloads/10m-raster-data/10m-gray-earth/",
+  "licenca": "Dominio publico",
+  "caixa": {
+    "lonMin": -130,
+    "lonMax": 30,
+    "latMin": -60,
+    "latMax": 30
+  },
+  "imagem": {
+    "href": "/prototipo/relevo.webp",
+    "larguraPixels": 1800,
+    "alturaPixels": 1013,
+    "x": -1429.7,
+    "y": -651.1,
+    "largura": 4083.7,
+    "altura": 2369.8
+  }
+}

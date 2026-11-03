@@ -4,6 +4,100 @@
 
 Uma plataforma interativa para visualização e comparação de indicadores econômicos durante diferentes governos brasileiros.
 
+## SEO e páginas de indicadores
+
+A rota `/economia/salario-minimo` entrega resposta, fontes e tabelas no HTML,
+com histórico mensal, comparação nominal/real e imagem própria de compartilhamento.
+Os dados vêm do Neon, com revalidação a cada hora e pelo webhook existente.
+O histórico começa em 1995 e exclui meses futuros. O poder de compra reutiliza
+a série real calculada pelo backend e informa o mês-base do IPCA.
+
+A rota `/economia/inflacao` apresenta IPCA mensal, no ano e em 12 meses,
+comparação de intervalos, tabela mensal completa desde julho de 1994 e anual
+desde 1995. Os acumulados compõem fatores e preservam lacunas. Tem canônica,
+JSON-LD, imagem de compartilhamento, entrada no sitemap e revalidação próprios.
+As páginas herdam o visual do protótipo pelo layout de Economia:
+cabeçalho, marca, fontes Geist, paleta, paisagem, painéis de vidro e tema escuro.
+
+Também estão disponíveis `/economia/desemprego`, `/economia/gasolina` e
+`/economia/desemprego/estados`. O desemprego nacional usa trimestre móvel;
+a comparação estadual usa trimestre civil e mostra o CV da estimativa.
+Gasolina usa médias mensais nominais da ANP, com o agregado Brasil da fonte.
+
+### Publicação em escala
+
+`src/lib/catalogoEconomia.ts` cadastra as cinco intenções principais e os
+recortes aprovados. Esse cadastro alimenta navegação, geração estática e sitemap.
+As três páginas novas e futuros recortes usam a rota `[...pagina]`, o mesmo
+modelo de apresentação, dados estruturados e imagens em `/economia/imagens/…`.
+Salário mínimo e inflação mantêm seus cálculos e apresentações específicos.
+
+Para publicar um recorte estadual, adicionar a `RECORTES_PUBLICADOS`, após
+revisão editorial e de demanda, por exemplo:
+
+```ts
+{ indicador: "gasolina", codigo: "29", nome: "Bahia", slug: "bahia", localizacao: "na Bahia" }
+```
+
+O catálogo cobre as 27 UFs nas duas famílias (54 páginas estaduais) e 305
+municípios com gasolina mensal da ANP. Com as cinco páginas principais, são 364
+páginas de economia. As UFs são cadastradas uma vez e compartilhadas pelas duas famílias;
+cada página continua sujeita à validação real da sua própria fonte. Cada endereço
+segue `/economia/{indicador}/{estado}`, com metadados, imagem, comparação com o
+Brasil, histórico e entrada no sitemap próprios. As páginas principais e tabelas
+estaduais oferecem links para os recortes; São Paulo e Rio explicitam o estado,
+evitando confusão com a capital. O cadastro inclui a preposição em `localizacao`.
+Os municípios usam `/economia/gasolina/{estado}/{municipio}`, evitando colisão
+entre capital e UF e entre homônimos. As páginas estaduais levam às cidades da
+UF; cada cidade liga ao estado, ao Brasil e a outras cidades da mesma UF. A
+navegação estadual é alfabética; a municipal prioriza população como proxy de
+alcance. A pesquisa de busca e suas limitações constam da seção 16 de
+`../SEO-AEO-GEO-OBSERVATORIO.md`.
+Desemprego territorial reutiliza a PNAD trimestral, nunca o trimestre móvel
+nacional. O código e o nome precisam corresponder ao cadastro da fonte.
+
+O carregador exige as últimas 12 observações mensais ou quatro trimestrais
+completas, sem transformar ausência em zero. URLs desconhecidas, aliases do
+mesmo território e colisões são recusados; recortes cadastrados sem cobertura
+não são gerados nem entram no sitemap. Filtros do gráfico não criam URLs novas.
+Os dois indicadores com páginas específicas já passam pelas suas validações de dados.
+
+`src/lib/dadosEconomiaPublica.ts` mantém cache horário por fonte, compartilhado
+entre os recortes com a tag `painel-economia`. Os agregados compartilham consulta
+por fonte; os dados municipais compartilham consulta por UF. O webhook invalida a tag e toda a árvore `/economia`, incluindo
+imagens, em vez de manter uma lista manual de caminhos para cada nova página.
+
+Gasolina municipal tem adaptador próprio para `mart.gasolina_municipal`, com
+cache por UF para respeitar o limite do Next e evitar consultas por cidade.
+O catálogo é gerado, de forma revisável, por
+`node --env-file=.env.local scripts/cadastrar-municipios-gasolina.mjs` após a carga
+oficial `python -m desempenho anp_municipios` no backend. O script exige 12 meses
+consecutivos com preço e amostra válidos, até a referência comum com o Brasil.
+`src/lib/municipiosGasolina.ts` guarda somente o cadastro; valores e datas vêm da
+fonte no banco. O carregador revalida cobertura e referência nacional antes de
+gerar cada página. A verificação de publicabilidade é sequencial para preencher
+o cache antes do próximo recorte e não multiplicar consultas idênticas ao banco.
+Desemprego permanece nacional/estadual: não recebe páginas municipais sem fonte.
+Novos indicadores ou fontes exigem um adaptador e
+revisão das unidades, frequência, regras de cobertura e texto de interpretação.
+O mecanismo suporta ampliar o catálogo; não promete mil recortes úteis com as
+fontes atuais. O sitemap atual cabe no formato único nativo do Next.js.
+
+- `SITE_URL`: origem canônica de produção; padrão `https://desempenhodogoverno.com.br`.
+- `SEO_INDEXING=false`: desativa indexação em homologação. Desenvolvimento e
+  `VERCEL_ENV=preview` recebem `noindex` automaticamente, mesmo com `SEO_INDEXING=true`.
+- `GOOGLE_SITE_VERIFICATION` e `BING_SITE_VERIFICATION`: tokens públicos opcionais.
+- `/robots.txt` e `/sitemap.xml`: gerados pelo Next.js; previews não listam URLs.
+  Os protótipos ficam fora do sitemap e preservam `noindex`.
+- JSON-LD: organização/site; página, breadcrumbs e dataset de cada indicador.
+- `npm run test:seo`: testes das regras de dados, catálogo, publicação, canônicas, indexação e JSON-LD
+  usando o runner nativo do Node (Node 24 ou versão com suporte a TypeScript).
+
+Após publicar, cadastrar/verificar o domínio no Search Console e Bing Webmaster
+Tools e enviar `/sitemap.xml`. Tokens, cadastro externo, inspeção da URL pública
+e eventual acesso dos crawlers pela CDN não são configurados automaticamente.
+A marcação não garante indexação ou citação por IA.
+
 ## 📊 Sobre o Projeto
 
 Este projeto apresenta uma análise visual dos principais indicadores econômicos do Brasil durante diferentes mandatos presidenciais, permitindo aos cidadãos comparar o desempenho econômico de cada governo de forma objetiva e transparente.

@@ -2,57 +2,1827 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Paleta validada com o script de checagem de daltonismo da skill de dataviz.
+ *
+ * Duas decisões que vieram dessa checagem:
+ *
+ * 1. O site usa UMA cor de série (azul). As faixas de mandato são lavagens
+ *    neutras alternadas, não cores por presidente — nove hues categóricos não
+ *    passariam a checagem de CVD, e pintar partido por cor seria carga política
+ *    disfarçada de design.
+ *
+ * 2. Verde e vermelho (melhora/piora) REPROVARAM a separação de daltonismo
+ *    entre si (ΔE 4,1 em deuteranopia). São cores de status, não de série:
+ *    a regra é que nunca carreguem significado sozinhas. Todo indicador de
+ *    melhora/piora leva seta E texto junto com a cor.
+ */
+
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card-background: #ffffff;
-  --card-border: #e2e8f0;
-  --accent: #3b82f6;
-  --success: #22c55e;
-  --danger: #ef4444;
+  color-scheme: light;
+
+  --plano: #f9f9f7;
+  --superficie: #fcfcfb;
+
+  --tinta: #0b0b0b;
+  --tinta-2: #52514e;
+  --tinta-3: #898781;
+
+  --grade: #e1e0d9;
+  --eixo: #c3c2b7;
+  --borda: rgba(11, 11, 11, 0.1);
+
+  --serie: #2a78d6;
+  --serie-fraca: #cde2fb;
+
+  /* Faixas de mandato: lavagem neutra alternada, sem identidade partidária. */
+  --faixa-a: rgba(11, 11, 11, 0.035);
+  --faixa-b: rgba(11, 11, 11, 0.012);
+  --faixa-ativa: rgba(42, 120, 214, 0.1);
+
+  --bom: #006300;
+  --ruim: #d03b3b;
+
+  /*
+   * Mapa: rampa ordinal de 5 classes no mesmo azul da série, do menor para o
+   * maior valor. Começa no passo 250 e não no 100 porque um estado na classe
+   * mais baixa ainda precisa aparecer contra o fundo (2,0:1 no validador da
+   * skill de dataviz); com o passo 100 o contorno do país se desfazia.
+   */
+  --mapa-1: #86b6ef;
+  --mapa-2: #5598e7;
+  --mapa-3: #2a78d6;
+  --mapa-4: #1c5cab;
+  --mapa-5: #104281;
+
+  /*
+   * Brasil: o verde, o amarelo e o azul da bandeira, sempre os três juntos e
+   * só no ambiente (a marca, o fio do cabeçalho, os halos do fundo), nunca em
+   * dado. Não é a paleta de nenhum governo nem de nenhum lado: o site compara
+   * governos e não pode se vestir de um deles. O azul é o do mapa, para a
+   * marca conversar com o resto.
+   */
+  --brasil-verde: #1a9a50;
+  --brasil-amarelo: #f5c518;
+  --brasil-azul: #1c5cab;
+
+  /*
+   * Vidro: aro, brilho da borda de cima, reflexo que segue o ponteiro, a
+   * lente das opções escolhidas e a sombra azulada que descola o painel.
+   */
+  --vidro-aro: rgba(255, 255, 255, 0.65);
+  --vidro-brilho: rgba(255, 255, 255, 0.95);
+  --vidro-reflexo: rgba(255, 255, 255, 0.6);
+  --vidro-lente: rgba(255, 255, 255, 0.92);
+  --vidro-sombra: rgba(16, 66, 129, 0.28);
+  --vidro-tinta: rgba(255, 255, 255, 0.18);
+  --vidro-filtro: blur(0.5px) saturate(2.1) brightness(1.04);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f8fafc;
-    --card-background: #1e293b;
-    --card-border: #334155;
-    --accent: #60a5fa;
-    --success: #4ade80;
-    --danger: #f87171;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --plano: #0d0d0d;
+    --superficie: #1a1a19;
+
+    --tinta: #ffffff;
+    --tinta-2: #c3c2b7;
+    --tinta-3: #898781;
+
+    --grade: #2c2c2a;
+    --eixo: #383835;
+    --borda: rgba(255, 255, 255, 0.1);
+
+    --serie: #3987e5;
+    --serie-fraca: #184f95;
+
+    --faixa-a: rgba(255, 255, 255, 0.05);
+    --faixa-b: rgba(255, 255, 255, 0.018);
+    --faixa-ativa: rgba(57, 135, 229, 0.16);
+
+    --bom: #0ca30c;
+    --ruim: #e66767;
+
+    /* No escuro a rampa inverte o sentido: valor maior é mais claro, porque é
+       o claro que se destaca do fundo. O passo mais escuro para em 600. */
+    --mapa-1: #184f95;
+    --mapa-2: #256abf;
+    --mapa-3: #3987e5;
+    --mapa-4: #6da7ec;
+    --mapa-5: #9ec5f4;
+
+    --vidro-aro: rgba(255, 255, 255, 0.09);
+    --vidro-brilho: rgba(255, 255, 255, 0.16);
+    --vidro-reflexo: rgba(255, 255, 255, 0.07);
+    --vidro-lente: rgba(255, 255, 255, 0.13);
+    --vidro-sombra: rgba(0, 0, 0, 0.6);
+    --vidro-tinta: rgba(30, 30, 29, 0.4);
+    --vidro-filtro: blur(0.5px) saturate(1.6) brightness(0.85);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --plano: #0d0d0d;
+  --superficie: #1a1a19;
+
+  --tinta: #ffffff;
+  --tinta-2: #c3c2b7;
+  --tinta-3: #898781;
+
+  --grade: #2c2c2a;
+  --eixo: #383835;
+  --borda: rgba(255, 255, 255, 0.1);
+
+  --serie: #3987e5;
+  --serie-fraca: #184f95;
+
+  --faixa-a: rgba(255, 255, 255, 0.05);
+  --faixa-b: rgba(255, 255, 255, 0.018);
+  --faixa-ativa: rgba(57, 135, 229, 0.16);
+
+  --bom: #0ca30c;
+  --ruim: #e66767;
+
+  --mapa-1: #184f95;
+  --mapa-2: #256abf;
+  --mapa-3: #3987e5;
+  --mapa-4: #6da7ec;
+  --mapa-5: #9ec5f4;
+
+  --vidro-aro: rgba(255, 255, 255, 0.09);
+  --vidro-brilho: rgba(255, 255, 255, 0.16);
+  --vidro-reflexo: rgba(255, 255, 255, 0.07);
+  --vidro-lente: rgba(255, 255, 255, 0.13);
+  --vidro-sombra: rgba(0, 0, 0, 0.6);
+  --vidro-tinta: rgba(30, 30, 29, 0.4);
+  --vidro-filtro: blur(0.5px) saturate(1.6) brightness(0.85);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: var(--font-geist-sans);
+  background: var(--plano);
+  color: var(--tinta);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-.card {
-  @apply bg-[var(--card-background)] border border-[var(--card-border)] rounded-xl shadow-sm hover:shadow-md transition-shadow;
+/*
+ * Números em colunas alinham pela vírgula; números-manchete usam figuras
+ * proporcionais, porque tabular deixa um "121" com espaçamento frouxo em
+ * corpo grande.
+ */
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
 
-.metric-value {
-  @apply text-2xl font-semibold font-mono;
+.manchete {
+  font-variant-numeric: proportional-nums;
+  letter-spacing: -0.02em;
 }
 
-.metric-label {
-  @apply text-sm text-gray-600 dark:text-gray-400;
+/*
+ * A paleta do protótipo: a bandeira em tom de painel, sobre fundo quase branco
+ * (#F8FAFD) e texto #263746. Cada cor tem um trabalho só, para não virar site
+ * oficial antigo:
+ * - azul #285C84 é o dado (a rampa do mapa, a linha dos gráficos, a ação);
+ * - verde #2E795B é "melhorou" (e o vermelho, "piorou", sempre com texto);
+ * - ouro #D7B45B é o que está escolhido: a linha, o modo, o dia de hoje;
+ * - o resto é neutro. As três juntas só aparecem de leve nos halos do fundo,
+ *   que dão ao vidro alguma cor para desfocar.
+ * O mapa é chapado: estados na rampa, divisas na cor do fundo, sem satélite
+ * nem mar.
+ */
+.painel-prototipo {
+  --plano: light-dark(#f8fafd, #0f1820);
+  --superficie: light-dark(#ffffff, #17232d);
+  --tinta: light-dark(#263746, #e8eef3);
+  --tinta-2: light-dark(#46586a, #c3cdd6);
+  --tinta-3: light-dark(#5f6e7b, #96a4b0);
+  --grade: light-dark(#dde4ea, #2c3a45);
+  --eixo: light-dark(#b8c3cc, #475663);
+  --borda: light-dark(rgba(38, 55, 70, 0.1), rgba(232, 238, 243, 0.1));
+  --serie: light-dark(#285c84, #8fb7d8);
+  --serie-fraca: light-dark(#d9e5ef, #23435d);
+  --foco: light-dark(#285c84, #8fb7d8);
+  --bom: light-dark(#2e795b, #84cba8);
+  --ruim: light-dark(#a3473a, #f0a090);
+  --ouro: #d7b45b;
+  /* O ouro em fio fino precisa de mais contraste com o fundo claro. */
+  --ouro-forte: light-dark(#9c7a28, #e2c57a);
+  --faixa-a: light-dark(rgba(38, 55, 70, 0.04), rgba(232, 238, 243, 0.05));
+  --faixa-b: light-dark(rgba(38, 55, 70, 0.015), rgba(232, 238, 243, 0.018));
+  --faixa-ativa: light-dark(rgba(40, 92, 132, 0.08), rgba(143, 183, 216, 0.12));
+  /*
+   * Rampa do mapa: um matiz só, o azul da paleta. No claro, valor maior é mais
+   * escuro; no escuro, mais claro, porque é o claro que se destaca do fundo.
+   * `-texto` é a cor do número escrito em cima de cada classe.
+   */
+  --mapa-1: light-dark(#c6d7e5, #2f6690);
+  --mapa-2: light-dark(#98b8d0, #4a82ab);
+  --mapa-3: light-dark(#6c98b9, #6d9fc5);
+  --mapa-4: light-dark(#467a9f, #98bdda);
+  --mapa-5: light-dark(#285c84, #c6dbeb);
+  --mapa-1-texto: light-dark(#263746, #ffffff);
+  --mapa-2-texto: light-dark(#263746, #ffffff);
+  --mapa-3-texto: light-dark(#263746, #0f1820);
+  --mapa-4-texto: light-dark(#ffffff, #0f1820);
+  --mapa-5-texto: light-dark(#ffffff, #0f1820);
+  --mapa-melhor: light-dark(#5a9c7f, #4f9b7b);
+  --mapa-pior: light-dark(#cf8070, #c27566);
+  --mapa-estavel: light-dark(#b3bec8, #5b6a77);
+  /* Placar do mandato: o bloco inteiro na cor do veredito, com o texto branco por cima. */
+  --placar-bom: #2e795b;
+  --placar-ruim: #a3473a;
+  --placar-texto: #ffffff;
+  --halo-azul: light-dark(rgba(40, 92, 132, 0.22), rgba(40, 92, 132, 0.3));
+  --halo-verde: light-dark(rgba(46, 121, 91, 0.19), rgba(46, 121, 91, 0.2));
+  --halo-ouro: light-dark(rgba(215, 180, 91, 0.24), rgba(215, 180, 91, 0.09));
+  --atlas-orla: light-dark(#cdd7e0, #2a3a47);
+  --atlas-divisa: light-dark(#f8fafd, #0f1820);
+  --atlas-guia: light-dark(#7d8b97, #8796a3);
+  --atlas-etiqueta: light-dark(#eef2f6, #1c2934);
+  /* Rótulo sobre o estado: tinta com um halo da cor do fundo, legível em qualquer classe. */
+  --atlas-rotulo-contorno: light-dark(rgba(248, 250, 253, 0.88), rgba(15, 24, 32, 0.88));
+  --atlas-rotulo-tinta: light-dark(#263746, #f4f7fa);
+  --atlas-sombra: light-dark(rgba(38, 55, 70, 0.16), rgba(0, 0, 0, 0.4));
+  /* No zoom: o papel em que os vizinhos clareiam e a sombra do escolhido. */
+  --atlas-papel: light-dark(#eef2f6, #1a2732);
+  --atlas-elevacao: light-dark(rgba(38, 55, 70, 0.4), rgba(0, 0, 0, 0.6));
+  /*
+   * Partidos: a etiqueta ao lado da sigla de cada estado e as barras por
+   * partido. Nunca o preenchimento, que é sempre a medida. Partem da cor de cada partido, mas
+   * não são o hex oficial: muitos partidos são azuis, e os azuis foram
+   * afastados em claro, médio, escuro, ciano e violeta para não virarem um só.
+   * Uma família por partido ao longo dos nomes (PFL, DEM e União; PPR, PPB e
+   * PP; PL e PR). A sigla vai sempre escrita: a cor sozinha não basta para
+   * distinguir quinze partidos, nem para quem não vê vermelho e verde.
+   */
+  --partido-pt: light-dark(#c8102e, #e0384a);
+  --partido-pcdob: light-dark(#8a1538, #b8344f);
+  --partido-pdt: light-dark(#e8607f, #e07890);
+  --partido-pps: light-dark(#d36bb8, #d07cc0);
+  --partido-psb: light-dark(#eaaa00, #cf9800);
+  --partido-novo: light-dark(#f2621b, #e86a22);
+  --partido-sd: light-dark(#9b4d1c, #b8642f);
+  --partido-pros: light-dark(#cf8a3a, #d39a52);
+  --partido-psl: light-dark(#a8c023, #9aae1f);
+  --partido-mdb: light-dark(#5fb84f, #5aae4c);
+  --partido-pv: light-dark(#7fc241, #7cb84a);
+  --partido-psc: light-dark(#8d5a36, #a8714a);
+  --partido-psd: light-dark(#00796f, #14998c);
+  --partido-pode: light-dark(#26a88f, #2bb39b);
+  --partido-rep: light-dark(#23a9d6, #22a7cf);
+  --partido-pp: light-dark(#8cc6f2, #8bbde6);
+  --partido-psdb: light-dark(#2a63c4, #5d8ee8);
+  --partido-pl: light-dark(#1f3a86, #4a63b8);
+  --partido-uniao: light-dark(#a23fa8, #b55cbb);
+  --partido-phs: light-dark(#8577c2, #9a8ed6);
+  --partido-ptb: light-dark(#6b6f8f, #8a8eae);
+  --partido-pmn: light-dark(#b5525e, #c46a74);
+  /* Sem filiação é um fato com fonte; não confirmado é falta de dado. */
+  --partido-sem: light-dark(#d9dcd8, #59605f);
+  --partido-nd: var(--grade);
+  /*
+   * O texto dentro da etiqueta: branco ou quase preto, o que contrastar mais
+   * com a cor do partido em cada tema (contraste WCAG medido em cada par).
+   */
+  --partido-pt-texto: #fff;
+  --partido-pcdob-texto: #fff;
+  --partido-pdt-texto: #16191a;
+  --partido-pps-texto: #16191a;
+  --partido-psb-texto: #16191a;
+  --partido-novo-texto: #16191a;
+  --partido-sd-texto: #fff;
+  --partido-pros-texto: #16191a;
+  --partido-psl-texto: #16191a;
+  --partido-mdb-texto: #16191a;
+  --partido-pv-texto: #16191a;
+  --partido-psc-texto: #fff;
+  --partido-psd-texto: light-dark(#fff, #16191a);
+  --partido-pode-texto: #16191a;
+  --partido-rep-texto: #16191a;
+  --partido-pp-texto: #16191a;
+  --partido-psdb-texto: light-dark(#fff, #16191a);
+  --partido-pl-texto: #fff;
+  --partido-uniao-texto: #fff;
+  --partido-phs-texto: #16191a;
+  --partido-ptb-texto: light-dark(#fff, #16191a);
+  --partido-pmn-texto: light-dark(#fff, #16191a);
+  --partido-sem-texto: var(--tinta-2);
+  --partido-nd-texto: var(--tinta-3);
+  --vidro-aro: light-dark(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.1));
+  --vidro-brilho: light-dark(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.18));
+  --vidro-reflexo: light-dark(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.06));
+  --vidro-lente: light-dark(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.08));
+  --vidro-sombra: light-dark(rgba(38, 55, 70, 0.14), rgba(0, 0, 0, 0.45));
+  --vidro-tinta: light-dark(rgba(255, 255, 255, 0.42), rgba(23, 35, 45, 0.56));
+  --mapa-opacidade-inativa: 0.5;
+  --vidro-filtro: blur(2px) saturate(1.35) brightness(1.02);
+  background: var(--plano);
+  color: var(--tinta);
 }
 
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(-5%);
-    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+.painel-prototipo {
+  --brasil-verde: #2e795b;
+  --brasil-amarelo: #d7b45b;
+  --brasil-azul: #285c84;
+  --acao: #285c84;
+  --acao-tinta: #fff;
+  padding-top: var(--altura-cabecalho, 112px);
+  /* Para a camada dos halos (z-index -1) ficar entre o fundo da página e o conteúdo. */
+  isolation: isolate;
+}
+
+/*
+ * Os halos da bandeira, fixos atrás de tudo: da sala ao fim da página o vidro
+ * sempre tem um pouco de cor para desfocar, e não há emenda entre as partes.
+ */
+.fundo-prototipo {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(55% 65% at 4% 18%, var(--halo-verde), transparent 75%),
+    radial-gradient(48% 60% at 94% 24%, var(--halo-azul), transparent 75%),
+    radial-gradient(45% 50% at 52% 75%, var(--halo-ouro), transparent 75%);
+}
+
+/*
+ * A paisagem de cada tema: planos curvos que recuam para deixar o mapa no
+ * primeiro plano, e os mesmos tons nas margens do terminal e no rodapé. A
+ * forma é uma só; cada aba dá as cores nos tokens `--paisagem-*`.
+ *
+ * Economia: a bandeira (verde no alto à esquerda, azul à direita).
+ */
+.painel-prototipo[data-aba="economia"] {
+  --paisagem-papel: light-dark(#fff, #0f1820);
+  --paisagem-de: light-dark(#e3ece3, #142720);
+  --paisagem-ate: light-dark(#dce7eb, #162b3b);
+  --paisagem-a-de: light-dark(#1f6652, #143f35);
+  --paisagem-a-ate: light-dark(#80ac91, #254d3e);
+  --paisagem-a-fio: light-dark(#fff, #796c3e);
+  --paisagem-b-de: light-dark(#aac4cc, #2a4656);
+  --paisagem-b-ate: light-dark(#285c84, #1b354c);
+  --terminal-plano-a: light-dark(#dce8de, #172b25);
+  --terminal-plano-a-fio: light-dark(#fff, #3c382a);
+  --terminal-plano-b: light-dark(#dce6e9, #192c3a);
+  --rodape-de: light-dark(#e0e9df, #172b25);
+  --rodape-meio: light-dark(#fff, #29291f);
+  --rodape-ate: light-dark(#dce6e9, #192c3a);
+}
+
+/*
+ * Meio ambiente: mata e terra. Sálvia no alto à esquerda, areia à direita, o
+ * fundo claro puxado para o verde-cinza. Cada tipo de dado do mapa tem a sua cor
+ * (ver abaixo); o verde e o vermelho continuam só para melhorou e
+ * piorou, e o ouro, para o que está escolhido. A tinta da série é um
+ * verde-cinza escuro de pouco croma, que não se lê como "melhorou".
+ */
+.painel-prototipo[data-aba="ambiente"] {
+  --plano: light-dark(#f5f8f3, #0f1712);
+  --tinta: light-dark(#26332c, #e8efe9);
+  --tinta-2: light-dark(#475850, #c3cec7);
+  --tinta-3: light-dark(#5f6d66, #97a59d);
+  --grade: light-dark(#dfe5dc, #2a3830);
+  --eixo: light-dark(#bcc6b8, #46564c);
+  --borda: light-dark(rgba(38, 51, 44, 0.1), rgba(232, 239, 233, 0.1));
+  --serie: light-dark(#3b5248, #b4c9bf);
+  --serie-fraca: light-dark(#dfe7e1, #22342b);
+  --foco: light-dark(#3b5248, #b4c9bf);
+  --acao: #3b5248;
+  --faixa-a: light-dark(rgba(38, 51, 44, 0.045), rgba(232, 239, 233, 0.05));
+  --faixa-ativa: light-dark(rgba(59, 82, 72, 0.09), rgba(180, 201, 191, 0.12));
+  /*
+   * Uma cor por tipo de medida, no mapa e nas listas. O quarto passo de cada
+   * rampa é a cor do tipo, conferida no validador de paleta nos dois temas:
+   * vinho para o desmatamento, magenta para os alertas, laranja para o fogo,
+   * azul para a fiscalização e turquesa para as áreas protegidas. No claro, mais
+   * é mais escuro; no escuro, mais claro. Verde e vermelho ficam para o veredito.
+   */
+  --desmate-1: light-dark(#f5e4e4, #3a1f25);
+  --desmate-2: light-dark(#e4babd, #582d36);
+  --desmate-3: light-dark(#c27d83, #7a3d48);
+  --desmate-4: light-dark(#872e36, #a04e5a);
+  --desmate-5: light-dark(#541820, #e8b4bb);
+  --desmate-1-texto: light-dark(#26332c, #ffffff);
+  --desmate-2-texto: light-dark(#26332c, #ffffff);
+  --desmate-3-texto: light-dark(#141c17, #ffffff);
+  --desmate-4-texto: light-dark(#ffffff, #ffffff);
+  --desmate-5-texto: light-dark(#ffffff, #0f1712);
+  --alerta-1: light-dark(#f3e1ee, #4b1f40);
+  --alerta-2: light-dark(#dfb4d6, #74315f);
+  --alerta-3: light-dark(#c37bb8, #a84683);
+  --alerta-4: light-dark(#a8358f, #d95aa5);
+  --alerta-5: light-dark(#741f62, #f0a5cf);
+  --alerta-1-texto: light-dark(#26332c, #ffffff);
+  --alerta-2-texto: light-dark(#26332c, #ffffff);
+  --alerta-3-texto: light-dark(#141c17, #ffffff);
+  --alerta-4-texto: light-dark(#ffffff, #0f1712);
+  --alerta-5-texto: light-dark(#ffffff, #0f1712);
+  --fogo-1: light-dark(#fbe3cd, #4a1e0e);
+  --fogo-2: light-dark(#f7bd8b, #8a3312);
+  --fogo-3: light-dark(#f2944e, #c04e16);
+  --fogo-4: light-dark(#e8650f, #e8641c);
+  --fogo-5: light-dark(#9e2f08, #fcb78a);
+  --fogo-1-texto: light-dark(#26332c, #ffffff);
+  --fogo-2-texto: light-dark(#26332c, #ffffff);
+  --fogo-3-texto: light-dark(#26332c, #ffffff);
+  --fogo-4-texto: light-dark(#1f140c, #0f1712);
+  --fogo-5-texto: light-dark(#ffffff, #0f1712);
+  --fiscal-1: light-dark(#e2e8f8, #232e55);
+  --fiscal-2: light-dark(#b9c6ef, #33488c);
+  --fiscal-3: light-dark(#8a9fe3, #4f6ac4);
+  --fiscal-4: light-dark(#3f63d0, #6f8cf0);
+  --fiscal-5: light-dark(#2a4299, #b4c4f8);
+  --fiscal-1-texto: light-dark(#26332c, #ffffff);
+  --fiscal-2-texto: light-dark(#26332c, #ffffff);
+  --fiscal-3-texto: light-dark(#26332c, #ffffff);
+  --fiscal-4-texto: light-dark(#ffffff, #0f1712);
+  --fiscal-5-texto: light-dark(#ffffff, #0f1712);
+  --protegidas: light-dark(#008c80, #1fa59a);
+  --protegidas-0: light-dark(#d5eae5, #1c3430);
+  --protegidas-1: light-dark(#a6d8ce, #1d4e48);
+  --protegidas-2: light-dark(#66bdaf, #1f7068);
+  --protegidas-3: light-dark(#279f92, #1f8f85);
+  --protegidas-4: light-dark(#008c80, #1fa59a);
+  --protegidas-5: light-dark(#005a52, #92e0d6);
+  --protegidas-1-texto: light-dark(#26332c, #ffffff);
+  --protegidas-2-texto: light-dark(#26332c, #ffffff);
+  --protegidas-3-texto: light-dark(#141c17, #0f1712);
+  --protegidas-4-texto: light-dark(#ffffff, #0f1712);
+  --protegidas-5-texto: light-dark(#ffffff, #0f1712);
+  --mapa-estavel: light-dark(#b9c3b5, #56655b);
+  --atlas-orla: light-dark(#d3dccd, #26332a);
+  --atlas-divisa: light-dark(#f5f8f3, #0f1712);
+  --atlas-etiqueta: light-dark(#eef2ea, #1a251e);
+  --atlas-rotulo-contorno: light-dark(rgba(245, 248, 243, 0.88), rgba(15, 23, 18, 0.88));
+  --atlas-rotulo-tinta: light-dark(#26332c, #f2f6f3);
+  --atlas-sombra: light-dark(rgba(38, 51, 44, 0.16), rgba(0, 0, 0, 0.4));
+  --atlas-papel: light-dark(#eef2ea, #18231c);
+  --halo-azul: transparent;
+  --halo-verde: transparent;
+  --halo-ouro: transparent;
+
+  --paisagem-papel: light-dark(#f5f8f3, #0f1712);
+  --paisagem-de: light-dark(#e3eadc, #16241b);
+  --paisagem-ate: light-dark(#efe6d4, #2a2418);
+  --paisagem-a-de: light-dark(#4d6b4f, #1c3222);
+  --paisagem-a-ate: light-dark(#b9cbb2, #2f4635);
+  --paisagem-a-fio: light-dark(#fff, #6b5f3c);
+  --paisagem-b-de: light-dark(#efe6d4, #3a3021);
+  --paisagem-b-ate: light-dark(#c9a774, #4a3a24);
+  --terminal-plano-a: light-dark(#dce6d6, #18261d);
+  --terminal-plano-a-fio: light-dark(#fff, #3c382a);
+  --terminal-plano-b: light-dark(#efe6d4, #2a2418);
+  --rodape-de: light-dark(#dfe7d9, #18261d);
+  --rodape-meio: light-dark(#fff, #262318);
+  --rodape-ate: light-dark(#efe6d4, #2a2418);
+}
+
+.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) {
+  background: var(--paisagem-papel);
+}
+.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo {
+  position: absolute;
+  height: max(100dvh, 720px);
+  overflow: hidden;
+  mask-image: linear-gradient(#000 80%, transparent);
+  background:
+    radial-gradient(ellipse 82% 72% at 48% 40%, var(--paisagem-papel) 38%, transparent 100%),
+    linear-gradient(145deg, var(--paisagem-de), var(--paisagem-papel) 48%, var(--paisagem-ate));
+}
+.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo::before,
+.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo::before {
+  width: 100%;
+  height: clamp(260px, 30vw, 440px);
+  left: -18%;
+  top: clamp(-330px, -22vw, -185px);
+  border-radius: 0 0 65% 40%;
+  transform: rotate(9deg);
+  background: linear-gradient(110deg, var(--paisagem-a-de), var(--paisagem-a-ate));
+  box-shadow: 0 14px 0 var(--paisagem-a-fio);
+}
+.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo::after {
+  width: 70%;
+  height: clamp(260px, 28vw, 400px);
+  right: -32%;
+  top: clamp(-260px, -16vw, -130px);
+  border-radius: 0 0 35% 80%;
+  transform: rotate(-16deg);
+  background: linear-gradient(120deg, var(--paisagem-b-de), var(--paisagem-b-ate));
+}
+@media (max-width: 640px) {
+  .painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo::before {
+    width: 135%;
+    left: -50%;
+    top: -190px;
   }
-  50% {
-    transform: translateY(0);
-    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  .painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo::after {
+    width: 100%;
+    right: -48%;
+    top: -175px;
   }
 }
 
-.animate-bounce {
-  animation: bounce 2s infinite;
+/* No meio ambiente a areia sobe: a borda dela cortava a barra de vidro no meio. */
+.painel-prototipo[data-aba="ambiente"] > .fundo-prototipo::after {
+  top: clamp(-340px, -25vw, -190px);
+}
+
+/* O terminal continua a paisagem, com cor só nas margens da leitura. */
+.terminal-tema {
+  isolation: isolate;
+  overflow: clip;
+}
+.terminal-tema::before,
+.terminal-tema::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: clamp(280px, 42vw, 680px);
+  height: 75%;
+  max-height: 1400px;
+  pointer-events: none;
+}
+.terminal-tema::before {
+  top: 5%;
+  left: -30%;
+  border-radius: 35% 75% 65% 30%;
+  transform: rotate(-12deg);
+  background: var(--terminal-plano-a);
+  box-shadow: 12px 0 0 var(--terminal-plano-a-fio);
+}
+.terminal-tema::after {
+  bottom: -10%;
+  right: -29%;
+  border-radius: 75% 35% 30% 65%;
+  transform: rotate(14deg);
+  background: var(--terminal-plano-b);
+}
+.terminal-tema .vidro {
+  --vidro-tinta: light-dark(rgba(255, 255, 255, .64), rgba(23, 35, 45, .78));
+  --vidro-filtro: blur(2px) saturate(1.15);
+}
+.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > footer {
+  position: relative;
+  padding: 28px 24px;
+  border-radius: 24px;
+  background: linear-gradient(115deg, var(--rodape-de), var(--rodape-meio) 55%, var(--rodape-ate));
+}
+@media (max-width: 640px) {
+  .terminal-tema::before { left: -235px; }
+  .terminal-tema::after { right: -245px; }
+  .painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > footer { padding: 20px 16px; }
+}
+
+.prototipo-cabecalho {
+  background: transparent;
+  color: var(--tinta);
+  border-color: var(--borda);
+  padding: 12px 16px;
+  border-bottom: 0;
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 50;
+  margin: 0;
+  pointer-events: none;
+}
+
+.cabecalho-painel {
+  max-width: 1680px;
+  margin-inline: auto;
+  border: 1px solid var(--borda);
+  border-radius: 28px;
+  --vidro-tinta: light-dark(rgba(255, 255, 255, 0.52), rgba(23, 35, 45, 0.66));
+  --vidro-brilho: light-dark(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.2));
+  --vidro-reflexo: light-dark(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.04));
+  --vidro-sombra: light-dark(rgba(38, 55, 70, 0.1), rgba(0, 0, 0, 0.35));
+  --vidro-filtro: blur(3px) saturate(1.4) brightness(1.02);
+  pointer-events: auto;
+}
+
+.painel-prototipo .sala-tema {
+  margin-top: calc(-1 * var(--altura-cabecalho, 112px));
+  padding-top: var(--altura-cabecalho, 112px);
+}
+
+.painel-prototipo [id] {
+  scroll-margin-top: calc(var(--altura-cabecalho, 112px) + 12px);
+}
+
+/* No terminal, a faixa do índice fica embaixo do cabeçalho: a seção desconta as duas. */
+.terminal-tema [id] {
+  scroll-margin-top: calc(var(--altura-cabecalho, 112px) + 60px);
+}
+
+/* O índice do terminal: uma faixa de vidro logo abaixo do cabeçalho fixo, que
+   entra quando o leitor passa do mapa (`NavTerminal`). Fica abaixo do
+   cabeçalho na pilha, para os menus dele passarem por cima. */
+.nav-terminal {
+  position: fixed;
+  top: calc(var(--altura-cabecalho, 112px) - 4px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  padding-inline: 12px;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity 200ms ease-out, transform 200ms ease-out, visibility 0s linear 200ms;
+}
+.nav-terminal[data-visivel] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
+}
+.nav-terminal-faixa {
+  /* Mais opaco que o cabeçalho: os rótulos são pequenos e a grade passa por trás. */
+  --vidro-tinta: light-dark(rgba(255, 255, 255, 0.82), rgba(23, 35, 45, 0.86));
+  position: relative;
+  display: flex;
+  gap: 2px;
+  max-width: 100%;
+  padding: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  pointer-events: auto;
+}
+.nav-terminal-faixa a {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 30px;
+  padding: 4px 13px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--tinta-2);
+  transition: background 160ms ease-out, color 160ms ease-out;
+}
+.nav-terminal-faixa a:hover {
+  color: var(--tinta);
+  background: var(--faixa-a);
+}
+.nav-terminal-faixa a[aria-current="true"] {
+  color: var(--tinta);
+  font-weight: 600;
+  background: var(--superficie);
+  box-shadow: 0 1px 2px rgb(0 0 0 / .14);
+}
+.nav-terminal-faixa a:focus-visible {
+  outline: 2px solid var(--ouro-forte, var(--serie));
+  outline-offset: 1px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-terminal,
+  .nav-terminal[data-visivel] {
+    transition: none;
+  }
+}
+
+.cabecalho-principal {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(260px, 330px) auto;
+  grid-template-areas: "marca temas mandato acoes";
+  align-items: center;
+  gap: 20px;
+  min-height: 64px;
+  padding: 10px 20px;
+}
+
+.marca-painel {
+  grid-area: marca;
+  display: block;
+  width: 210px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.marca-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  transition: transform 220ms ease-out;
+}
+
+.marca-bandeira {
+  transform-box: fill-box;
+  transform-origin: 15% 50%;
+  animation: marca-bandeira-entrada 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.marca-escrita {
+  animation: marca-escrita-entrada 640ms 120ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+:root:not([data-theme="dark"]) .painel-prototipo .prototipo-cabecalho .marca-escrita {
+  filter: brightness(0);
+  opacity: 0.86;
+}
+
+/* No escuro a escrita fica branca: as cores da arte original brigavam com a paleta. A bandeira fica como é. */
+:root[data-theme="dark"] .painel-prototipo .prototipo-cabecalho .marca-escrita {
+  filter: brightness(0) invert(1);
+  opacity: 0.92;
+}
+
+@keyframes marca-bandeira-entrada {
+  from { opacity: 0; transform: translateX(-30px) rotate(-5deg) scale(0.94); }
+  to { opacity: 1; transform: translateX(0) rotate(0) scale(1); }
+}
+
+@keyframes marca-escrita-entrada {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .marca-painel:hover .marca-logo { transform: translateY(-1px) scale(1.025); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marca-bandeira,
+  .marca-escrita { animation: none; }
+  .marca-logo { transition: none; }
+  .marca-painel:hover .marca-logo { transform: none; }
+}
+
+.navegacao-temas {
+  grid-area: temas;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  justify-self: center;
+  scrollbar-width: none;
+}
+
+.navegacao-temas button {
+  position: relative;
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: var(--tinta-2);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.navegacao-temas button:hover,
+.acao-cabecalho:hover {
+  background: color-mix(in srgb, var(--tinta) 6%, transparent);
+  color: var(--tinta);
+}
+
+.navegacao-temas button:disabled {
+  cursor: not-allowed;
+  color: var(--tinta-3);
+}
+.navegacao-temas button:disabled:hover { background: transparent; color: var(--tinta-3); }
+.tema-em-breve { display: block; font-size: 9px; line-height: 1; font-weight: 400; }
+
+.navegacao-temas button[aria-current="page"] {
+  color: var(--tinta);
+  font-weight: 650;
+}
+
+.cabecalho-acoes {
+  grid-area: acoes;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.acao-cabecalho {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 8px 10px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tinta) 3%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: var(--tinta-2);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tema-interruptor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 52px;
+  height: 30px;
+  padding-inline: 6px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tinta) 8%, var(--superficie));
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15), 0 1px 0 rgba(255, 255, 255, 0.13);
+}
+
+.tema-interruptor svg {
+  position: relative;
+  z-index: 1;
+}
+
+.tema-marcador {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--tinta), color-mix(in srgb, var(--tinta) 80%, transparent));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 2px 5px rgba(5, 20, 34, 0.26);
+  transition: transform 160ms ease-out;
+}
+
+.tema-interruptor[aria-checked="true"] .tema-marcador { transform: translateX(22px); }
+.tema-interruptor .tema-sol,
+.tema-interruptor[aria-checked="true"] .tema-lua { color: var(--superficie); }
+.tema-interruptor .tema-lua,
+.tema-interruptor[aria-checked="true"] .tema-sol { color: var(--tinta-2); }
+
+.mandato-faixa {
+  grid-area: mandato;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "pessoa contagem" "grafico grafico";
+  align-items: center;
+  gap: 2px 12px;
+  padding-left: 18px;
+  border-left: 1px solid var(--borda);
+}
+
+.mandato-identidade { grid-area: pessoa; display: flex; align-items: center; gap: 8px; min-width: 0; line-height: 1.2; }
+.mandato-seletor-botao { margin-left: -4px; padding: 4px; border-radius: 10px; color: var(--tinta); text-align: left; }
+.mandato-seletor-botao:hover { background: var(--faixa-a); }
+.mandato-seletor-nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+/* Governador: sem retrato, a logo do partido num círculo; o nome longo corta com reticências. */
+.mandato-partido { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--superficie); box-shadow: inset 0 0 0 1px var(--borda); }
+.mandato-governador { overflow: hidden; text-overflow: ellipsis; }
+.mandato-seletor-nome strong { font-weight: 650; }
+.mandato-seletor-nome > span { color: var(--tinta-2); }
+.mandato-seta { flex-shrink: 0; margin-left: 2px; color: var(--tinta-3); transition: transform 180ms ease-out; }
+.mandato-seletor-botao[aria-expanded="true"] .mandato-seta { transform: rotate(180deg); }
+.mandato-opcoes.vidro { scrollbar-width: thin; --vidro-tinta: light-dark(rgba(255, 255, 255, .96), rgba(23, 35, 45, .97)); animation: mandato-menu-entrada 180ms cubic-bezier(.22, 1, .36, 1); }
+.mandato-opcao { border-radius: 10px; color: var(--tinta); }
+.mandato-opcao:hover,
+.mandato-opcao:focus-visible { background: var(--faixa-a); outline-offset: -2px; }
+.mandato-opcao[aria-selected="true"] { background: color-mix(in srgb, var(--serie) 12%, transparent); }
+.mandato-opcao-texto strong { font-size: 13px; font-weight: 650; }
+.mandato-opcao-texto > span { color: var(--tinta-2); font-size: 11px; }
+@keyframes mandato-menu-entrada {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mandato-opcoes.vidro { animation: none; }
+  .mandato-seta { transition: none; }
+}
+/* Aviso de outro mandato: flutua sob o cabeçalho em vez de engordá-lo. */
+.mandato-nota { position: absolute; top: calc(100% + 10px); right: 0; z-index: 30; width: max-content; max-width: min(22rem, 100%); padding: 6px 10px; border: 1px solid var(--borda); border-radius: 10px; background: var(--superficie); box-shadow: 0 4px 14px var(--vidro-sombra); color: var(--tinta-2); font-size: 11px; line-height: 1.4; }
+.mandato-grafico { grid-area: grafico; position: relative; min-width: 0; padding-block: 6px 4px; }
+.mandato-trilho { position: relative; height: 4px; border-radius: 999px; background: color-mix(in srgb, var(--tinta) 14%, transparent); box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.08); }
+.mandato-progresso { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, color-mix(in srgb, var(--serie) 45%, transparent), var(--serie)); }
+.mandato-hoje { position: absolute; top: 50%; width: 11px; height: 11px; border: 2px solid var(--superficie); border-radius: 50%; background: var(--ouro, var(--brasil-amarelo)); box-shadow: 0 0 0 1px var(--ouro-forte, transparent), 0 1px 3px rgba(0, 0, 0, 0.2); transform: translate(-50%, -50%); }
+.mandato-marcos { position: absolute; inset-inline: 0; top: 8px; }
+.mandato-marco { position: absolute; top: 0; width: 28px; height: 28px; border-radius: 8px; transform: translate(-50%, -50%); }
+.mandato-marco::after { content: ""; position: absolute; top: 50%; left: 50%; width: 7px; height: 7px; border: 1.5px solid var(--tinta-3); border-radius: 50%; background: var(--superficie); transform: translate(-50%, -50%); }
+.mandato-marco:hover::after,
+.mandato-marco:focus-visible::after { border-color: var(--tinta); background: var(--tinta); }
+.mandato-marcos [role="status"] { top: 28px; }
+.mandato-contagem { grid-area: contagem; color: var(--tinta-3); font-size: 12px; text-align: right; line-height: 1.25; white-space: nowrap; }
+.mandato-contagem strong { color: var(--tinta); font-size: 14px; font-weight: 650; }
+
+.painel-prototipo .segmentos {
+  --vidro-tinta: light-dark(rgba(255, 255, 255, 0.35), rgba(232, 238, 243, 0.04));
+  --vidro-brilho: light-dark(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.2));
+  --vidro-reflexo: light-dark(rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.08));
+  --vidro-filtro: blur(1px) saturate(1.35) brightness(1.02);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+}
+
+.segmentos button { min-height: 36px; border-radius: 999px; color: var(--tinta-2); font-size: 13px; font-weight: 500; transition: background-color 160ms ease-out, box-shadow 160ms ease-out; }
+.segmentos button:hover { background: color-mix(in srgb, var(--tinta) 7%, transparent); }
+.painel-prototipo .segmentos button[aria-checked="true"],
+.painel-prototipo .segmentos button[aria-current="page"] { background: light-dark(rgba(32, 49, 58, 0.08), rgba(244, 250, 255, 0.12)); color: var(--tinta); font-weight: 600; box-shadow: inset 0 1px 0 var(--vidro-brilho), inset 0 0 0 1px var(--borda), 0 3px 8px var(--vidro-sombra); }
+.painel-prototipo .navegacao-temas button:focus-visible,
+.painel-prototipo .segmentos button:focus-visible { outline-offset: -2px; }
+
+@media (max-width: 1400px) {
+  .marca-painel { width: 190px; }
+  .rotulo-acao { display: none; }
+  .cabecalho-principal { gap: 14px; }
+}
+@media (max-width: 1100px) {
+  .cabecalho-principal { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "marca temas acoes" "mandato mandato mandato"; gap: 10px 16px; }
+  .marca-painel { width: 180px; }
+  .navegacao-temas button { padding-inline: 6px; font-size: 11px; }
+  .rotulo-acao { display: none; }
+  .mandato-faixa { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "pessoa grafico contagem"; gap: 20px; padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--borda); }
+}
+
+@media (max-width: 760px) {
+  .prototipo-cabecalho { padding: 10px 12px; }
+  .cabecalho-painel { border-radius: 24px; }
+  .cabecalho-principal { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "marca acoes" "temas temas" "mandato mandato"; gap: 10px; padding: 12px; }
+  .marca-painel { width: 180px; }
+  .cabecalho-acoes { grid-area: acoes; gap: 4px; }
+  .navegacao-temas { grid-area: temas; justify-self: stretch; justify-content: space-between; gap: 0; }
+  .navegacao-temas .segmentos { width: 100%; gap: 0; padding: 3px; }
+  .navegacao-temas button { flex: 1; min-height: 38px; padding-inline: 6px; font-size: 11px; }
+  .mandato-faixa { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "pessoa contagem" "grafico grafico"; gap: 6px 16px; padding-top: 10px; }
+  .mandato-identidade { grid-area: pessoa; }
+  .mandato-grafico { grid-area: grafico; padding-top: 4px; }
+  .mandato-marcos { top: 6px; }
+  .mandato-contagem { grid-area: contagem; min-width: 0; }
+}
+
+@media (max-width: 380px) {
+  .navegacao-temas button { padding-inline: 3px; font-size: 10.5px; }
+  .cabecalho-acoes { gap: 2px; }
+  .acao-cabecalho { min-width: 32px; padding-inline: 7px; }
+}
+
+/*
+ * Vidro líquido. Três camadas num elemento só:
+ *
+ * - `::before`, o corpo: uma tinta clara quase transparente sobre o que está
+ *   atrás, desfocado de leve. No Chromium (classe `refrata` no <html>, posta
+ *   por `useVidro`), o filtro SVG `#refracao` entorta o fundo perto das
+ *   bordas, como a beirada grossa de uma lente; nos outros navegadores o
+ *   vidro fica fosco, que é o que eles sabem fazer.
+ * - `::after`, a luz: o brilho especular no aro (forte no alto e à esquerda,
+ *   fraco embaixo e à direita) e um reflexo redondo que segue o ponteiro
+ *   (`--mx`, `--my`).
+ * - a sombra azulada do próprio elemento, que o descola do fundo.
+ *
+ * Fica em `@layer components` para `absolute` e `lg:absolute` vencerem o
+ * `position: relative` daqui. Nenhum ancestral do vidro pode ter opacidade,
+ * filtro ou máscara: isso corta o que o desfoque enxerga atrás (por isso as
+ * animações de entrada usam `backwards`, não `both`).
+ */
+@layer components {
+  .vidro {
+    --mx: 50%;
+    --my: -6rem;
+    position: relative;
+    isolation: isolate;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--tinta) 6%, transparent),
+      0 2px 6px -2px rgba(11, 11, 11, 0.08),
+      0 24px 48px -26px var(--vidro-sombra);
+  }
+  .vidro::before,
+  .vidro::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+  .vidro::before {
+    background: var(--vidro-tinta);
+    -webkit-backdrop-filter: var(--vidro-filtro);
+    backdrop-filter: var(--vidro-filtro);
+  }
+  .refrata .vidro::before {
+    backdrop-filter: url(#refracao) var(--vidro-filtro);
+  }
+  .vidro::after {
+    background:
+      linear-gradient(125deg, color-mix(in srgb, var(--vidro-brilho) 22%, transparent), transparent 30% 75%, color-mix(in srgb, var(--vidro-brilho) 10%, transparent)),
+      radial-gradient(14rem circle at var(--mx) var(--my), var(--vidro-reflexo), transparent 70%);
+    box-shadow:
+      inset 1.5px 1.5px 0 -0.5px var(--vidro-brilho),
+      inset -1px -1px 0 -0.25px color-mix(in srgb, var(--vidro-brilho) 70%, transparent),
+      inset 0 0 3px color-mix(in srgb, var(--vidro-brilho) 30%, transparent);
+  }
+}
+
+/* A gota de vidro sobre a opção escolhida (seletores e a medida ativa). */
+.vidro-lente {
+  background: linear-gradient(180deg, var(--vidro-lente), color-mix(in srgb, var(--vidro-lente) 70%, transparent));
+  box-shadow:
+    inset 0 1px 0 var(--vidro-brilho),
+    0 0 0 1px var(--vidro-aro),
+    0 6px 16px -8px var(--vidro-sombra),
+    0 1px 2px rgba(11, 11, 11, 0.08);
+}
+
+/* Botão de ação: a cor da série com volume, como uma gota. */
+.botao-liquido {
+  color: #fff;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--serie) 72%, white) 0%,
+    var(--serie) 55%,
+    color-mix(in srgb, var(--serie) 82%, black) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18),
+    0 8px 20px -8px color-mix(in srgb, var(--serie) 85%, transparent);
+}
+
+/* Números e etiquetas curtas em monoespaçada: datas, períodos, rótulos. */
+.mono {
+  font-family: var(--fonte-mono), ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+
+/*
+ * A régua do tempo: trilho fino com o trecho já percorrido na cor da série e
+ * um botão com halo. `--progresso` vem do componente.
+ */
+.faixa-tempo {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  background: transparent;
+}
+.faixa-tempo:focus-visible {
+  outline: none;
+}
+.faixa-tempo::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--serie) var(--progresso, 100%), var(--grade) var(--progresso, 100%));
+}
+.faixa-tempo::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 999px;
+  background: var(--superficie);
+  border: 2px solid var(--serie);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--serie) 20%, transparent),
+    0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.faixa-tempo:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 6px color-mix(in srgb, var(--serie) 38%, transparent),
+    0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.faixa-tempo::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--grade);
+}
+.faixa-tempo::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--serie);
+}
+.faixa-tempo::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--superficie);
+  border: 2px solid var(--serie);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--serie) 20%, transparent);
+}
+
+/* A régua do tempo abre embaixo do mapa, crescendo na altura. O conteúdo
+   permanece para a saída; fechado fica inerte e sem replay. */
+.economia-controles {
+  gap: 0;
+  transition: gap 520ms cubic-bezier(.22, 1, .36, 1), right 500ms cubic-bezier(.22, 1, .36, 1);
+}
+.economia-controles[data-historico="true"] {
+  gap: 12px;
+}
+.economia-historico {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 520ms cubic-bezier(.22, 1, .36, 1),
+    flex-grow 520ms cubic-bezier(.22, 1, .36, 1),
+    opacity 240ms ease-out,
+    visibility 0s 520ms;
+}
+.economia-historico-conteudo {
+  transform: translateY(10px) scale(.985);
+  transform-origin: bottom right;
+  transition: transform 520ms cubic-bezier(.22, 1, .36, 1);
+}
+.economia-controles[data-historico="true"] .economia-historico {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+.economia-controles[data-historico="true"] .economia-historico-conteudo {
+  transform: translateY(0) scale(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .economia-controles,
+  .economia-historico,
+  .economia-historico-conteudo {
+    transition: none;
+  }
+}
+
+@keyframes entrar-lado {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/*
+ * A chegada do mapa da economia: o continente se aproxima, os estados se
+ * repartem do centro para fora e os rótulos aparecem por último.
+ */
+@keyframes aproximar {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: scale(0.4) translateY(-14px);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
+ * O número da manchete troca como o relógio do iPhone: cada algarismo que muda
+ * sobe e some, e o novo entra por baixo, um depois do outro. A casa recorta o
+ * que passa da linha com `clip-path`, que não mexe na linha de base como o
+ * `overflow` mexeria. Com menos movimento pedido, a regra geral faz a troca
+ * ser imediata.
+ */
+.digito {
+  position: relative;
+  display: inline-block;
+  clip-path: inset(-0.06em -0.04em -0.14em -0.04em);
+}
+.digito > span {
+  display: inline-block;
+}
+.digito-entra {
+  animation: digito-entra 560ms cubic-bezier(.2, .9, .25, 1) backwards;
+}
+.digito-sai {
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: digito-sai 460ms cubic-bezier(.4, 0, .6, 1) forwards;
+}
+@keyframes digito-entra {
+  from {
+    transform: translateY(85%);
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+@keyframes digito-sai {
+  to {
+    transform: translateY(-85%);
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+
+/* O nome da medida sobe junto, mais curto. */
+.palavra-entra {
+  display: inline-block;
+  animation: palavra-entra 480ms cubic-bezier(.2, .9, .25, 1) backwards;
+}
+@keyframes palavra-entra {
+  from {
+    transform: translateY(45%);
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+
+.painel-prototipo .botao-liquido {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--acao) 88%, white), color-mix(in srgb, var(--acao) 94%, transparent));
+  color: var(--acao-tinta);
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.25), 0 5px 14px -6px rgba(40, 92, 132, 0.4);
+}
+
+.painel-prototipo .botao-liquido:hover {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--acao) 84%, white), var(--acao));
+}
+
+.painel-prototipo :where(button, a, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--foco, var(--acao));
+  outline-offset: 3px;
+}
+
+:root[data-theme="dark"] .sala-tema {
+  --mapa-opacidade-inativa: 0.3;
+}
+
+.mapa-atlas .mapa-rotulos text {
+  fill: var(--atlas-rotulo-tinta);
+  stroke: var(--atlas-rotulo-contorno);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.mapa-atlas .mapa-rotulos text[data-vizinho] {
+  fill: var(--tinta-2);
+  stroke: var(--atlas-papel);
+}
+
+/* Fora do partido em destaque, o rótulo apaga junto com o estado. */
+.mapa-rotulos [data-apagado] {
+  opacity: 0.35;
+}
+.mapa-rotulos > * {
+  transition: opacity 300ms ease-out;
+}
+
+/*
+ * A etiqueta do partido fora do mapa (barra, legenda, ficha): a mesma pílula
+ * que vai ao lado da sigla de cada estado. Sem partido e não confirmado não
+ * têm cor: a pílula fica vazada.
+ */
+.pilula {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  height: 16px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+}
+.pilula[data-vazada] {
+  box-shadow: inset 0 0 0 1px var(--tinta-3);
+  color: var(--tinta-2);
+}
+
+/*
+ * Os modos do mapa, no topo da legenda: texto com um traço embaixo do
+ * escolhido. Sem cápsula, para não parecer outra barra de navegação.
+ */
+/*
+ * A linha escolhida nas listas do terminal da economia: um tom de ouro e um
+ * fio à esquerda, do lado do gráfico que ela comanda. Sem vidro: numa lista
+ * apertada a lente parecia um cartão solto por cima das outras linhas.
+ */
+.linha-escolhida {
+  background: color-mix(in srgb, var(--ouro, var(--serie)) 15%, transparent);
+  box-shadow: inset 2px 0 0 var(--ouro-forte, var(--serie));
+}
+.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) .linha-escolhida {
+  background: var(--faixa-ativa);
+  box-shadow: none;
+}
+
+/*
+ * Placar do mandato: blocos chapados, sem sombra nem degradê. O aberto ganha
+ * o aro de ouro do que está escolhido; o ponteiro só escurece um pouco.
+ */
+.placar-bloco {
+  transition: filter 150ms ease, box-shadow 150ms ease;
+}
+.placar-bloco:hover {
+  filter: brightness(0.94);
+}
+.placar-bloco[data-aberto] {
+  box-shadow: 0 0 0 2px var(--superficie), 0 0 0 3.5px var(--ouro-forte, var(--ouro));
+}
+.placar-bloco:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/*
+ * Governo a governo: a célula não tem caixa. A cor da posição fica só na
+ * pílula do número. O ponteiro acende a linha (aqui, sem React) e a coluna,
+ * que é uma faixa só atrás da tabela: desliza por `--k` e não redesenha as
+ * células. O mandato fixado fica com a mesma faixa, no tom da escolha.
+ */
+.grade-mandatos tbody tr:hover > :not([colspan]) {
+  background: color-mix(in srgb, var(--tinta) 3.5%, transparent);
+}
+.grade-mandatos tbody tr:hover > :first-child {
+  border-radius: 10px 0 0 10px;
+}
+.grade-mandatos tbody tr:hover > :last-child {
+  border-radius: 0 10px 10px 0;
+}
+.valor-mandato {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  line-height: 1.25;
+}
+.grade-mandatos td:hover .valor-mandato,
+.grade-mandatos td:focus-visible .valor-mandato {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tinta) 30%, transparent);
+}
+.faixa-mandato {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--rotulos);
+  width: calc((100% - var(--rotulos)) / var(--n));
+  transform: translateX(calc(var(--k, 0) * 100%));
+  border-radius: 12px;
+  pointer-events: none;
+}
+.faixa-mandato[data-fixa] {
+  background: var(--faixa-ativa);
+}
+.faixa-mandato[data-sob] {
+  opacity: 0;
+  background: color-mix(in srgb, var(--tinta) 5%, transparent);
+  transition:
+    transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 120ms ease-out;
+  will-change: transform;
+}
+.faixa-mandato[data-sob][data-acesa] {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .faixa-mandato[data-sob] {
+    transition: none;
+  }
+}
+
+/* Na tabela de estados, o escolhido na sala: o mesmo ouro, sem sumir entre os outros 26. */
+.tabela-estados tr[data-escolhido] > * {
+  background: color-mix(in srgb, var(--ouro, var(--serie)) 18%, transparent);
+}
+.tabela-estados tr[data-escolhido] > :first-child {
+  box-shadow: inset 2px 0 0 var(--ouro-forte, var(--serie));
+}
+
+.modos-mapa {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+.modos-mapa button {
+  position: relative;
+  padding: 2px 0;
+  font-size: 12px;
+  color: var(--tinta-3);
+  transition: color 160ms ease-out;
+}
+.modos-mapa button:hover {
+  color: var(--tinta);
+}
+.modos-mapa button[aria-checked="true"] {
+  color: var(--tinta);
+  font-weight: 600;
+}
+.modos-mapa button[aria-checked="true"]::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -6px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--ouro-forte, var(--serie));
+}
+
+/* O seletor do terminal: botões de verdade, lado a lado, a escolhida
+   preenchida. Alvo de 30px para o dedo, sem precisar mirar num texto. */
+.seletor {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: var(--faixa-a);
+}
+.seletor[data-quebra] {
+  flex-wrap: wrap;
+  border-radius: 18px;
+}
+/* A lista da sala do meio ambiente: em tela baixa, um município a menos, para a coluna caber. */
+.onde-mais {
+  height: 120px;
+  overflow: hidden;
+}
+/* Telas baixas: a coluna tem altura fixa, então a lista cede. */
+@media (min-width: 1024px) and (max-height: 800px) {
+  .onde-mais { height: 96px; }
+}
+@media (min-width: 1024px) and (max-height: 765px) {
+  .onde-mais { height: 72px; }
+}
+/*
+ * Os biomas na barra: miniaturas do Brasil em sete colunas iguais. O nome reserva
+ * duas linhas ("Mata Atlântica") e o peso não muda ao escolher, para nada andar.
+ */
+.abas-bioma {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--borda);
+}
+.abas-bioma button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 4px 1px 3px;
+  border-radius: 10px;
+  color: var(--tinta-3);
+  transition: background 160ms ease-out, color 160ms ease-out;
+}
+.abas-bioma svg {
+  display: block;
+  width: 100%;
+  max-width: 38px;
+  height: auto;
+}
+.abas-bioma span {
+  display: block;
+  min-height: 2.2em;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  text-align: center;
+}
+.bioma-fundo {
+  fill: color-mix(in srgb, var(--tinta) 11%, transparent);
+}
+.bioma-forma {
+  fill: var(--bioma-calmo);
+  transition: fill 160ms ease-out;
+}
+.abas-bioma button:hover {
+  background: var(--faixa-a);
+  color: var(--tinta);
+}
+.abas-bioma button:hover .bioma-forma,
+.abas-bioma button[data-aceso] .bioma-forma {
+  fill: var(--bioma-aceso);
+}
+.abas-bioma button[data-aceso] {
+  background: color-mix(in srgb, var(--ouro, var(--serie)) 16%, transparent);
+  box-shadow: inset 0 0 0 1.5px var(--ouro-forte, var(--serie));
+  color: var(--tinta);
+}
+@media (max-width: 359px) {
+  .abas-bioma {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.seletor button {
+  min-height: 30px;
+  padding: 4px 13px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--tinta-2);
+  transition: background 160ms ease-out, color 160ms ease-out;
+}
+.seletor button:hover {
+  color: var(--tinta);
+  background: var(--faixa-b);
+}
+.seletor button[aria-checked="true"] {
+  color: var(--tinta);
+  font-weight: 600;
+  background: var(--superficie);
+  box-shadow: 0 1px 2px rgb(0 0 0 / .14);
+}
+.seletor button:focus-visible {
+  outline: 2px solid var(--ouro-forte, var(--serie));
+  outline-offset: 1px;
+}
+
+/* Os controles do mapa usam a mesma linguagem do seletor do cabeçalho. */
+.controle-mapa {
+  --vidro-tinta: light-dark(rgba(255, 255, 255, .72), rgba(23, 35, 45, .8));
+}
+.controle-mapa .modos-mapa { gap: 2px; }
+.controle-mapa .modos-mapa button {
+  min-height: 32px;
+  padding: 5px 9px;
+  border-radius: 10px;
+  color: var(--tinta-2);
+}
+.controle-mapa .modos-mapa button[aria-checked="true"] {
+  color: var(--tinta);
+  background: var(--faixa-ativa);
+}
+.controle-mapa .modos-mapa button[aria-checked="true"]::after { content: none; }
+.controle-mapa-legenda { font-size: 11px; font-weight: 600; }
+
+.mapa-atlas [data-chamada] text {
+  fill: var(--tinta);
+  stroke: var(--atlas-etiqueta);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.mapa-atlas [data-chamada]:hover .mapa-etiqueta {
+  fill: var(--atlas-etiqueta);
+  fill-opacity: 0.75;
+}
+
+
+
+
+
+/*
+ * Dinheiro público: o orçamento é a paisagem. Cada família de gasto tem a sua cor,
+ * conferida contra daltonismo nos dois temas, e nada aqui usa verde ou vermelho:
+ * gastar mais não é bom nem ruim por si só. Ouro é o escolhido.
+ */
+.painel-prototipo[data-aba="dinheiro"] {
+  --serie: light-dark(#285c84, #8fb7d8);
+  --halo-azul: transparent;
+  --halo-verde: transparent;
+  --halo-ouro: transparent;
+  --dn-claro: light-dark(#ffffff, #0b1218);
+  --dn-escuro: light-dark(#263746, #0b1218);
+  background: var(--plano);
+}
+.dn-f-beneficios { --f: light-dark(#2470b3, #3d86d6); --f-t: var(--dn-claro); --f-l: var(--f); }
+.dn-f-divida { --f: light-dark(#b0397a, #b8397f); --f-t: #ffffff; --f-l: var(--f); }
+.dn-f-transfer { --f: light-dark(#45c3cb, #2ba99a); --f-t: var(--dn-escuro); --f-l: light-dark(#1c8f97, #2ba99a); }
+.dn-f-servicos { --f: light-dark(#c8591b, #db6e2b); --f-t: var(--dn-claro); --f-l: var(--f); }
+.dn-f-estado { --f: light-dark(#3a4149, #c3cdd6); --f-t: light-dark(#ffffff, #0b1218); --f-l: var(--f); }
+.dn-f-opaco { --f: light-dark(#c5cdd5, #4a5763); --f-t: light-dark(#263746, #ffffff); --f-l: light-dark(#7c8a97, #96a4b0); }
+.dn-r1 { --f: light-dark(#56687a, #8d9caa); --f-t: var(--dn-claro); }
+.dn-r2 { --f: light-dark(#74848f, #76858f); --f-t: var(--dn-claro); }
+.dn-r3 { --f: light-dark(#93a0aa, #5f6e7b); --f-t: var(--dn-escuro); }
+.dn-r4 { --f: light-dark(#aab5be, #4a5763); --f-t: var(--dn-escuro); }
+.dn-q { display: block; flex: none; width: 10px; height: 10px; border-radius: 3px; background: var(--f); }
+.dn-rs { font-size: .62em; font-weight: 500; margin-right: .22em; opacity: .82; }
+.dn-nota { font-size: 11.5px; line-height: 1.45; color: var(--tinta-3); margin-top: 8px; }
+.dn-pilula { display: inline-block; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--tinta) 11%, transparent); color: var(--tinta); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.dn-aviso { display: grid; justify-items: center; gap: 12px; padding: 96px 16px; color: var(--tinta-2); font-size: 14px; }
+.dn-acao { padding: 7px 14px; border-radius: 999px; background: var(--faixa-a); font-size: 13px; font-weight: 600; }
+.dn-acao:hover { background: color-mix(in srgb, var(--tinta) 10%, transparent); }
+
+/* O palco */
+.dn-sala { display: grid; grid-template-columns: 216px minmax(0, 1fr) 248px; gap: 20px; padding: 6px 20px 12px; height: max(560px, calc(100svh - var(--altura-cabecalho, 84px) - 14px)); }
+.dn-sala[data-aberta] { grid-template-columns: 216px minmax(0, 1fr) 352px; }
+.dn-coluna { display: flex; flex-direction: column; min-width: 0; padding-top: 4px; }
+.dn-seletor-ente { position: relative; display: block; margin-top: 5px; }
+.dn-seletor-ente select { appearance: none; width: 100%; background: transparent; border: 0; border-bottom: 1px solid var(--eixo); padding: 3px 18px 5px 0; font-size: 15px; font-weight: 600; color: var(--tinta); cursor: pointer; }
+.dn-seletor-ente select option, .dn-seletor-ente select optgroup { color: var(--tinta); background: var(--superficie); }
+.dn-seletor-ente::after { content: ""; position: absolute; right: 3px; top: 12px; width: 7px; height: 7px; border-right: 1.5px solid var(--tinta-2); border-bottom: 1.5px solid var(--tinta-2); transform: rotate(45deg) translateY(-3px); pointer-events: none; }
+.dn-quem { font-size: 12px; color: var(--tinta-3); min-height: 17px; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dn-total { display: flex; align-items: flex-end; margin-top: 12px; min-height: 44px; }
+.dn-total strong { font-size: 2.45rem; line-height: 1; font-weight: 600; letter-spacing: -.035em; white-space: nowrap; }
+.dn-periodo { font-size: 12px; color: var(--tinta-3); margin-top: 7px; min-height: 17px; }
+.dn-apoio { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 8px; min-height: 24px; font-size: 12px; color: var(--tinta-2); }
+.dn-apoio-2 { margin-top: 4px; }
+.dn-faisca { display: block; width: 100%; max-width: 110px; height: 30px; margin-top: 6px; overflow: visible; }
+.dn-mudou { margin-top: 16px; min-height: 172px; }
+.dn-mudou ul { list-style: none; margin: 8px 0 0; padding: 0; }
+.dn-mudou li { border-top: 1px solid var(--borda); }
+.dn-mudou button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 7px 0; font-size: 13px; text-align: left; }
+.dn-mudou button:hover { background: var(--faixa-a); }
+.dn-mudou .dn-q { width: 8px; height: 8px; border-radius: 2px; }
+.dn-mudou .dn-nome { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dn-mudou .dn-valor { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.dn-meio { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.dn-legenda-palco { height: 30px; flex: none; display: flex; align-items: baseline; gap: 10px; min-width: 0; white-space: nowrap; overflow: hidden; }
+.dn-legenda-palco h2 { font-size: 17px; font-weight: 600; letter-spacing: -.015em; }
+.dn-legenda-palco > span { font-size: 12.5px; color: var(--tinta-3); overflow: hidden; text-overflow: ellipsis; }
+.dn-voltar { flex: none; font-size: 12.5px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--faixa-a); }
+.dn-voltar:hover { background: color-mix(in srgb, var(--tinta) 10%, transparent); }
+.dn-mapa { position: relative; flex: 1; min-height: 0; }
+.dn-sem-dado { position: absolute; inset: 0; display: grid; place-items: center; font-size: 14px; color: var(--tinta-3); background: var(--faixa-a); border-radius: 8px; }
+.dn-bloco { position: absolute; display: flex; flex-direction: column; gap: 1px; overflow: hidden; padding: 9px 11px; border-radius: 6px; background: var(--f); color: var(--f-t); text-align: left; contain: strict; animation: dn-surge .24s ease-out backwards; transition: left .48s cubic-bezier(.22, .8, .26, 1), top .48s cubic-bezier(.22, .8, .26, 1), width .48s cubic-bezier(.22, .8, .26, 1), height .48s cubic-bezier(.22, .8, .26, 1), opacity .18s; }
+@keyframes dn-surge { from { opacity: 0; } }
+.dn-bloco[data-mini] { padding: 0; }
+.dn-bloco[data-estreito] { padding: 7px 3px; align-items: center; justify-content: flex-end; }
+.dn-bloco[data-compacto] { padding: 4px 6px; }
+.dn-bloco .dn-nome { font-weight: 600; line-height: 1.18; }
+.dn-bloco .dn-valor { font-weight: 600; letter-spacing: -.025em; line-height: 1.08; margin-top: 2px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dn-absoluto { font-size: 12px; opacity: .86; margin-top: 2px; white-space: nowrap; }
+.dn-abrir { font-size: 11.5px; opacity: .9; margin-top: auto; }
+.dn-vert { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.dn-bloco:hover { filter: brightness(1.08); }
+.dn-bloco[aria-pressed="true"] { outline: 3px solid var(--ouro); outline-offset: -3px; }
+.dn-bloco:focus-visible { outline: 3px solid var(--ouro-forte); outline-offset: -3px; }
+.dn-mapa[data-foco="beneficios"] .dn-bloco:not([data-familia="beneficios"]),
+.dn-mapa[data-foco="divida"] .dn-bloco:not([data-familia="divida"]),
+.dn-mapa[data-foco="transfer"] .dn-bloco:not([data-familia="transfer"]),
+.dn-mapa[data-foco="servicos"] .dn-bloco:not([data-familia="servicos"]),
+.dn-mapa[data-foco="opaco"] .dn-bloco:not([data-familia="opaco"]),
+.dn-mapa[data-foco="estado"] .dn-bloco:not([data-familia="estado"]) { opacity: .28; }
+
+.dn-trilho { display: flex; flex: none; gap: 10px; padding-top: 8px; height: 56px; }
+.dn-gov { display: flex; flex-direction: column; min-width: 0; }
+.dn-gov > span { font-size: 11px; color: var(--tinta-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: 2px; height: 15px; }
+.dn-gov > div { display: flex; gap: 2px; border-top: 1px solid var(--eixo); padding-top: 3px; margin-top: 1px; }
+.dn-ano { flex: 1; min-width: 0; text-align: center; font-size: 12px; color: var(--tinta-2); padding: 3px 0; border-radius: 6px; font-variant-numeric: tabular-nums; }
+.dn-ano:hover:not(:disabled) { background: var(--faixa-a); }
+.dn-ano:disabled { opacity: .35; cursor: default; }
+.dn-ano[aria-pressed="true"] { background: var(--ouro); color: #2a2412; font-weight: 600; }
+
+/* A barra */
+.dn-barra { align-self: start; max-height: 100%; overflow: auto; scrollbar-width: none; border-radius: 20px; padding: 16px; }
+.dn-barra::-webkit-scrollbar { display: none; }
+.dn-barra-titulo { font-size: 14px; font-weight: 600; }
+.dn-familias { list-style: none; margin: 10px 0 0; padding: 0; }
+.dn-familias li { border-top: 1px solid var(--borda); }
+.dn-familias button { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 9px; width: 100%; padding: 10px 2px; text-align: left; }
+.dn-familias button:hover, .dn-familias button[aria-pressed="true"] { background: var(--faixa-a); }
+.dn-familias .dn-q { width: 12px; height: 12px; }
+.dn-familias .dn-nome { font-size: 13px; line-height: 1.2; }
+.dn-familias .dn-valor { font-size: 14px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dn-detalhe { animation: entrar-lado .32s cubic-bezier(.22, .8, .26, 1) backwards; }
+.dn-detalhe-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.dn-detalhe-nome { font-size: 16px; font-weight: 600; line-height: 1.2; letter-spacing: -.01em; }
+.dn-detalhe-familia { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--tinta-3); margin-top: 2px; }
+.dn-detalhe-familia .dn-q { width: 9px; height: 9px; border-radius: 2px; }
+.dn-fechar { flex: none; width: 26px; height: 26px; border-radius: 50%; text-align: center; line-height: 24px; color: var(--tinta-2); font-size: 16px; background: var(--faixa-a); }
+.dn-fechar:hover { background: color-mix(in srgb, var(--tinta) 10%, transparent); }
+.dn-detalhe-numero { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-top: 8px; }
+.dn-detalhe-numero strong { font-size: 1.8rem; font-weight: 600; line-height: 1; letter-spacing: -.03em; }
+.dn-detalhe-numero span:not(.dn-rs) { font-size: 12px; color: var(--tinta-2); }
+.dn-detalhe-apoio { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; margin-top: 6px; font-size: 12px; color: var(--tinta-2); }
+.dn-secao { margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--borda); }
+.dn-secao-titulo { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 600; }
+.dn-secao-titulo span { font-weight: 400; color: var(--tinta-3); font-size: 11.5px; text-align: right; }
+.dn-grafico { display: block; width: 100%; height: auto; margin-top: 5px; overflow: visible; }
+.dn-texto-grafico { font-size: 10px; fill: var(--tinta-3); }
+.dn-texto-forte { font-size: 10.5px; font-weight: 600; fill: var(--tinta); }
+.dn-alvo-grafico { cursor: pointer; }
+.dn-alvo-grafico:hover { fill: color-mix(in srgb, var(--tinta) 7%, transparent); }
+.dn-regua { position: relative; margin-top: 6px; }
+.dn-chip { position: absolute; width: 29px; height: 16px; border-radius: 4px; background: color-mix(in srgb, var(--tinta) 11%, transparent); color: var(--tinta); font-size: 10.5px; font-weight: 500; text-align: center; line-height: 16px; }
+.dn-chip:hover { background: color-mix(in srgb, var(--tinta) 22%, transparent); }
+.dn-chip[aria-pressed="true"] { background: var(--ouro); color: #2a2412; font-weight: 700; }
+.dn-regua-pontas { display: flex; justify-content: space-between; font-size: 11px; color: var(--tinta-3); border-top: 1px solid var(--eixo); padding-top: 3px; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.dn-abre { list-style: none; margin: 6px 0 0; padding: 0; }
+.dn-abre li { font-size: 12px; padding: 2px 0; }
+.dn-abre li > div:first-child { display: flex; justify-content: space-between; gap: 8px; }
+.dn-abre-nome { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dn-abre b { font-weight: 600; white-space: nowrap; }
+.dn-traco { display: block; height: 3px; margin-top: 2px; background: var(--faixa-a); border-radius: 2px; overflow: hidden; }
+.dn-traco i { display: block; height: 100%; border-radius: 2px; background: var(--f-l, var(--dn-rank)); }
+.dn-balao { position: fixed; left: 0; top: 0; z-index: 70; max-width: 270px; padding: 7px 10px; border-radius: 7px; background: light-dark(#1f2d3a, #e8eef3); color: light-dark(#ffffff, #0f1820); font-size: 12px; line-height: 1.4; white-space: pre-line; pointer-events: none; opacity: 0; transition: opacity .1s; }
+.dn-balao-ve { opacity: 1; }
+.dn-esqueleto { border-radius: 10px; background: var(--faixa-a); }
+.dn-esqueleto-barra { align-self: start; height: 340px; border-radius: 20px; }
+.dn-esqueleto-emendas { height: 420px; }
+
+/* O terminal */
+.dn-terminal { --dn-rank: light-dark(#1c8f97, #2ba99a); display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; padding: 6px 20px 28px; }
+.dn-s7 { grid-column: span 7; }
+.dn-s5 { grid-column: span 5; }
+.dn-s12 { grid-column: span 12; }
+.dn-legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--tinta-2); }
+.dn-legenda span { display: inline-flex; align-items: center; gap: 5px; }
+.dn-colunas { display: flex; align-items: stretch; gap: 4px; height: 268px; margin-top: 10px; }
+.dn-col { flex: 1; min-width: 0; display: flex; flex-direction: column; border-radius: 5px; text-align: center; }
+.dn-pilha { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; border-radius: 4px; }
+.dn-col[data-vazia] .dn-pilha { background: var(--faixa-a); }
+.dn-seg { display: flex; align-items: center; justify-content: center; min-height: 0; overflow: hidden; background: var(--f); color: var(--f-t); font-size: 11px; font-variant-numeric: tabular-nums; border-bottom: 2px solid var(--superficie); }
+.dn-seg:last-child { border-bottom: 0; }
+.dn-col > span { padding: 4px 0 2px; margin-top: 2px; border-radius: 5px; font-size: 12px; color: var(--tinta-2); }
+button.dn-col:hover > span { background: var(--faixa-a); }
+.dn-col[aria-pressed="true"] > span { background: var(--ouro); color: #2a2412; font-weight: 600; }
+.dn-faixa-receita { display: flex; gap: 2px; height: 34px; }
+.dn-faixa-receita > div { display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; background: var(--f); color: var(--f-t); font-size: 11.5px; font-weight: 600; }
+.dn-faixa-receita > div:first-child { border-radius: 5px 0 0 5px; }
+.dn-faixa-receita > div:last-child { border-radius: 0 5px 5px 0; }
+.dn-linhas { list-style: none; margin: 10px 0 0; padding: 0; }
+.dn-linhas li { display: grid; grid-template-columns: 12px minmax(0, 1fr) 62px 86px; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--borda); font-size: 13px; font-variant-numeric: tabular-nums; }
+.dn-linhas b { font-weight: 600; text-align: right; }
+.dn-linhas li > span:last-child { text-align: right; color: var(--tinta-2); }
+.dn-nota-receita { font-size: 12.5px; color: var(--tinta-2); }
+.dn-numeros { display: flex; flex-wrap: wrap; gap: 6px 28px; margin-bottom: 12px; }
+.dn-numeros span { display: block; color: var(--tinta-3); }
+.dn-numeros b { font-size: 19px; font-weight: 600; letter-spacing: -.02em; }
+.dn-barra-busca { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.dn-barra-busca input { flex: 1; min-width: 200px; padding: 7px 10px; border: 1px solid var(--borda); border-radius: 8px; background: var(--plano); color: var(--tinta); font-size: 13px; }
+.dn-barra-busca input::placeholder { color: var(--tinta-3); }
+.dn-ranks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 10px; }
+.dn-ranks h4 { margin-bottom: 3px; font-size: 12px; font-weight: 600; }
+.dn-rank { list-style: none; margin: 0; padding: 0; }
+.dn-rank li { border-top: 1px solid var(--borda); font-size: 13px; }
+.dn-rank button { display: block; width: 100%; padding: 5px 2px; text-align: left; }
+.dn-rank button:hover { background: var(--faixa-a); }
+.dn-rank button[aria-pressed="true"] { box-shadow: inset 2px 0 0 var(--ouro); background: var(--faixa-a); }
+.dn-rank-linha { display: flex; justify-content: space-between; gap: 10px; }
+.dn-rank-linha > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dn-rank-linha small, .dn-plano-nome small { margin-left: 4px; font-size: 11.5px; color: var(--tinta-3); }
+.dn-rank-linha b { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dn-rank .dn-traco { margin-top: 3px; }
+.dn-planos { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--eixo); }
+.dn-planos-topo { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dn-planos h4 { font-size: 13px; font-weight: 600; }
+.dn-planos ul { list-style: none; margin: 8px 0 0; padding: 0; }
+.dn-planos li { border-top: 1px solid var(--borda); }
+.dn-planos li > button { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1px 12px; width: 100%; padding: 7px 4px; text-align: left; font-size: 13px; }
+.dn-planos li > button:hover { background: var(--faixa-a); }
+.dn-plano-nome { font-weight: 500; }
+.dn-plano-sub { grid-column: 1; font-size: 11.5px; color: var(--tinta-3); }
+.dn-planos li > button b { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dn-plano-detalhe { padding: 4px 4px 12px; font-size: 12px; line-height: 1.55; color: var(--tinta-2); overflow-wrap: anywhere; }
+.dn-plano-detalhe p { margin-top: 4px; }
+.dn-plano-detalhe dl > div { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 8px; margin-top: 4px; }
+.dn-plano-detalhe dt { font-weight: 600; }
+.dn-paginacao { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; font-size: 12px; color: var(--tinta-2); }
+.dn-paginacao button { padding: 5px 11px; border: 1px solid var(--borda); border-radius: 6px; }
+.dn-paginacao button:disabled { opacity: .4; }
+.dn-tabelas { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 0 32px; }
+.dn-tabelas table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; align-self: start; }
+.dn-tabelas th { padding: 3px 0 3px 8px; font-size: 11px; font-weight: 500; color: var(--tinta-3); text-align: right; white-space: nowrap; }
+.dn-tabelas th:first-child { padding-left: 0; text-align: left; }
+.dn-tabelas td { padding: 4px 0 4px 8px; border-top: 1px solid var(--borda); text-align: right; white-space: nowrap; }
+.dn-tabelas td:first-child { padding-left: 0; text-align: left; white-space: normal; }
+.dn-tabelas td .dn-q { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+.dn-csv { padding: 4px 9px; border: 1px solid var(--borda); border-radius: 6px; font-size: 11px; color: var(--tinta-2); }
+.dn-csv:hover { background: var(--faixa-a); }
+.dn-fontes { max-width: 96ch; font-size: 12.5px; line-height: 1.55; color: var(--tinta-2); }
+.dn-links-fonte { display: flex; gap: 14px; margin-top: 8px; font-size: 12.5px; text-decoration: underline; color: var(--tinta-2); }
+@media (max-width: 980px) {
+  .dn-sala, .dn-sala[data-aberta] { grid-template-columns: minmax(0, 1fr); height: auto; }
+  /* No celular o treemap abre a página: o número e o seletor vêm logo depois. */
+  .dn-meio { order: -1; }
+  .dn-mapa { height: 440px; flex: none; }
+  .dn-mudou { min-height: 0; }
+  .dn-barra { max-height: none; }
+  .dn-trilho { height: auto; flex-wrap: wrap; }
+  .dn-s7, .dn-s5 { grid-column: span 12; }
+  .dn-ranks { grid-template-columns: minmax(0, 1fr); }
+  .dn-tabelas { grid-template-columns: minmax(0, 1fr); }
+  .dn-colunas { gap: 2px; }
+  .dn-seg { font-size: 9.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dn-bloco, .dn-detalhe { animation: none; transition: none; }
 }
