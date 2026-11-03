@@ -1,4 +1,4 @@
-// Usa somente o servidor existente em 3001; não inicia ou encerra o Next.js.
+// Usa somente o servidor existente em 3000; não inicia ou encerra o Next.js.
 // node scripts/test-navbar.mjs [diretorio-das-capturas]
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -6,7 +6,7 @@ import { mkdtemp, readFile, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const url = 'http://localhost:3001/prototipo';
+const url = 'http://localhost:3000/prototipo';
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function until(fn, label) {
   const deadline = Date.now() + 30000;
@@ -18,7 +18,7 @@ async function until(fn, label) {
 }
 
 const response = await fetch(url, { signal: AbortSignal.timeout(25000) });
-assert.equal(response.status, 200, 'O servidor compartilhado 3001 precisa estar disponível');
+assert.equal(response.status, 200, 'O servidor compartilhado 3000 precisa estar disponível');
 const profile = await mkdtemp(join(tmpdir(), 'desempenho-navbar-'));
 const browser = spawn(process.env.CHROME_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', [
   '--headless=new', '--disable-gpu', '--no-first-run', '--remote-debugging-port=0', `--user-data-dir=${profile}`, 'about:blank',

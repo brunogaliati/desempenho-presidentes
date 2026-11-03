@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { neon } from '@neondatabase/serverless';
 
 const sql = neon(process.env.DATABASE_URL);
-const base = `http://localhost:${process.argv[2] ?? 3001}/prototipo/api/dinheiro`;
+const base = `http://localhost:${process.argv[2] ?? 3000}/prototipo/api/dinheiro`;
 async function get(query) {
   const r = await fetch(`${base}?${query}`);
   assert.equal(r.status, 200, query);

@@ -51,3 +51,5 @@ yarn-error.log*
 next-env.d.ts
 /.next-dinheiro-check/
 .dev.log
+# Builds de conferência, ver AGENTS.md.
+/.next-*/
