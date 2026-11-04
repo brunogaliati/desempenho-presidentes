@@ -789,7 +789,7 @@ body {
   scrollbar-width: none;
 }
 
-.navegacao-temas button {
+.navegacao-temas :is(button, a) {
   position: relative;
   flex-shrink: 0;
   min-height: 40px;
@@ -801,20 +801,20 @@ body {
   white-space: nowrap;
 }
 
-.navegacao-temas button:hover,
+.navegacao-temas :is(button, a):hover,
 .acao-cabecalho:hover {
   background: color-mix(in srgb, var(--tinta) 6%, transparent);
   color: var(--tinta);
 }
 
-.navegacao-temas button:disabled {
+.navegacao-temas :is(button, a):disabled {
   cursor: not-allowed;
   color: var(--tinta-3);
 }
-.navegacao-temas button:disabled:hover { background: transparent; color: var(--tinta-3); }
+.navegacao-temas :is(button, a):disabled:hover { background: transparent; color: var(--tinta-3); }
 .tema-em-breve { display: block; font-size: 9px; line-height: 1; font-weight: 400; }
 
-.navegacao-temas button[aria-current="page"] {
+.navegacao-temas :is(button, a)[aria-current="page"] {
   color: var(--tinta);
   font-weight: 650;
 }
@@ -942,12 +942,12 @@ body {
   border-radius: 999px;
 }
 
-.segmentos button { min-height: 36px; border-radius: 999px; color: var(--tinta-2); font-size: 13px; font-weight: 500; transition: background-color 160ms ease-out, box-shadow 160ms ease-out; }
-.segmentos button:hover { background: color-mix(in srgb, var(--tinta) 7%, transparent); }
-.painel-prototipo .segmentos button[aria-checked="true"],
-.painel-prototipo .segmentos button[aria-current="page"] { background: light-dark(rgba(32, 49, 58, 0.08), rgba(244, 250, 255, 0.12)); color: var(--tinta); font-weight: 600; box-shadow: inset 0 1px 0 var(--vidro-brilho), inset 0 0 0 1px var(--borda), 0 3px 8px var(--vidro-sombra); }
-.painel-prototipo .navegacao-temas button:focus-visible,
-.painel-prototipo .segmentos button:focus-visible { outline-offset: -2px; }
+.segmentos :is(button, a) { min-height: 36px; border-radius: 999px; color: var(--tinta-2); font-size: 13px; font-weight: 500; transition: background-color 160ms ease-out, box-shadow 160ms ease-out; }
+.segmentos :is(button, a):hover { background: color-mix(in srgb, var(--tinta) 7%, transparent); }
+.painel-prototipo .segmentos :is(button, a)[aria-checked="true"],
+.painel-prototipo .segmentos :is(button, a)[aria-current="page"] { background: light-dark(rgba(32, 49, 58, 0.08), rgba(244, 250, 255, 0.12)); color: var(--tinta); font-weight: 600; box-shadow: inset 0 1px 0 var(--vidro-brilho), inset 0 0 0 1px var(--borda), 0 3px 8px var(--vidro-sombra); }
+.painel-prototipo .navegacao-temas :is(button, a):focus-visible,
+.painel-prototipo .segmentos :is(button, a):focus-visible { outline-offset: -2px; }
 
 @media (max-width: 1400px) {
   .marca-painel { width: 190px; }
@@ -957,7 +957,7 @@ body {
 @media (max-width: 1100px) {
   .cabecalho-principal { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "marca temas acoes" "mandato mandato mandato"; gap: 10px 16px; }
   .marca-painel { width: 180px; }
-  .navegacao-temas button { padding-inline: 6px; font-size: 11px; }
+  .navegacao-temas :is(button, a) { padding-inline: 6px; font-size: 11px; }
   .rotulo-acao { display: none; }
   .mandato-faixa { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "pessoa grafico contagem"; gap: 20px; padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--borda); }
 }
@@ -970,7 +970,7 @@ body {
   .cabecalho-acoes { grid-area: acoes; gap: 4px; }
   .navegacao-temas { grid-area: temas; justify-self: stretch; justify-content: space-between; gap: 0; }
   .navegacao-temas .segmentos { width: 100%; gap: 0; padding: 3px; }
-  .navegacao-temas button { flex: 1; min-height: 38px; padding-inline: 6px; font-size: 11px; }
+  .navegacao-temas :is(button, a) { flex: 1; min-height: 38px; padding-inline: 6px; font-size: 11px; }
   .mandato-faixa { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "pessoa contagem" "grafico grafico"; gap: 6px 16px; padding-top: 10px; }
   .mandato-identidade { grid-area: pessoa; }
   .mandato-grafico { grid-area: grafico; padding-top: 4px; }
@@ -979,7 +979,7 @@ body {
 }
 
 @media (max-width: 380px) {
-  .navegacao-temas button { padding-inline: 3px; font-size: 10.5px; }
+  .navegacao-temas :is(button, a) { padding-inline: 3px; font-size: 10.5px; }
   .cabecalho-acoes { gap: 2px; }
   .acao-cabecalho { min-width: 32px; padding-inline: 7px; }
 }

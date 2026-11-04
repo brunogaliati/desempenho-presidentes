@@ -53,14 +53,13 @@ entre capital e UF e entre homônimos. As páginas estaduais levam às cidades d
 UF; cada cidade liga ao estado, ao Brasil e a outras cidades da mesma UF. A
 navegação estadual é alfabética; a municipal prioriza população como proxy de
 alcance. A pesquisa de busca e suas limitações constam da seção 16 de
-`../SEO-AEO-GEO-OBSERVATORIO.md`.
+`docs/SEO-AEO-GEO-OBSERVATORIO.md`.
 Desemprego territorial reutiliza a PNAD trimestral, nunca o trimestre móvel
 nacional. O código e o nome precisam corresponder ao cadastro da fonte.
 
 O carregador exige as últimas 12 observações mensais ou quatro trimestrais
 completas, sem transformar ausência em zero. URLs desconhecidas, aliases do
-mesmo território e colisões são recusados; recortes cadastrados sem cobertura
-não são gerados nem entram no sitemap. Filtros do gráfico não criam URLs novas.
+mesmo território e colisões são recusados; recortes sem nenhuma janela histórica válida não são gerados nem entram no sitemap. Recortes publicados preservam a última janela consistente quando a divulgação seguinte está incompleta. Filtros do gráfico não criam URLs novas.
 Os dois indicadores com páginas específicas já passam pelas suas validações de dados.
 
 `src/lib/dadosEconomiaPublica.ts` mantém cache horário por fonte, compartilhado
@@ -75,13 +74,12 @@ O catálogo é gerado, de forma revisável, por
 oficial `python -m desempenho anp_municipios` no backend. O script exige 12 meses
 consecutivos com preço e amostra válidos, até a referência comum com o Brasil.
 `src/lib/municipiosGasolina.ts` guarda somente o cadastro; valores e datas vêm da
-fonte no banco. O carregador revalida cobertura e referência nacional antes de
-gerar cada página. A verificação de publicabilidade é sequencial para preencher
+fonte no banco. O cadastro novo exige cobertura atual. Em endereços já aprovados, o carregador conserva a última janela válida e mostra um aviso se estiver defasada em relação à fonte. A verificação de publicabilidade é sequencial para preencher
 o cache antes do próximo recorte e não multiplicar consultas idênticas ao banco.
 Desemprego permanece nacional/estadual: não recebe páginas municipais sem fonte.
 Novos indicadores ou fontes exigem um adaptador e
 revisão das unidades, frequência, regras de cobertura e texto de interpretação.
-O sitemap atual cabe no formato único nativo do Next.js.
+O sitemap é um índice em `/sitemap.xml`, com partes em `/sitemaps/{id}.xml` de até 4.000 URLs.
 
 ### Outros indicadores municipais
 
@@ -116,7 +114,7 @@ pré-carregamento de centenas de páginas. O cadastro completo fica no servidor.
 
 Verificação de integração reutilizável:
 `node --env-file=.env.local scripts/verificar-indicadores-municipais.mjs`.
-Por padrão usa `http://localhost:3130`; `SEO_PREVIEW_URL` permite outra origem.
+Por padrão usa `http://localhost:3000`; execute contra o build de produção com indexação habilitada. `SEO_PREVIEW_URL` permite outra origem.
 Confere cobertura e descoberta de todas as URLs, sitemap e diretórios, amostra
 de todas as UFs com valores e imagens, limites de publicação e rotas existentes.
 Pesquisa e validação estão registradas na seção 17 do documento SEO na raiz.
@@ -135,6 +133,45 @@ Após publicar, cadastrar/verificar o domínio no Search Console e Bing Webmaste
 Tools e enviar `/sitemap.xml`. Tokens, cadastro externo, inspeção da URL pública
 e eventual acesso dos crawlers pela CDN não são configurados automaticamente.
 A marcação não garante indexação ou citação por IA.
+
+### Revisão da arquitetura de SEO — novembro de 2026
+
+O centro `/economia` conecta os indicadores e diretórios. Há 60 panoramas novos
+para população, emprego formal, CadÚnico e BPC (quatro famílias e 56 recortes de UF).
+Cada município aponta para indicador → UF → município; os endereços antigos são
+preservados. O menu público usa links HTML para `/economia`, `/meio-ambiente` e
+`/dinheiro`, sem depender de páginas de protótipo não indexáveis.
+
+Aplicar `backend/sql/080_publicacao_seo.sql` antes de implantar esta versão.
+A visão `mart.historico_publicavel_municipal` preserva a última janela completa;
+a visão 079 continua sendo o critério mais estrito para aprovar recortes novos.
+Comparações municipais usam a mesma UF, período e unidade; agregados de UF/Brasil
+são os publicados na fonte. CadÚnico e BPC mantêm cobertura paulista, sem total
+nacional inferido.
+
+`observatorio.revisao_publicacao` registra assinatura dos valores e a revisão
+editorial (`REVISAO_EDITORIAL` em `src/lib/revisoesPublicadas.ts`). Coleta e horários
+de consulta ficam fora da assinatura. A mesma assinatura não renova `modificado_em`.
+Ao alterar texto ou estrutura relevante, atualizar a revisão editorial. O registro
+começou nesta implantação; não tenta reconstruir datas históricas. Sitemap e
+`dateModified` usam a mesma revisão. Os panoramas usam a revisão mais recente das
+páginas que apresentam. Painéis temáticos sem assinatura de todos os seus dados
+omitem `lastmod`, em vez de usar o horário de coleta.
+
+`/sobre` identifica o projeto e declara que o responsável individual e um contato
+público ainda não foram definidos. `/correcoes` registra relatos anônimos no banco,
+sem solicitar nome, e-mail ou documento. Não envia e-mail nem promete atendimento.
+Para acompanhar os relatos, consultar `observatorio.correcao_site` por `criado_em`
+e atualizar `situacao` (`recebida`, `em_analise`, `concluida`) após análise; não tornar
+os relatos públicos, pois podem conter texto pessoal apesar da orientação.
+
+Core Web Vitals: `NEXT_PUBLIC_WEB_VITALS=true` habilita o hook nativo do Next e o
+endpoint `/api/metricas-web`. Requer novo build. CLS, INP, LCP, FCP e TTFB são
+registrados como JSON nos logs da hospedagem, por caminho, sem cookies, query ou
+identificador de visitante. O padrão é desativado. A instalação não constitui uma
+medição de campo: habilitar em produção e observar amostra suficiente antes de
+concluir sobre desempenho. Nenhuma aprovação de Core Web Vitals ou posição de busca
+é inferida do build local.
 
 ## 📊 Sobre o Projeto
 
@@ -192,9 +229,9 @@ Este projeto apresenta uma análise visual dos principais indicadores econômico
    Crie um arquivo `.env.local` na raiz do projeto com as seguintes variáveis:
 
    ```
-   GOOGLE_SERVICE_ACCOUNT_EMAIL=seu-email@google-service-account.com
-   GOOGLE_PRIVATE_KEY=sua-chave-privada
-   GOOGLE_SHEET_ID=id-da-sua-planilha
+   DATABASE_URL=postgresql://...
+   REVALIDATE_TOKEN=...
+   SITE_URL=https://desempenhodogoverno.com.br
    ```
 
 4. Execute o servidor de desenvolvimento:
@@ -223,7 +260,7 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo LICENSE para d
 
 ## 📊 Fonte dos Dados
 
-Os dados utilizados neste projeto são obtidos de fontes oficiais como Banco Central do Brasil e IBGE, através de uma planilha Google Sheets que é atualizada regularmente.
+Os dados utilizados neste projeto são obtidos de fontes oficiais como Banco Central do Brasil e IBGE, através de coletores do backend e armazenados no PostgreSQL/Neon.
 
 ---
 

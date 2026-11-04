@@ -3,7 +3,8 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { sql } from "@/lib/db";
 import { catalogoEconomia, type PaginaEconomia } from "@/lib/catalogoEconomia";
-import { prepararSeriePublica, seriePublicavel, ultimaReferenciaPublica, type SeriePublica } from "@/app/prototipo/_dados/economiaModelo";
+import { prepararSeriePublica, ultimaJanelaPublica, ultimaReferenciaPublica, type SeriePublica } from "@/app/prototipo/_dados/economiaModelo";
+import { dataRevisao } from "./revisoesPublicadas";
 
 export type { SeriePublica } from "@/app/prototipo/_dados/economiaModelo";
 interface LinhaPublica { codigo: string; nome: string; mes: string; valor: number | null; cv?: number | null; postos?: number | null; minimo?: number | null; maximo?: number | null; atualizado_em: string }
@@ -65,6 +66,9 @@ export interface DadosPaginaEconomia {
   principal: SeriePublica;
   ultimo: { mes: string; valor: number };
   atualizadoEm: string;
+  revisadoEm: string;
+  historicoPreservado: boolean;
+  referenciaFonte: string;
   trimestral: boolean;
   fonte: string;
   fonteUrl: string;
@@ -87,14 +91,16 @@ export const carregarPaginaEconomia = cache(async (pagina: PaginaEconomia): Prom
   for (const r of rows) { const g = grupos.get(r.codigo) ?? []; g.push(r); grupos.set(r.codigo, g); }
   let series: SeriePublica[] = [...grupos].map(([codigo, rs]) => ({ codigo, nome: rs[0].nome, pontos: prepararSeriePublica(rs.map((r) => ({ mes: r.mes, valor: r.valor })), trimestral, hoje) }));
   const brasilSerie = series.find((s) => s.codigo === "1");
-  const principal = pagina.territorio
+  const encontrada = pagina.territorio
     ? series.find((s) => s.codigo === pagina.territorio!.codigo)
     : brasilSerie;
-  if (!principal || (pagina.territorio && nomeNormal(principal.nome) !== nomeNormal(pagina.territorio.nome)) || !seriePublicavel(principal.pontos, pagina.minimoPontos)) return null;
+  if (!encontrada || (pagina.territorio && nomeNormal(encontrada.nome) !== nomeNormal(pagina.territorio.nome))) return null;
+  const principal = {...encontrada, pontos:ultimaJanelaPublica(encontrada.pontos,pagina.minimoPontos)};
+  if (!principal.pontos.length) return null;
+  series=series.map(s=>s.codigo===principal.codigo?principal:s);
   const ultimo = ultimaReferenciaPublica(principal.pontos);
   if (!ultimo || ultimo.valor === null) return null;
-  // O município precisa acompanhar a última referência do agregado nacional.
-  if (uf && ultimo.mes !== ultimaReferenciaPublica(brasilSerie?.pontos ?? [])?.mes) return null;
+  const referenciaFonte=[encontrada.pontos.at(-1)?.mes,brasilSerie?.pontos.at(-1)?.mes].filter(Boolean).sort().at(-1)!;
   const brasil = brasilSerie?.pontos.find((p) => p.mes === ultimo.mes)?.valor ?? null;
   const comparacao = series.filter((s) => s.codigo.length === 2).map((s) => {
     const valor = s.pontos.find((p) => p.mes === ultimo.mes)?.valor ?? null;
@@ -109,6 +115,7 @@ export const carregarPaginaEconomia = cache(async (pagina: PaginaEconomia): Prom
   if (!atualizadoEm || !Number.isFinite(new Date(atualizadoEm).getTime())) throw new Error("Data de atualização ausente na fonte.");
   return {
     pagina, series, principal, ultimo: { mes: ultimo.mes, valor: ultimo.valor }, atualizadoEm, trimestral,
+    revisadoEm:await dataRevisao(`economia:${pagina.slug}`),referenciaFonte,historicoPreservado:ultimo.mes<referenciaFonte,
     fonte: pagina.id === "gasolina" ? "ANP, Levantamento de Preços de Combustíveis" : "IBGE, PNAD Contínua",
     fonteUrl: pagina.id === "gasolina" ? "https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/precos-revenda-e-de-distribuicao-combustiveis/serie-historica-do-levantamento-de-precos" : pagina.id === "estados" ? "https://sidra.ibge.gov.br/tabela/4099" : "https://sidra.ibge.gov.br/tabela/6381",
     territorio: pagina.territorio?.nome ?? "Brasil", comparacao, brasil,

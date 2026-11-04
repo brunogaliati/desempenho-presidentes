@@ -1,10 +1,15 @@
 import Link from "next/link";
+import LayoutEconomia from "../economia/layout";
+import styles from "../economia/indicador.module.css";
+import { idsMunicipais, INDICADORES_MUNICIPAIS } from "@/lib/indicadoresMunicipais";
+import { dataRevisao } from "@/lib/revisoesPublicadas";
+import { jsonLd, URL_SITE } from "@/lib/seo";
 import type { Metadata } from "next";
 import { metadataPagina } from "@/lib/seo";
 import retratos from "../../../public/presidentes/fontes.json";
 import governadores from "../../../public/prototipo/governadores/fontes.json";
 
-export const metadata: Metadata = metadataPagina("Metodologia · Desempenho do Governo", "Como os indicadores são calculados: anualização, cobertura de dados, herança entre mandatos e comparação internacional.", "/metodologia");
+export const metadata: Metadata = metadataPagina("Metodologia · Desempenho do Governo", "Fontes, períodos, unidades e limites dos indicadores nacionais e municipais; critérios de publicação e comparação entre mandatos.", "/metodologia");
 
 /**
  * A página que sustenta o resto do site.
@@ -18,7 +23,7 @@ export const metadata: Metadata = metadataPagina("Metodologia · Desempenho do G
 
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <section className="border-t py-8" style={{ borderColor: "var(--borda)" }}>
+    <section className="vidro" data-lustro="fixo">
       <h2 className="text-lg font-semibold">{titulo}</h2>
       <div className="mt-3 max-w-prose space-y-3 text-[15px] leading-relaxed"
            style={{ color: "var(--tinta-2)" }}>
@@ -28,9 +33,12 @@ function Secao({ titulo, children }: { titulo: string; children: React.ReactNode
   );
 }
 
-export default function Metodologia() {
+export const revalidate=3600;
+export default async function Metodologia() {
+  const revisado=await dataRevisao('site:metodologia');
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-24">
+    <LayoutEconomia><main className={`${styles.pagina} mx-auto max-w-6xl pb-20`}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{__html:jsonLd({'@context':'https://schema.org','@type':'WebPage',url:URL_SITE+'/metodologia',name:'Metodologia',dateModified:revisado,inLanguage:'pt-BR'})}}/>
       <header className="py-6">
         <Link href="/" className="text-sm hover:underline" style={{ color: "var(--tinta-2)" }}>
           ← Voltar
@@ -45,14 +53,29 @@ export default function Metodologia() {
         </p>
       </header>
 
-      <Secao titulo="Todo número é anual">
+      <Secao titulo="Cada indicador conserva sua unidade e frequência">
+        <p>As páginas de indicadores publicam as medidas na frequência da fonte: o IPCA é mensal, com acumulados compostos; o salário mínimo é um valor nominal com vigência e uma série de poder de compra; a gasolina é uma média mensal em reais por litro; o desemprego nacional usa trimestre móvel, e a comparação entre UFs usa trimestre civil. Essas séries não são todas convertidas em taxa anual.</p>
+        <p>Comparações territoriais exigem a mesma referência, unidade, população de interesse e método. O agregado Brasil ou UF vem da fonte, sem média simples dos municípios. Ausência de informação não vira zero, e diferenças de taxas são expressas em pontos percentuais.</p>
+        <ul className="space-y-3">{idsMunicipais.map(id=><li key={id}><Link href={`/economia/${id}`}>{INDICADORES_MUNICIPAIS[id].nome}</Link>: {INDICADORES_MUNICIPAIS[id].limites.join(' ')}</li>)}</ul>
+      </Secao>
+      <Secao titulo="Publicação e preservação das páginas municipais">
+        <p>Uma página nova depende de cadastro territorial aprovado e de uma janela recente válida: duas referências anuais consecutivas para população ou 12 meses consecutivos para as séries mensais, até a referência mais recente da fonte integrada. Valores incoerentes, duplicados ou ausentes impedem a publicação de novos recortes.</p>
+        <p>Uma página já cadastrada conserva a última janela histórica válida quando uma divulgação posterior está incompleta, com aviso explícito sobre o período. O endereço não desaparece apenas por uma falha na referência mais recente. Não preenchemos lacunas com estimativas próprias.</p>
+        <p>As posições municipais são ordenações descritivas entre localidades com dado válido no mesmo período e na mesma UF. Empates recebem a mesma posição. Valores próximos não tornam as cidades equivalentes em população, economia ou gestão.</p>
+      </Secao>
+      <Secao titulo="Referência, coleta e revisão são datas diferentes">
+        <p>A referência informa o período medido. A coleta informa quando a cópia da fonte entrou na base. A revisão do conteúdo é registrada quando os valores publicados ou o conteúdo editorial mudam; consultas repetidas com os mesmos dados não renovam essa data. O sitemap e os dados estruturados usam essa revisão.</p>
+        <p>As assinaturas de revisão começaram a ser registradas em novembro de 2026; não reconstituem datas editoriais anteriores à implantação. Revisões históricas da própria fonte podem alterar uma série já publicada.</p>
+        <p>Veja o <Link href="/sobre">expediente e a política editorial</Link> ou <Link href="/correcoes">registre um erro</Link>. Revisão desta metodologia: <time dateTime={revisado}>{new Date(revisado).toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'})}</time>.</p>
+      </Secao>
+      <Secao titulo="Comparação entre mandatos: medidas anualizadas">
         <p>
           Os mandatos duraram tempos diferentes. Dilma 2 durou 1 ano e 8 meses
           até o impeachment; Temer, 2 anos e 4 meses; os demais, 4 anos. Somar a
           inflação de cada período mede duração, não desempenho.
         </p>
         <p>
-          Por isso tudo aqui é convertido em taxa anual. E a inflação é composta,
+          Por isso, na comparação entre mandatos, as variações acumuladas são convertidas em taxa anual. E a inflação é composta,
           nunca somada: 1% ao mês por 12 meses dá 12,68% ao ano, não 12%.
         </p>
         <p>
@@ -260,6 +283,6 @@ export default function Metodologia() {
           ← Ver os números
         </Link>
       </footer>
-    </div>
+    </main></LayoutEconomia>
   );
 }

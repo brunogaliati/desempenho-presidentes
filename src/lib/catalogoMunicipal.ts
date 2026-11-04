@@ -4,6 +4,8 @@ import { idsMunicipais, type IndicadorMunicipal, type MunicipioIndicadores } fro
 
 export const MUNICIPIOS_INDICADORES:MunicipioIndicadores[]=registro;
 const porCaminho=new Map(MUNICIPIOS_INDICADORES.map(m=>[`${m.uf.slug}/${m.slug}`,m]));
+const porCodigo=new Map(MUNICIPIOS_INDICADORES.map(m=>[m.codigo,m]));
+export const buscarMunicipioCodigo=(codigo:string)=>porCodigo.get(codigo)??null;
 export function buscarPaginaMunicipal(partes:string[]) {
   if(partes.length!==3 || !idsMunicipais.includes(partes[0] as IndicadorMunicipal)) return null;
   const id=partes[0] as IndicadorMunicipal,m=porCaminho.get(partes.slice(1).join("/"));

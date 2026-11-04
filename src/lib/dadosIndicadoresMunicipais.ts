@@ -3,7 +3,9 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { sql } from "./db";
 import { MUNICIPIOS_INDICADORES } from "./catalogoMunicipal";
-import { prepararLinhasMunicipais, serieMunicipalPublicavel, type IndicadorMunicipal, type LinhaMunicipal, type MunicipioIndicadores } from "./indicadoresMunicipais";
+import { prepararLinhasMunicipais, ultimaJanelaMunicipal, type IndicadorMunicipal, type LinhaMunicipal, type MunicipioIndicadores } from "./indicadoresMunicipais";
+import { contextoDoMunicipio } from "./contextoMunicipal";
+import { dataRevisao } from "./revisoesPublicadas";
 
 const opcoes={revalidate:3600,tags:["painel-economia"]};
 // No máximo 100 códigos municipais por prefixo: mantém os blocos abaixo do teto de 2 MB do cache.
@@ -25,7 +27,7 @@ const blocoMunicipal=unstable_cache(async(id:IndicadorMunicipal,prefixo:string)=
       and codigo like ${prefixo+'%'} order by mes` as (LinhaMunicipal&{codigo:string})[];
 },["indicadores-municipais-bloco-v1"],opcoes);
 
-export const coberturaMunicipal=unstable_cache(async()=>await sql`select indicador,codigo_ibge codigo,to_char(referencia,'YYYY-MM') referencia from mart.publicacao_indicador_municipal` as {indicador:IndicadorMunicipal;codigo:string;referencia:string}[],["cobertura-indicadores-municipais-v1"],opcoes);
+export const coberturaMunicipal=unstable_cache(async()=>await sql`select indicador,codigo_ibge codigo,to_char(referencia,'YYYY-MM') referencia,to_char(referencia_fonte,'YYYY-MM') as referenciaFonte from mart.historico_publicavel_municipal` as {indicador:IndicadorMunicipal;codigo:string;referencia:string;referenciaFonte:string}[],["cobertura-indicadores-municipais-v2"],opcoes);
 export const paginasMunicipaisPublicaveis=cache(async()=>{
   const cobertura=new Map((await coberturaMunicipal()).map(r=>[`${r.indicador}:${r.codigo}`,r.referencia]));
   return MUNICIPIOS_INDICADORES.flatMap(m=>m.indicadores.flatMap(id=>{
@@ -35,13 +37,16 @@ export const paginasMunicipaisPublicaveis=cache(async()=>{
 });
 
 export const carregarIndicadorMunicipal=cache(async(id:IndicadorMunicipal,m:MunicipioIndicadores)=>{
-  const referencia=(await coberturaMunicipal()).find(r=>r.indicador===id && r.codigo===m.codigo)?.referencia;
-  if(!referencia || !m.indicadores.includes(id)) return null;
-  const pontos=prepararLinhasMunicipais(id,(await blocoMunicipal(id,m.codigo.slice(0,4))).filter(r=>r.codigo===m.codigo));
-  if(!serieMunicipalPublicavel(id,pontos,referencia)) return null;
+  const cobertura=(await coberturaMunicipal()).find(r=>r.indicador===id && r.codigo===m.codigo);
+  if(!m.indicadores.includes(id)) return null;
+  const todos=prepararLinhasMunicipais(id,(await blocoMunicipal(id,m.codigo.slice(0,4))).filter(r=>r.codigo===m.codigo));
+  const pontos=ultimaJanelaMunicipal(id,todos);
+  if(!pontos.length) return null;
   const ultimo=pontos.at(-1)!;
   const atualizado=pontos.map(p=>p.atualizado).filter(Boolean).sort().at(-1)!;
   if(!Number.isFinite(new Date(atualizado).getTime())) throw new Error("Data de atualização municipal inválida.");
-  return {id,municipio:m,pontos,ultimo,atualizado};
+  const referenciaFonte=cobertura?.referenciaFonte??todos.at(-1)!.referencia;
+  const [contexto,revisadoEm]=await Promise.all([contextoDoMunicipio(id,ultimo.referencia,m.codigo),dataRevisao(`${id}:${m.codigo}`)]);
+  return {id,municipio:m,pontos,ultimo,atualizado,revisadoEm,contexto,referenciaFonte,historicoPreservado:ultimo.referencia<referenciaFonte};
 });
 export type DadosIndicadorMunicipal=NonNullable<Awaited<ReturnType<typeof carregarIndicadorMunicipal>>>;

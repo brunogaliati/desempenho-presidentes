@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Inflacao() {
-  const { historico, anuais, ultimo, atualizadoEm } = await carregarInflacao();
+  const { historico, anuais, ultimo, atualizadoEm, revisadoEm } = await carregarInflacao();
   const url = `${URL_SITE}${ROTA_INFLACAO}`;
   const schema = {
     "@context": "https://schema.org", "@graph": [
@@ -27,10 +27,10 @@ export default async function Inflacao() {
         { "@type": "ListItem", position: 1, name: "Início", item: URL_SITE },
         { "@type": "ListItem", position: 2, name: "Inflação (IPCA)", item: url },
       ] },
-      { "@type": "WebPage", "@id": `${url}#pagina`, url, name: "IPCA acumulado: inflação em 12 meses, no ano e mês a mês", inLanguage: "pt-BR", dateModified: atualizadoEm, isPartOf: { "@id": `${URL_SITE}/#site` }, mainEntity: { "@id": `${url}#dados` } },
+      { "@type": "WebPage", "@id": `${url}#pagina`, url, name: "IPCA acumulado: inflação em 12 meses, no ano e mês a mês", inLanguage: "pt-BR", dateModified: revisadoEm, isPartOf: { "@id": `${URL_SITE}/#site` }, mainEntity: { "@id": `${url}#dados` } },
       { "@type": "Dataset", "@id": `${url}#dados`, name: "IPCA mensal e acumulado no Brasil desde o Plano Real",
         description: "IPCA geral mensal do IBGE, via SGS 433, com acumulados compostos no ano e em 12 meses. O recorte começa em julho de 1994; os acumulados exigem todos os meses do período.",
-        url, inLanguage: "pt-BR", temporalCoverage: `${historico[0].mes}-01/${ultimo.mes}-01`, dateModified: atualizadoEm,
+        url, inLanguage: "pt-BR", temporalCoverage: `${historico[0].mes}-01/${ultimo.mes}-01`, dateModified: revisadoEm,
         creator: { "@id": `${URL_SITE}/#organizacao` }, isBasedOn: [IPCA, SGS], spatialCoverage: "Brasil",
         variableMeasured: ["IPCA mensal", "IPCA acumulado no ano", "IPCA acumulado em 12 meses"].map((name) => ({ "@type": "PropertyValue", name, unitText: "%" })),
       },
@@ -45,7 +45,7 @@ export default async function Inflacao() {
         {ultimo.dozeMeses !== null ? <> Nos 12 meses encerrados nessa referência, a inflação acumulou <strong>{pct(ultimo.dozeMeses)}</strong>.</> : " O acumulado em 12 meses ainda não tem cobertura completa."}
         {ultimo.ano !== null ? <> De janeiro até esse mês, o acumulado foi de <strong>{pct(ultimo.ano)}</strong>.</> : " O acumulado no ano não tem cobertura completa."}
       </p>
-      <p className="text-sm leading-relaxed text-[var(--tinta-2)]">Fonte: IBGE, IPCA geral, via Banco Central (SGS 433). Referência dos dados: {mesPorExtenso(ultimo.mes)}. Série atualizada em <time dateTime={atualizadoEm}>{new Date(atualizadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>.</p>
+      <p className="text-sm leading-relaxed text-[var(--tinta-2)]">Fonte: IBGE, IPCA geral, via Banco Central (SGS 433). Referência dos dados: {mesPorExtenso(ultimo.mes)}. Coleta da série em <time dateTime={atualizadoEm}>{new Date(atualizadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>. Revisão do conteúdo em <time dateTime={revisadoEm}>{new Date(revisadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>.</p>
       <nav aria-label="Nesta página" className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm"><a href="#historico">Explorar o histórico</a><a href="#mensal">Tabela mês a mês</a><a href="#anual">Inflação por ano</a><a href="#fontes">Fontes e cálculo</a></nav>
     </header>
 

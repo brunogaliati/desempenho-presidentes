@@ -9,6 +9,10 @@ import { carregarIndicadorMunicipal,paginasMunicipaisPublicaveis } from "@/lib/d
 import { idsMunicipais,rotaMunicipal,tituloMunicipal } from "@/lib/indicadoresMunicipais";
 import { PaginaMunicipal,resumoMunicipal } from "../PaginaMunicipal";
 
+import { buscarHubEconomia,hubsEconomia,tituloHub,resumoHub } from "@/lib/hubsEconomia";
+import { revisoesPublicadas } from "@/lib/revisoesPublicadas";
+import { HubIndicador } from "../HubIndicador";
+
 export const revalidate = 3600;
 export const dynamicParams = true;
 const buscarMunicipal=cache(async(slug:string)=>{
@@ -28,13 +32,16 @@ const buscar = cache(async (slug: string) => {
 });
 
 export async function generateStaticParams() {
+  await revisoesPublicadas();
   const novas=await paginasMunicipaisPublicaveis();
   // As demais URLs são renderizadas no primeiro acesso e revalidadas pelo ISR.
-  return [...(await paginasEconomiaPublicaveis()).filter((p) => !p.propria).map((p) => ({pagina:p.slug.split("/")})),...idsMunicipais.flatMap(id=>novas.filter(p=>p.id===id).slice(0,4).map(p=>({pagina:rotaMunicipal(p.id,p.municipio).replace('/economia/','').split('/')})))];
+  return [...(await hubsEconomia()).map(h=>({pagina:h.slug.split("/")})),...(await paginasEconomiaPublicaveis()).filter((p) => !p.propria).map((p) => ({pagina:p.slug.split("/")})),...idsMunicipais.flatMap(id=>novas.filter(p=>p.id===id).slice(0,4).map(p=>({pagina:rotaMunicipal(p.id,p.municipio).replace('/economia/','').split('/')})))];
 }
 
 export async function generateMetadata({params}:{params:Promise<{pagina:string[]}>}) {
   const {pagina} = await params;
+  const hub=await buscarHubEconomia(pagina.join("/"));
+  if(hub)return metadataPagina(tituloHub(hub),resumoHub(hub),`/economia/${hub.slug}`);
   const municipal=await buscarMunicipal(pagina.join("/"));
   if(municipal)return metadataPagina(tituloMunicipal(municipal.id,municipal.municipio),resumoMunicipal(municipal),rotaMunicipal(municipal.id,municipal.municipio),`/economia/imagens/${pagina.join('/')}`);
   const d = await buscar(pagina.join("/"));
@@ -43,6 +50,8 @@ export async function generateMetadata({params}:{params:Promise<{pagina:string[]
 
 export default async function PaginaPublica({params}:{params:Promise<{pagina:string[]}>}) {
   const {pagina} = await params;
+  const hub=await buscarHubEconomia(pagina.join("/"));
+  if(hub)return <HubIndicador hub={hub}/>;
   const municipal=await buscarMunicipal(pagina.join("/"));
   if(municipal)return <PaginaMunicipal dados={municipal}/>;
   return <PaginaIndicador dados={await buscar(pagina.join("/"))} />;

@@ -26,6 +26,8 @@ import { FiltroRefracao, useVidro } from "./Vidro";
  */
 
 interface Props {
+  publico?: boolean;
+  introducao?: React.ReactNode;
   dados: DadosPainel;
   abaInicial: AbaId;
   ufInicial: string | null;
@@ -34,7 +36,7 @@ interface Props {
   retrato: React.ReactNode;
 }
 
-export function Painel({ dados: inteiros, abaInicial, ufInicial, mandatoInicial, retrato }: Props) {
+export function Painel({ publico=false, introducao, dados: inteiros, abaInicial, ufInicial, mandatoInicial, retrato }: Props) {
   const [aba, setAba] = useState<AbaId>(abaInicial);
   const [sigla, setSiglaDireto] = useState<string | null>(ufInicial);
   const emCurso = inteiros.presidente.id;
@@ -76,7 +78,7 @@ export function Painel({ dados: inteiros, abaInicial, ufInicial, mandatoInicial,
 
   useEffect(() => {
     const url = new URL(window.location.href);
-    if (aba === "economia") url.searchParams.delete("aba");
+    if (publico || aba === "economia") url.searchParams.delete("aba");
     else url.searchParams.set("aba", aba);
     if (sigla) url.searchParams.set("uf", sigla);
     else url.searchParams.delete("uf");
@@ -84,7 +86,7 @@ export function Painel({ dados: inteiros, abaInicial, ufInicial, mandatoInicial,
     else url.searchParams.delete("mandato");
     url.searchParams.delete("visao");
     window.history.replaceState(null, "", url);
-  }, [aba, sigla, mandatoId, emCurso]);
+  }, [aba, sigla, mandatoId, emCurso, publico]);
 
   const trocarAba = (a: AbaId) => {
     if (a !== "economia" && a !== "ambiente" && a !== "dinheiro") return;
@@ -101,9 +103,10 @@ export function Painel({ dados: inteiros, abaInicial, ufInicial, mandatoInicial,
       <div aria-hidden className="fundo-prototipo" />
       <FiltroRefracao />
       <div ref={cabecalho} className="prototipo-cabecalho relative -mx-3 mb-3 border-b">
-        <Cabecalho aba={aba} aoTrocar={trocarAba} mandato={<BarraMandato dados={atual} foco={dados.foco} retrato={retrato} sigla={sigla} aba={aba} aoEscolher={setMandatoId} />} />
+        <Cabecalho publico={publico} aba={aba} aoTrocar={trocarAba} mandato={<BarraMandato dados={atual} foco={dados.foco} retrato={retrato} sigla={sigla} aba={aba} aoEscolher={setMandatoId} />} />
       </div>
 
+      {introducao}
       {aba === "economia" && (
         <AbaEconomia dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} aoTrocarAba={trocarAba} />
       )}
@@ -113,6 +116,7 @@ export function Painel({ dados: inteiros, abaInicial, ufInicial, mandatoInicial,
         <PainelMapa dados={atual} aba={aba} sigla={sigla} setSigla={setSigla} aoTrocarAba={trocarAba} />
       )}
 
+      {publico && <nav aria-label="Sobre os dados" className="mx-auto mt-6 flex max-w-6xl flex-wrap gap-5 text-sm"><a href="/metodologia">Metodologia</a><a href="/sobre">Sobre o projeto</a><a href="/correcoes">Relatar um erro</a></nav>}
       <footer className="mx-auto mt-6 max-w-6xl text-[11px] leading-snug" style={{ color: "var(--tinta-3)" }}>
         {aba === "dinheiro" ? (<>Fontes: Tesouro Nacional · Siconfi e Transferegov · transferências especiais.</>) : aba === "ambiente" ? (
           <>

@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function SalarioMinimo() {
   const dados = await carregarSalarioMinimo();
-  const { ultimo, reajuste, anterior, referenciaReal, historico, anuais, reajustes, atualizadoEm } = dados;
+  const { ultimo, reajuste, anterior, referenciaReal, historico, anuais, reajustes, atualizadoEm, revisadoEm } = dados;
   const aumento = anterior ? reajuste.nominal - anterior.nominal : null;
   const percentual = anterior ? (reajuste.nominal / anterior.nominal - 1) * 100 : null;
   const url = `${URL_SITE}${ROTA_SALARIO}`;
@@ -32,11 +32,11 @@ export default async function SalarioMinimo() {
         { "@type": "ListItem", position: 1, name: "Início", item: URL_SITE },
         { "@type": "ListItem", position: 2, name: "Salário mínimo", item: url },
       ] },
-      { "@type": "WebPage", "@id": `${url}#pagina`, url, name: "Salário mínimo: valor, reajuste e poder de compra", inLanguage: "pt-BR", dateModified: atualizadoEm,
+      { "@type": "WebPage", "@id": `${url}#pagina`, url, name: "Salário mínimo: valor, reajuste e poder de compra", inLanguage: "pt-BR", dateModified: revisadoEm,
         isPartOf: { "@id": `${URL_SITE}/#site` }, mainEntity: { "@id": `${url}#dados` } },
       { "@type": "Dataset", "@id": `${url}#dados`, name: "Histórico do salário mínimo nacional e poder de compra",
         description: `Série mensal do salário mínimo nominal e real desde 1995. Valores reais corrigidos pelo IPCA para ${mesPorExtenso(referenciaReal)}.`,
-        url, inLanguage: "pt-BR", temporalCoverage: `${historico[0].mes}-01/${ultimo.mes}-01`, dateModified: atualizadoEm,
+        url, inLanguage: "pt-BR", temporalCoverage: `${historico[0].mes}-01/${ultimo.mes}-01`, dateModified: revisadoEm,
         creator: { "@id": `${URL_SITE}/#organizacao` }, isBasedOn: [SERIE, IPCA], spatialCoverage: "Brasil",
         variableMeasured: [
           { "@type": "PropertyValue", name: "Salário mínimo nominal", unitText: "BRL" },
@@ -57,7 +57,7 @@ export default async function SalarioMinimo() {
           O salário mínimo nacional registrado em <strong>{mesPorExtenso(ultimo.mes)}</strong> é de <strong>{reais(ultimo.nominal)} por mês</strong>.
           {anterior && <> O último reajuste identificado na série, em {mesPorExtenso(reajuste.mes)}, foi de {reais(aumento)} ({numero(percentual)}%), sobre {reais(anterior.nominal)}.</>}
         </p>
-        <p className="text-sm leading-relaxed text-[var(--tinta-2)]">Último mês nominal disponível: {mesPorExtenso(ultimo.mes)}. Poder de compra calculado até {mesPorExtenso(referenciaReal)}. Séries atualizadas em <time dateTime={atualizadoEm}>{new Date(atualizadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>.</p>
+        <p className="text-sm leading-relaxed text-[var(--tinta-2)]">Último mês nominal disponível: {mesPorExtenso(ultimo.mes)}. Poder de compra calculado até {mesPorExtenso(referenciaReal)}. Coleta das séries em <time dateTime={atualizadoEm}>{new Date(atualizadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>. Revisão do conteúdo em <time dateTime={revisadoEm}>{new Date(revisadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>.</p>
         <nav aria-label="Nesta página" className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm">
           <a href="#historico">Explorar o histórico</a><a href="#tabela">Tabela por ano</a><a href="#reajustes">Todos os reajustes</a><a href="#fontes">Fontes e cálculo</a>
         </nav>

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { catalogoEconomia, buscarPaginaEconomia, rotaEconomia, RECORTES_PUBLICADOS } from '../src/lib/catalogoEconomia.ts';
-import { prepararSeriePublica, seriePublicavel, ultimaReferenciaPublica, compararPontosPublicos, rotuloPeriodoPublico } from '../src/app/prototipo/_dados/economiaModelo.ts';
+import { prepararSeriePublica, ultimaJanelaPublica, seriePublicavel, ultimaReferenciaPublica, compararPontosPublicos, rotuloPeriodoPublico } from '../src/app/prototipo/_dados/economiaModelo.ts';
 
 test('catálogo publica cinco intenções e não cria páginas para filtros ou slugs desconhecidos', () => {
   const paginas=catalogoEconomia([]);
@@ -107,4 +107,11 @@ test('comparações usam p.p. para taxas, porcentagem para preço e exigem refer
   assert.equal(compararPontosPublicos(p,'2025-03','2025-01',true),null);
   assert.equal(compararPontosPublicos(p,'','2025-03',true),null);
   assert.equal(compararPontosPublicos(p,'2025-03','2025-03',true),0);
+});
+
+
+test('janela pública conserva histórico de página existente quando o mês recente é nulo',()=>{
+ const pontos=Array.from({length:14},(_,i)=>({mes:`2025-${String(i+1).padStart(2,'0')}`,valor:i<12?0:null}));
+ assert(!seriePublicavel(pontos,12));assert.equal(ultimaJanelaPublica(pontos,12).length,12);
+ assert.deepEqual(ultimaJanelaPublica(pontos.slice(0,11),12),[]);
 });

@@ -1,4 +1,5 @@
 import "server-only";
+import { dataRevisao } from "./revisoesPublicadas";
 import { cache } from "react";
 import { sql } from "@/lib/db";
 import { montarSalarioMinimo, type ObservacaoSalario } from "@/lib/salarioMinimoModelo";
@@ -11,5 +12,5 @@ export const carregarSalarioMinimo = cache(async () => {
         from serie where id in ('salario_minimo', 'salario_minimo_real', 'ipca')`,
   ]);
   const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
-  return { ...montarSalarioMinimo(linhas as ObservacaoSalario[], hoje), atualizadoEm: String(atualizacao[0].atualizado_em) };
+  return { ...montarSalarioMinimo(linhas as ObservacaoSalario[], hoje), revisadoEm: await dataRevisao("economia:salario-minimo"), atualizadoEm: String(atualizacao[0].atualizado_em) };
 });

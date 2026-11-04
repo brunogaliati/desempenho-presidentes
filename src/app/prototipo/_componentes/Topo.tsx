@@ -43,10 +43,12 @@ export function Cabecalho({
   aba,
   aoTrocar,
   mandato,
+  publico=false,
 }: {
   aba: AbaId;
   aoTrocar: (a: AbaId) => void;
   mandato: React.ReactNode;
+  publico?: boolean;
 }) {
   const [copiado, setCopiado] = useState(false);
   const [escuro, setEscuro] = useState(false);
@@ -71,7 +73,7 @@ export function Cabecalho({
           <Marca />
         </span>
         <nav className="navegacao-temas" aria-label="Temas">
-          <Segmentos opcoes={ABAS} ativo={aba} aoEscolher={aoTrocar} rotulo="Temas" papel="pagina" classeBotao="px-3 py-2" />
+          {publico ? <div className="segmentos vidro inline-flex gap-1 p-1">{ABAS.map(a=>a.indisponivel?<button key={a.id} type="button" disabled className="px-3 py-2">{a.rotulo}</button>:<Link key={a.id} href={a.id==='economia'?'/economia':a.id==='ambiente'?'/meio-ambiente':'/dinheiro'} aria-current={aba===a.id?'page':undefined} className="px-3 py-2">{a.rotulo}</Link>)}</div> : <Segmentos opcoes={ABAS} ativo={aba} aoEscolher={aoTrocar} rotulo="Temas" papel="pagina" classeBotao="px-3 py-2" />}
         </nav>
         {mandato}
         <div className="cabecalho-acoes">

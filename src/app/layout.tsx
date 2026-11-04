@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { MetricasWeb } from "./MetricasWeb";
 import { jsonLd, NOME_SITE, podeIndexar, URL_SITE } from "@/lib/seo";
 
 const geistSans = Geist({
@@ -60,11 +61,12 @@ export default function RootLayout({
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({
           "@context": "https://schema.org",
           "@graph": [
-            { "@type": "Organization", "@id": `${URL_SITE}/#organizacao`, name: NOME_SITE, url: URL_SITE },
+            { "@type": "Organization", "@id": `${URL_SITE}/#organizacao`, name: NOME_SITE, url: URL_SITE, description: "Projeto de organização e leitura de indicadores públicos.", subjectOf: { "@type": "AboutPage", url: `${URL_SITE}/sobre` }, contactPoint: { "@type": "ContactPoint", contactType: "Correções de conteúdo", url: `${URL_SITE}/correcoes`, availableLanguage: "pt-BR" } },
             { "@type": "WebSite", "@id": `${URL_SITE}/#site`, name: NOME_SITE, url: URL_SITE, inLanguage: "pt-BR", publisher: { "@id": `${URL_SITE}/#organizacao` } },
           ],
         }) }} />
         {children}
+        {process.env.NEXT_PUBLIC_WEB_VITALS==='true' && <MetricasWeb/>}
       </body>
     </html>
   );

@@ -58,3 +58,12 @@ export function serieMunicipalPublicavel(id:IndicadorMunicipal,pontos:LinhaMunic
   const minimo=INDICADORES_MUNICIPAIS[id].anual?2:12;
   return pontos.at(-1)?.referencia===referencia && pontos.length>=minimo && pontos.slice(-minimo).every(l=>linhaMunicipalValida(id,l));
 }
+
+/** Novos recortes exigem a cobertura atual; URLs já cadastradas conservam o histórico. */
+export function ultimaJanelaMunicipal(id:IndicadorMunicipal,pontos:LinhaMunicipal[]) {
+  const minimo=INDICADORES_MUNICIPAIS[id].anual?2:12;
+  for(let fim=pontos.length;fim>=minimo;fim--) {
+    if(pontos.slice(fim-minimo,fim).every(l=>linhaMunicipalValida(id,l))) return pontos.slice(0,fim);
+  }
+  return [];
+}

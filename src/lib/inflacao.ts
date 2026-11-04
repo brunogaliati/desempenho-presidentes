@@ -1,4 +1,5 @@
 import "server-only";
+import { dataRevisao } from "./revisoesPublicadas";
 import { cache } from "react";
 import { sql } from "@/lib/db";
 import { montarInflacao } from "@/app/prototipo/_dados/economiaModelo";
@@ -11,6 +12,6 @@ export const carregarInflacao = cache(async () => {
   const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
   return {
     ...montarInflacao({ datas: linhas.map((r) => String(r.mes)), valores: linhas.map((r) => Number(r.valor)) }, hoje),
-    atualizadoEm: String(atualizacao[0]?.atualizado_em),
+    revisadoEm: await dataRevisao("economia:inflacao"), atualizadoEm: String(atualizacao[0]?.atualizado_em),
   };
 });

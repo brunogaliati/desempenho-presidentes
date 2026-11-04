@@ -3,19 +3,22 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { neon } from '@neondatabase/serverless';
 import { idsMunicipais,rotaMunicipal } from '../src/lib/indicadoresMunicipais.ts';
-const root=process.env.SEO_PREVIEW_URL??'http://localhost:3130',sql=neon(process.env.DATABASE_URL);
+const root=process.env.SEO_PREVIEW_URL??'http://localhost:3000',sql=neon(process.env.DATABASE_URL);
 const municipios=JSON.parse(await readFile(new URL('../src/lib/municipiosIndicadores.json',import.meta.url),'utf8'));
-const cobertura=await sql`select indicador,codigo_ibge codigo,to_char(referencia,'YYYY-MM') referencia from mart.publicacao_indicador_municipal`;
+const cobertura=await sql`select indicador,codigo_ibge codigo,to_char(referencia,'YYYY-MM') referencia from mart.historico_publicavel_municipal`;
 const refs=new Map(cobertura.map(r=>[`${r.indicador}:${r.codigo}`,r.referencia]));
 const paths=new Set();
 for(const m of municipios)for(const id of m.indicadores){assert(refs.has(`${id}:${m.codigo}`),`cobertura ${id}/${m.codigo}`);paths.add(rotaMunicipal(id,m));}
-assert.equal(paths.size,cobertura.length);
-const xml=await(await fetch(root+'/sitemap.xml')).text(),urls=[...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map(m=>m[1]);
+assert.equal(paths.size,cobertura.filter(r=>municipios.some(m=>m.codigo===r.codigo && m.indicadores.includes(r.indicador))).length);
+const indice=await(await fetch(root+'/sitemap.xml')).text();
+const xml=indice.includes('<sitemapindex')?(await Promise.all([...indice.matchAll(/<loc>(.*?)<\/loc>/g)].map(async m=>await(await fetch(root+new URL(m[1]).pathname)).text()))).join(''):indice;
+const urls=[...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map(m=>m[1]);
 assert.equal(new Set(urls).size,urls.length);for(const path of paths)assert(urls.some(url=>url.endsWith(path)),path+' sitemap');
 assert(!xml.includes('prototipo'));assert(!xml.includes('/imagens/'));
+async function lote(items,fn){for(let i=0;i<items.length;i+=4)await Promise.all(items.slice(i,i+4).map(fn));}
+if(process.env.SEO_APENAS_ARQUITETURA!=='true'){
 const diretorios=urls.filter(u=>new URL(u).pathname.startsWith('/economia/municipios'));
 const descobertas=new Set();
-async function lote(items,fn){for(let i=0;i<items.length;i+=4)await Promise.all(items.slice(i,i+4).map(fn));}
 await lote(diretorios,async u=>{
  const url=new URL(u),path=url.pathname+url.search,res=await fetch(root+path);assert.equal(res.status,200,path);const html=await res.text();
  assert(html.includes(`rel="canonical" href="${u}"`),path+' canonical');
@@ -47,3 +50,39 @@ for(const path of ['/economia/populacao/uf-inexistente/cidade','/economia/caduni
 const busca=await(await fetch(root+'/economia/municipios/sao-paulo?q=campinas')).text();assert(busca.includes('noindex, follow'));assert(busca.includes('rel="canonical" href="https://desempenhodogoverno.com.br/economia/municipios/sao-paulo"'));
 for(const path of ['/economia/salario-minimo','/economia/inflacao','/economia/gasolina/sao-paulo/campinas','/economia/desemprego/bahia'])assert.equal((await fetch(root+path)).status,200,path);
 console.log('PASSOU: seis limites/404, busca não indexável e quatro rotas existentes preservadas.');
+}
+
+
+// Arquitetura pública: todos os panoramas, pais canônicos e datas reais.
+const hubs=urls.map(u=>new URL(u).pathname).filter(p=>/^\/economia\/(populacao|emprego-formal|cadunico|bpc)(?:\/[^/]+)?$/.test(p));
+assert.equal(hubs.length,60);
+await lote(hubs,async path=>{
+ const r=await fetch(root+path);assert.equal(r.status,200,path);const html=await r.text();
+ assert.equal([...html.matchAll(/<h1[ >]/g)].length,1,path);assert(html.includes(`rel="canonical" href="https://desempenhodogoverno.com.br${path}"`),path);
+ assert(!/href="\/prototipo(?:[?"/])/.test(html),path+' navegação pública');
+ assert(html.includes('CollectionPage'));assert(html.includes('dateModified'));assert(html.includes('/metodologia'));assert(html.includes('/correcoes'));
+});
+const datas=new Map([...xml.matchAll(/<url>\s*<loc>([^<]+)<\/loc>\s*<lastmod>([^<]+)<\/lastmod>\s*<\/url>/g)].map(m=>[new URL(m[1].replaceAll('&amp;','&')).pathname,m[2]]));
+for(const path of ['/economia/populacao/sao-paulo/campinas','/economia/emprego-formal/sao-paulo/campinas','/economia/cadunico/sao-paulo/campinas','/economia/bpc/sao-paulo/campinas','/economia/gasolina/sao-paulo/campinas','/economia/inflacao','/economia/salario-minimo']){
+ const html=await(await fetch(root+path)).text();const graph=[...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)].flatMap(m=>JSON.parse(m[1])['@graph']??[]),d=graph.find(s=>s['@type']==='Dataset');
+ assert(d.dateModified);assert.equal(d.dateModified,datas.get(path),path+' sitemap/schema');assert(html.includes('Revisão do conteúdo'));assert(html.includes('/correcoes'));
+}
+for(const path of ['/','/economia','/metodologia','/sobre','/correcoes','/meio-ambiente','/dinheiro']){
+ const r=await fetch(root+path);assert.equal(r.status,200,path);const html=await r.text();assert(html.includes(`rel="canonical" href="https://desempenhodogoverno.com.br${path==='/'?'':path}"`) || html.includes(`rel="canonical" href="https://desempenhodogoverno.com.br${path}"`),path+' canonical');assert(!html.includes('noindex'));assert(!/href="\/prototipo(?:[?"/])/.test(html));
+}
+for(const [corpo,origem,status] of [[{caminho:'//outro.site',descricao:'Descrição do teste suficientemente longa.'},root,400],[{caminho:'/',descricao:'curta'},root,400],[{caminho:'/',descricao:'Descrição do teste suficientemente longa.'},'https://outro.site',403]]){
+ const r=await fetch(root+'/api/correcoes',{method:'POST',headers:{'Content-Type':'application/json',Origin:origem},body:JSON.stringify(corpo)});assert.equal(r.status,status);
+}
+assert.equal((await fetch(root+'/sitemaps/999.xml')).status,404);
+assert.equal((await fetch(root+'/sitemaps/01.xml')).status,404);
+console.log(`PASSOU: ${hubs.length} panoramas, navegação pública sem protótipo, sete páginas institucionais/temas, datas de revisão no sitemap/schema e validação do formulário.`);
+
+if(process.env.REVALIDATE_TOKEN){
+ const assinatura=async()=>(await sql`select md5(string_agg(chave||':'||assinatura||':'||modificado_em::text,',' order by chave)) valor from observatorio.revisao_publicacao`)[0].valor;
+ const antes=await assinatura();
+ const r=await fetch(root+'/api/revalidate',{method:'POST',headers:{'x-revalidate-token':process.env.REVALIDATE_TOKEN}});assert.equal(r.status,200);
+ // Rota dinâmica força a leitura das assinaturas após a invalidação da tag.
+ assert.equal((await fetch(root+'/sitemaps/999.xml')).status,404);
+ assert.equal(await assinatura(),antes,'reconsulta sem mudança não pode renovar a data editorial');
+ console.log('PASSOU: webhook de revalidação funciona e dados idênticos preservam todas as assinaturas e datas de revisão.');
+}

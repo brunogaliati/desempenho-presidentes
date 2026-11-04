@@ -25,6 +25,14 @@ export function seriePublicavel(pontos: PontoPublico[], minimo: number): boolean
   return pontos.length >= minimo && pontos.slice(-minimo).every((p) => p.valor !== null && Number.isFinite(p.valor));
 }
 
+/** Recortes já publicados conservam a última janela válida quando a fonte falha. */
+export function ultimaJanelaPublica(pontos: PontoPublico[], minimo: number) {
+  for (let fim = pontos.length; fim >= minimo; fim--) {
+    if (seriePublicavel(pontos.slice(fim - minimo, fim), minimo)) return pontos.slice(0, fim);
+  }
+  return [];
+}
+
 export function compararPontosPublicos(pontos: PontoPublico[], desde: string, ate: string, emPontos: boolean) {
   if (desde > ate) return null;
   const a = pontos.find((p) => p.mes === desde)?.valor, b = pontos.find((p) => p.mes === ate)?.valor;

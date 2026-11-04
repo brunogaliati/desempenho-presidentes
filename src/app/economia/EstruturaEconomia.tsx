@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useLayoutEffect, useRef } from "react";
 import { Cabecalho } from "@/app/prototipo/_componentes/Topo";
 import { FiltroRefracao, useVidro } from "@/app/prototipo/_componentes/Vidro";
@@ -13,7 +13,6 @@ export function EstruturaEconomia({ children }: { children: React.ReactNode }) {
   const caminho = usePathname();
   const atual = buscarPaginaEconomia(caminho.replace(/^\/economia\//, "").split("/"));
   const municipal=caminho.startsWith("/economia/municipios") || idsMunicipais.some(id=>caminho.startsWith(`/economia/${id}/`));
-  const router = useRouter();
   const cabecalho = useRef<HTMLDivElement>(null);
   useVidro();
   useLayoutEffect(() => {
@@ -29,7 +28,7 @@ export function EstruturaEconomia({ children }: { children: React.ReactNode }) {
     <div aria-hidden className="fundo-prototipo" />
     <FiltroRefracao />
     <div ref={cabecalho} className="prototipo-cabecalho">
-      <Cabecalho aba="economia" aoTrocar={(aba) => router.push(`/prototipo${aba === "economia" ? "" : `?aba=${aba}`}`)} mandato={
+      <Cabecalho aba="economia" publico aoTrocar={() => {}} mandato={
         <nav aria-label="Indicadores de economia" className={styles.indicadores}>
           {PAGINAS_ECONOMIA.map((p) => <Link key={p.slug} href={rotaEconomia(p)} aria-current={atual?.id === p.id ? "page" : undefined}>{p.rotulo}</Link>)}
           <Link href="/economia/municipios" aria-current={municipal?"page":undefined}>Municípios</Link>
@@ -37,5 +36,6 @@ export function EstruturaEconomia({ children }: { children: React.ReactNode }) {
       } />
     </div>
     {children}
+    <footer className="mx-auto flex max-w-6xl flex-wrap gap-x-6 gap-y-3 px-4 py-6 text-sm text-[var(--tinta-2)]"><Link href="/economia">Economia</Link><Link href="/metodologia">Metodologia</Link><Link href="/sobre">Sobre o projeto</Link><Link href="/correcoes">Relatar um erro</Link></footer>
   </div>;
 }

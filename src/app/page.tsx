@@ -352,10 +352,14 @@ export default async function Home() {
           desempenhodogoverno.com.br
         </span>
         <nav className="flex flex-wrap gap-4" style={{ color: "var(--tinta-2)" }}>
+          <Link href="/economia" className="hover:underline">Economia</Link>
+          <Link href="/economia/municipios" className="hover:underline">Municípios</Link>
+          <Link href="/meio-ambiente" className="hover:underline">Meio ambiente</Link>
+          <Link href="/dinheiro" className="hover:underline">Dinheiro público</Link>
           {PAGINAS_ECONOMIA.map((p) => <Link key={p.slug} href={rotaEconomia(p)} className="hover:underline">{p.rotulo}</Link>)}
           <a href="#tabela" className="hover:underline">Tabela</a>
           <a href="#mundo" className="hover:underline">Mundo</a>
-          <Link href="/metodologia" className="hover:underline">Metodologia</Link>
+          <Link href="/metodologia" className="hover:underline">Metodologia</Link><Link href="/sobre" className="hover:underline">Sobre o projeto</Link><Link href="/correcoes" className="hover:underline">Relatar um erro</Link>
         </nav>
       </header>
 
