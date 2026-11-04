@@ -16,11 +16,17 @@ export async function sitemapPublico(): Promise<MetadataRoute.Sitemap> {
   for(const p of municipais){const cidades=ufs.get(p.municipio.uf.slug)??new Set<string>();cidades.add(p.municipio.codigo);ufs.set(p.municipio.uf.slug,cidades);}
   const diretorios=["/economia/municipios",...[...ufs].flatMap(([uf,cidades])=>Array.from({length:Math.ceil(cidades.size/100)},(_,i)=>`/economia/municipios/${uf}${i?`?pagina=${i+1}`:""}`))];
   const datas=new Map<string,string>();
+  const ultimas=new Map<string,string>();
+  const registrar=(chave:string,data:string)=>{if(data>(ultimas.get(chave)??''))ultimas.set(chave,data);};
   for(const p of paginas)datas.set(rotaEconomia(p),revisoes.get(`economia:${p.slug}`)!);
-  for(const p of municipais)datas.set(rotaMunicipal(p.id,p.municipio),revisoes.get(`${p.id}:${p.municipio.codigo}`)!);
+  for(const p of municipais){
+    const data=revisoes.get(`${p.id}:${p.municipio.codigo}`)!;
+    datas.set(rotaMunicipal(p.id,p.municipio),data);
+    for(const chave of ['municipios',`municipios:${p.municipio.uf.slug}`,p.id,`${p.id}:${p.municipio.uf.codigo}`])registrar(chave,data);
+  }
   const hubs=await hubsEconomia();
-  for(const h of hubs){const ultima=municipais.filter(p=>p.id===h.id && (!h.uf || p.municipio.uf.codigo===h.uf.codigo)).map(p=>datas.get(rotaMunicipal(p.id,p.municipio))!).sort().at(-1)!;datas.set(`/economia/${h.slug}`,ultima);}
-  for(const caminho of diretorios){const uf=new URL(caminho,URL_SITE).pathname.split('/')[3];datas.set(caminho,municipais.filter(p=>!uf || p.municipio.uf.slug===uf).map(p=>datas.get(rotaMunicipal(p.id,p.municipio))!).sort().at(-1)!);}
+  for(const h of hubs)datas.set(`/economia/${h.slug}`,ultimas.get(h.uf?`${h.id}:${h.uf.codigo}`:h.id)!);
+  for(const caminho of diretorios){const uf=new URL(caminho,URL_SITE).pathname.split('/')[3];datas.set(caminho,ultimas.get(uf?`municipios:${uf}`:'municipios')!);}
   const institucionais=['metodologia','sobre','correcoes','economia'];
   for(const nome of institucionais)datas.set('/'+nome,revisoes.get('site:'+nome)!);
   datas.set('/',revisoes.get('site:principal')!);

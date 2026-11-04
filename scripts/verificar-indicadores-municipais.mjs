@@ -10,8 +10,9 @@ const refs=new Map(cobertura.map(r=>[`${r.indicador}:${r.codigo}`,r.referencia])
 const paths=new Set();
 for(const m of municipios)for(const id of m.indicadores){assert(refs.has(`${id}:${m.codigo}`),`cobertura ${id}/${m.codigo}`);paths.add(rotaMunicipal(id,m));}
 assert.equal(paths.size,cobertura.filter(r=>municipios.some(m=>m.codigo===r.codigo && m.indicadores.includes(r.indicador))).length);
-const indice=await(await fetch(root+'/sitemap.xml')).text();
-const xml=indice.includes('<sitemapindex')?(await Promise.all([...indice.matchAll(/<loc>(.*?)<\/loc>/g)].map(async m=>await(await fetch(root+new URL(m[1]).pathname)).text()))).join(''):indice;
+async function carregarSitemap(path){const r=await fetch(root+path,{signal:AbortSignal.timeout(60000)});assert.equal(r.status,200,path+' status');assert(r.headers.get('content-type')?.includes('xml'),path+' tipo');return r.text();}
+const indice=await carregarSitemap('/sitemap.xml');
+const xml=indice.includes('<sitemapindex')?(await Promise.all([...indice.matchAll(/<loc>(.*?)<\/loc>/g)].map(m=>carregarSitemap(new URL(m[1]).pathname)))).join(''):indice;
 const urls=[...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map(m=>m[1]);
 assert.equal(new Set(urls).size,urls.length);for(const path of paths)assert(urls.some(url=>url.endsWith(path)),path+' sitemap');
 assert(!xml.includes('prototipo'));assert(!xml.includes('/imagens/'));

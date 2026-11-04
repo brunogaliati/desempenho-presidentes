@@ -1,5 +1,8 @@
 import { sitemapPublico } from "@/lib/sitemapPublico";
 export const revalidate=3600;
+export async function generateStaticParams(){
+  return Array.from({length:Math.ceil((await sitemapPublico()).length/4000)},(_,i)=>({id:`${i}.xml`}));
+}
 const xml=(s:string)=>s.replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&apos;'}[c]!));
 export async function GET(_request:Request,{params}:{params:Promise<{id:string}>}){
   const {id}=await params;

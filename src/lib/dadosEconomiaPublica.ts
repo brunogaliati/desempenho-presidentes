@@ -123,11 +123,22 @@ export const carregarPaginaEconomia = cache(async (pagina: PaginaEconomia): Prom
   };
 });
 
-export const paginasEconomiaPublicaveis = cache(async () => {
-  // Preenche o cache por fonte/UF antes do próximo recorte, sem consultas idênticas simultâneas.
+export const paginasEconomiaPublicaveis = unstable_cache(async () => {
+  // Route Handlers não compartilham o cache de renderização do React.
+  // A elegibilidade usa cada fonte uma vez, sem carregar gráficos ou revisões por URL.
+  const [precos,pnad,brasil]=await Promise.all([gasolina(),estadual(),nacional()]);
+  const municipais=new Map<string,LinhaPublica[]>();
+  const hoje=new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo"}).format(new Date());
   const paginas: PaginaEconomia[] = [];
   for (const p of catalogoEconomia()) {
-    if (p.propria || await carregarPaginaEconomia(p)) paginas.push(p);
+    if(p.propria){paginas.push(p);continue;}
+    const uf=p.territorio?.uf;
+    if(uf && !municipais.has(uf.codigo))municipais.set(uf.codigo,await gasolinaMunicipal(uf.codigo));
+    const fonte=uf?municipais.get(uf.codigo)!:p.id==='gasolina'?precos:p.id==='estados'?pnad:brasil;
+    const linhas=fonte.filter(r=>r.codigo===(p.territorio?.codigo??'1'));
+    if(!linhas.length || (p.territorio && nomeNormal(linhas[0].nome)!==nomeNormal(p.territorio.nome)))continue;
+    const pontos=prepararSeriePublica(linhas.map(r=>({mes:r.mes,valor:r.valor})),p.id==='estados',hoje);
+    if(ultimaJanelaPublica(pontos,p.minimoPontos).length)paginas.push(p);
   }
   return paginas;
-});
+},["economia-catalogo-publicavel-v2"],opcoes);
