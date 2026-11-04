@@ -1,5 +1,4 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { fonteCompartilhamento } from "@/lib/fonteCompartilhamento";
 
 import { ImageResponse } from "next/og";
 
@@ -24,10 +23,9 @@ export const dynamic = "force-dynamic";
 // pessoa, e o segmento dinâmico da rota já dá conta disso.
 
 async function fontes() {
-  const dir = join(process.cwd(), "src", "assets");
   const [regular, semibold] = await Promise.all([
-    readFile(join(dir, "Inter-Regular.ttf")),
-    readFile(join(dir, "Inter-SemiBold.ttf")),
+    fonteCompartilhamento("Inter-Regular.ttf"),
+    fonteCompartilhamento("Inter-SemiBold.ttf"),
   ]);
   return [
     { name: "Inter", data: regular, weight: 400 as const, style: "normal" as const },

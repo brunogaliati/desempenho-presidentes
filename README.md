@@ -265,3 +265,64 @@ Os dados utilizados neste projeto são obtidos de fontes oficiais como Banco Cen
 ---
 
 Desenvolvido com ❤️ para promover transparência e análise objetiva dos indicadores econômicos brasileiros.
+
+
+## Hospedagem no Cloudflare Workers
+
+O frontend usa `@opennextjs/cloudflare` (OpenNext) e Wrangler. O Next foi atualizado
+para o patch 15.5.29 exigido pelo adaptador; a aplicação continua usando Next 15.
+`open-next.config.ts` configura cache incremental em R2, fila de revalidação e tags
+em Durable Objects. O cache regional adicional fica desligado para que o webhook
+não dependa de um segundo mecanismo de purge. `wrangler.jsonc` declara o Worker
+`desempenho-do-governo`, bucket `desempenho-do-governo-cache`, assets e bindings.
+O Neon continua sendo o banco dos dados oficiais; R2 armazena apenas cache.
+
+Comandos, na raiz deste repositório:
+
+```sh
+npm ci
+npm run build:worker
+npm run preview:worker
+# Depois de autenticar e configurar as variáveis da conta:
+npm run deploy:worker
+```
+
+O preview usa a porta 3000 e deve substituir o servidor Next durante o teste,
+sem manter dois servidores. O deploy utiliza o pacote já gerado por `build:worker`
+e o comando OpenNext inicializa os caches. Um `wrangler deploy` isolado não substitui
+esse fluxo. Artefatos `.open-next`, `.wrangler` e arquivos de segredos locais não
+são versionados. As fontes das imagens são servidas pelo binding ASSETS no Worker
+e lidas de `public/fontes` durante builds ou execução em Node.
+
+Para deploy automático em **Workers & Pages → Workers Builds**, conectar
+`brunogaliati/desempenho-presidentes`, branch `main`, diretório raiz `/`.
+Build command: `npm run build:worker`. Deploy command: `npm run deploy:worker`.
+Usar Node 24 (variável de build `NODE_VERSION=24`) e npm. Os segredos precisam ser
+cadastrados no painel, sem publicá-los no Git:
+
+- Build: `DATABASE_URL` como segredo; `SITE_URL`, `SEO_INDEXING=true` e, se desejado,
+  `NEXT_PUBLIC_WEB_VITALS` e tokens públicos de verificação.
+- Runtime: `DATABASE_URL` e `REVALIDATE_TOKEN` como segredos. Os valores públicos
+  principais já estão em `wrangler.jsonc`; o deploy preserva variáveis do painel.
+- Backend no GitHub: `REVALIDATE_URL=https://desempenhodogoverno.com.br/api/revalidate`
+  e `REVALIDATE_TOKEN` igual ao segredo do Worker.
+
+Antes do primeiro deploy, autenticar com `npx wrangler login` e habilitar/criar o
+bucket R2 na conta selecionada. Os Durable Objects são provisionados pela migração
+`v1` do Wrangler. A disponibilidade desses recursos e os limites do plano precisam
+ser conferidos na conta; nenhum plano ou serviço pago foi contratado nesta revisão.
+
+O domínio usa atualmente nameservers da DigitalOcean. Para o domínio principal
+no Worker, adicionar a zona à Cloudflare, conferir a importação dos registros DNS
+existentes e alterar os nameservers no registrador. Depois configurar
+**Worker → Settings → Domains & Routes → Custom domain**. Não apontar o domínio
+para o Worker antes de cadastrar os segredos e verificar a aplicação publicada.
+
+Validação da adaptação: build do Worker e lint aprovados; 30 testes SEO/dados
+aprovados; simulação de deploy aprovada. O teste de runtime encontrou erro nas fontes
+das imagens, corrigido no carregador compartilhado; seis rotas de imagens geraram
+PNGs válidos no workerd local. A integração completa no workerd local também passou: 12.431 URLs descobertas, 70 diretórios, 59 páginas/imagens amostradas, 60 panoramas, limites/404 e webhook com preservação das datas. A validação remota depende de autenticação na conta.
+O npm audit ainda sinaliza dependências transitivas (incluindo ferramentas de build
+e o PostCSS interno do Next 15); as correções compatíveis foram aplicadas, sem usar
+`audit fix --force`, que propõe downgrade do adaptador e mudança de versão principal.
+Não se declara aprovação integral de segurança a partir desses testes funcionais.

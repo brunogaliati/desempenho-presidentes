@@ -1,5 +1,4 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { fonteCompartilhamento } from "@/lib/fonteCompartilhamento";
 import { ImageResponse } from "next/og";
 import { carregarSalarioMinimo } from "@/lib/salarioMinimo";
 import { mesPorExtenso, reais } from "@/lib/formatar";
@@ -11,7 +10,7 @@ export const revalidate = 3600;
 
 export default async function ImagemSalario() {
   const [dados, fonte] = await Promise.all([
-    carregarSalarioMinimo(), readFile(join(process.cwd(), "src/assets/Inter-Regular.ttf")),
+    carregarSalarioMinimo(), fonteCompartilhamento("Inter-Regular.ttf"),
   ]);
   return new ImageResponse(
     <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 70, width: "100%", height: "100%", background: "#f9f9f7", color: "#0b0b0b", fontFamily: "Inter" }}>

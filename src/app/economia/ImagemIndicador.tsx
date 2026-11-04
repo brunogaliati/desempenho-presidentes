@@ -1,5 +1,4 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { fonteCompartilhamento } from "@/lib/fonteCompartilhamento";
 import { ImageResponse } from "next/og";
 import type { DadosPaginaEconomia } from "@/lib/dadosEconomiaPublica";
 import { rotuloPeriodoPublico } from "@/app/prototipo/_dados/economiaModelo";
@@ -17,7 +16,7 @@ export async function imagemMunicipal(d:DadosIndicadorMunicipal) {
 }
 
 async function imagemPublica(titulo:string,valor:string,referencia:string,fonteNome:string) {
-  const fonte = await readFile(join(process.cwd(),"src/assets/Inter-Regular.ttf"));
+  const fonte = await fonteCompartilhamento("Inter-Regular.ttf");
   return new ImageResponse(<div style={{display:"flex",flexDirection:"column",justifyContent:"space-between",width:"100%",height:"100%",padding:64,background:"#f8fafd",color:"#263746",fontFamily:"Inter"}}>
     <div style={{display:"flex",fontSize:36}}>{titulo}</div>
     <div style={{display:"flex",fontSize:96,color:"#285c84"}}>{valor}</div>

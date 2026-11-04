@@ -1,5 +1,4 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { fonteCompartilhamento } from "@/lib/fonteCompartilhamento";
 import { ImageResponse } from "next/og";
 import { carregarInflacao } from "@/lib/inflacao";
 import { mesPorExtenso, numero } from "@/lib/formatar";
@@ -10,7 +9,7 @@ export const contentType = "image/png";
 export const revalidate = 3600;
 
 export default async function ImagemInflacao() {
-  const [dados, fonte] = await Promise.all([carregarInflacao(), readFile(join(process.cwd(), "src/assets/Inter-Regular.ttf"))]);
+  const [dados, fonte] = await Promise.all([carregarInflacao(), fonteCompartilhamento("Inter-Regular.ttf")]);
   return new ImageResponse(
     <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 70, width: "100%", height: "100%", background: "#f9f9f7", color: "#0b0b0b", fontFamily: "Inter" }}>
       <div style={{ display: "flex", fontSize: 44 }}>Inflação (IPCA) em 12 meses</div>

@@ -1,5 +1,4 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { fonteCompartilhamento } from "@/lib/fonteCompartilhamento";
 
 import { ImageResponse } from "next/og";
 
@@ -31,14 +30,13 @@ export const dynamic = "force-dynamic";
  *
  * A resolução automática usa `fileURLToPath` num caminho que quebra no
  * Windows ("TypeError: Invalid URL"), derrubando tanto o build quanto o
- * runtime local. Carregar o arquivo explicitamente funciona igual em qualquer
- * sistema e ainda garante que o card saia com a mesma tipografia do site.
+ * runtime local. Carregar a fonte pelo adaptador do ambiente funciona no servidor
+ * Next e no Worker e ainda garante que o card saia com a mesma tipografia do site.
  */
 async function fontes() {
-  const dir = join(process.cwd(), "src", "assets");
   const [regular, semibold] = await Promise.all([
-    readFile(join(dir, "Inter-Regular.ttf")),
-    readFile(join(dir, "Inter-SemiBold.ttf")),
+    fonteCompartilhamento("Inter-Regular.ttf"),
+    fonteCompartilhamento("Inter-SemiBold.ttf"),
   ]);
   return [
     { name: "Inter", data: regular, weight: 400 as const, style: "normal" as const },
