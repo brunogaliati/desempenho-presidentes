@@ -307,59 +307,45 @@ cadastrados no painel, sem publicá-los no Git:
 - Backend no GitHub: `REVALIDATE_URL=https://desempenhodogoverno.com.br/api/revalidate`
   e `REVALIDATE_TOKEN` igual ao segredo do Worker.
 
-Antes do primeiro deploy, autenticar com `npx wrangler login` e habilitar/criar o
-bucket R2 na conta selecionada. Os Durable Objects são provisionados pela migração
-`v1` do Wrangler. A disponibilidade desses recursos e os limites do plano precisam
-ser conferidos na conta; nenhum plano ou serviço pago foi contratado nesta revisão.
+Antes do primeiro deploy em outra conta, autenticar com `npx wrangler login` e
+habilitar/criar o bucket R2. Os Durable Objects são provisionados pela migração
+`v1` do Wrangler. Na conta de produção, o bucket e os segredos já estão cadastrados.
 
-O domínio usa atualmente nameservers da DigitalOcean. Para o domínio principal
-no Worker, adicionar a zona à Cloudflare, conferir a importação dos registros DNS
-existentes e alterar os nameservers no registrador. Depois configurar
-**Worker → Settings → Domains & Routes → Custom domain**. Não apontar o domínio
-para o Worker antes de cadastrar os segredos e verificar a aplicação publicada.
-
-Validação da adaptação: build do Worker e lint aprovados; 30 testes SEO/dados
-aprovados; simulação de deploy aprovada. O teste de runtime encontrou erro nas fontes
-das imagens, corrigido no carregador compartilhado; seis rotas de imagens geraram
-PNGs válidos no workerd local. A integração completa no workerd local também passou: 12.431 URLs descobertas, 70 diretórios, 59 páginas/imagens amostradas, 60 panoramas, limites/404 e webhook com preservação das datas. A validação remota depende de autenticação na conta.
+Validação da adaptação: build do Worker, lint, 30 testes SEO/dados e simulação de
+deploy aprovados. O carregador compartilhado das imagens usa ASSETS no Worker;
+as quatro partes do sitemap são pré-geradas e a elegibilidade usa cache por fonte.
 O npm audit ainda sinaliza dependências transitivas (incluindo ferramentas de build
 e o PostCSS interno do Next 15); as correções compatíveis foram aplicadas, sem usar
 `audit fix --force`, que propõe downgrade do adaptador e mudança de versão principal.
 Não se declara aprovação integral de segurança a partir desses testes funcionais.
 
 
-### Publicação remota em 4 de novembro de 2026
+### Produção validada em 4 de novembro de 2026
 
-Worker publicado em `https://desempenho-do-governo.brunop-galiati.workers.dev`.
-Bucket R2 e segredos foram cadastrados na conta autorizada. A validação real
-identificou leituras repetidas durante a geração dos sitemaps: a elegibilidade
-agora é calculada por fonte, com cache persistente do catálogo, e as quatro partes
-são pré-geradas. A versão corrigida publicou 12.937 URLs; a verificação remota
-confirmou todas elas, mas a aprovação completa de produção continua pendente.
+Site publicado em **https://desempenhodogoverno.com.br**, também acessível por
+`www.desempenhodogoverno.com.br`. O endereço workers.dev continua habilitado.
+O titular ativou o Workers Paid (US$ 5/mês + uso excedente); o domínio/DNS continua
+no plano gratuito. `limits.cpu_ms=5000` limita o processamento por requisição.
+O plano Workers Free havia interrompido requisições com erro 1102 (`exceededCpu`).
 
-O plano Workers Free encerrou requisições com erro 1102 (`exceededCpu`), com
-amostras de 72 ms e 10 ms no log. O limite do Free é 10 ms; o painel oferece
-Workers Paid a US$ 5/mês + uso. Domínio no plano Free e Workers Free/Paid são
-produtos diferentes. Nenhuma atualização paga foi contratada pelo agente.
-O verificador agora registra status e diagnóstico de respostas 5xx, sem mascarar
-falhas por repetição automática.
+Com autorização do titular, os nameservers no Registro.br foram substituídos por
+`dayana.ns.cloudflare.com` e `kaiser.ns.cloudflare.com`. A zona está **ativa** e
+a delegação foi confirmada no DNS público e no RDAP. Os dois registros A importados
+continuam com proxy e o Worker atende os dois hosts por **Worker Routes**,
+versionadas em `wrangler.jsonc`. Custom Domain encontrou conflito com os registros
+importados e não foi usado. O certificado universal está ativo e a opção
+**SSL/TLS → Certificados de borda → Sempre usar HTTPS** está habilitada.
 
-A zona `desempenhodogoverno.com.br` foi cadastrada no plano gratuito e os dois
-registros A existentes foram importados. Ela permanece pendente de ativação:
-`dayana.ns.cloudflare.com` e `kaiser.ns.cloudflare.com` são os nameservers
-atribuídos. A delegação pública continua na DigitalOcean. A troca no registrador
-é uma etapa posterior; o domínio deve ser ligado ao Worker por Custom Domain
-após ativação da zona. Não se afirma validação do domínio principal nem deploy
-automático a partir do GitHub enquanto essas etapas não forem configuradas.
+A integração remota completa passou no workers.dev e no domínio oficial:
+12.937 URLs únicas no sitemap, 12.431 páginas municipais descobertas pelos 70
+diretórios, 59 páginas/imagens com valores conferidos na fonte, 60 panoramas,
+limites/404, navegação pública, metadados e webhook de revalidação. Dados idênticos
+preservaram todas as revisões e datas editoriais. O robots.txt permite rastreamento
+e aponta para o sitemap canônico. A página de inflação foi conferida no navegador.
 
-
-### Workers Paid e validação da aplicação
-
-O titular ativou o Workers Paid (US$ 5/mês + uso excedente). O Worker foi atualizado
-com `limits.cpu_ms=5000`, abaixo do padrão do plano, para limitar processamento por
-requisição. A validação remota completa passou no endereço workers.dev: cobertura
-das 12.431 URLs municipais, 70 diretórios, 59 páginas e imagens com conferência na
-fonte, 60 panoramas, limites/404, navegação e webhook. A reconsulta sem mudança de
-dados preservou as revisões e datas editoriais. A aprovação se refere à aplicação
-nesse endereço; o domínio principal depende da ativação da delegação e do Custom
-Domain. Não houve novas mudanças no conteúdo dos indicadores nesta etapa.
+Durante a troca, o resolvedor local ainda retornava o IP antigo para o domínio
+principal. O teste completo usou o IP obtido do DNS público apenas no processo de
+validação, mantendo a verificação normal do certificado e do hostname; o DNS do
+sistema não foi alterado. A propagação dos caches de outros resolvedores pode
+terminar depois da publicação. Não se declara indexação no Google, métricas reais
+de Core Web Vitals ou deploy automático pelo GitHub como concluídos nesta etapa.

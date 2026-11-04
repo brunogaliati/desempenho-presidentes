@@ -5,6 +5,12 @@
   "compatibility_date": "2026-11-04",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "limits": { "cpu_ms": 5000 },
+  "workers_dev": true,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "desempenhodogoverno.com.br/*", "zone_name": "desempenhodogoverno.com.br" },
+    { "pattern": "www.desempenhodogoverno.com.br/*", "zone_name": "desempenhodogoverno.com.br" }
+  ],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "services": [{ "binding": "WORKER_SELF_REFERENCE", "service": "desempenho-do-governo" }],
   "r2_buckets": [{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "desempenho-do-governo-cache" }],
