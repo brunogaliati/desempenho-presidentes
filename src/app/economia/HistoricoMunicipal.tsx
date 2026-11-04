@@ -1,4 +1,7 @@
 "use client";
+import { SeletorDados } from "@/components/SeletorDados";
+import { SeletorPeriodo } from "@/components/SeletorPeriodo";
+import styles from "@/app/economia/indicador.module.css";
 import { inteiroCompartilhado } from "@/lib/compartilhamento";
 import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
@@ -18,9 +21,9 @@ export function HistoricoMunicipal({id,nome,pontos}:{id:IndicadorMunicipal;nome:
   const data=(r:string)=>rotuloReferenciaMunicipal(r,cfg.anual);
   const unidade=id==="cadunico" && medida===1?"pessoas":id==="emprego-formal" && medida>0?"movimentações":cfg.unidade;
   return <div ref={ref}>
-    <div className="my-5 flex flex-wrap items-end gap-4">
-      {cfg.medidas.length>1 && <label className="grid gap-1 text-sm">Medida<select value={medida} onChange={e=>setMedida(Number(e.target.value))}>{cfg.medidas.map((m,i)=><option key={m} value={i}>{m}</option>)}</select></label>}
-      {([["De",de,setDe],["Até",ate,setAte]] as const).map(([nome,valor,mudar])=><label className="grid gap-1 text-sm" key={nome}>{nome}{cfg.anual?<select value={valor} onChange={e=>mudar(e.target.value)}>{pontos.filter(p=>p.valor!==null).map(p=><option key={p.referencia} value={p.referencia}>{data(p.referencia)}</option>)}</select>:<input type="month" min={pontos[0].referencia} max={ultimo} value={valor} onChange={e=>mudar(e.target.value)}/>}</label>)}
+    <div className={styles.filtros}>
+      {cfg.medidas.length>1 && <SeletorDados rotulo="Medida" valor={String(medida)} opcoes={cfg.medidas.map((m,i)=>({valor:String(i),rotulo:m}))} aoEscolher={v=>setMedida(Number(v))}/>}
+      {([["De",de,setDe],["Até",ate,setAte]] as const).map(([rotulo,valor,mudar])=><SeletorPeriodo key={rotulo} rotulo={rotulo} valor={valor} referencias={pontos.map(p=>p.referencia)} precisao={cfg.anual?'ano':'mes'} aoEscolher={mudar}/>)}
     </div>
     {valido ? <>
       <p aria-live="polite" className="max-w-prose text-sm leading-relaxed">De {data(de)} a {data(ate)}, a diferença na medida selecionada foi de <strong>{comSinal(b!-a!,0)} {unidade}</strong>{a!>0?` (${comSinal((b!/a!-1)*100,2)}%)`:""}. {medida===3 && id==="emprego-formal"?"Comparamos os saldos dos dois meses, sem somar o intervalo.":"Comparação dos valores nas duas referências."}</p>

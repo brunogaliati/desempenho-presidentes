@@ -27,7 +27,7 @@ export async function sitemapPublico(): Promise<MetadataRoute.Sitemap> {
   const hubs=await hubsEconomia();
   for(const h of hubs)datas.set(`/economia/${h.slug}`,ultimas.get(h.uf?`${h.id}:${h.uf.codigo}`:h.id)!);
   for(const caminho of diretorios){const uf=new URL(caminho,URL_SITE).pathname.split('/')[3];datas.set(caminho,ultimas.get(uf?`municipios:${uf}`:'municipios')!);}
-  const institucionais=['metodologia','sobre','correcoes','economia'];
+  const institucionais=['metodologia','sobre','correcoes','explorar'];
   for(const nome of institucionais)datas.set('/'+nome,revisoes.get('site:'+nome)!);
   datas.set('/',revisoes.get('site:principal')!);
   return ["/",...institucionais.map(n=>'/'+n),'/meio-ambiente','/dinheiro', ...paginas.map(rotaEconomia),...hubs.map(h=>`/economia/${h.slug}`),...municipais.map(p=>rotaMunicipal(p.id,p.municipio)),...diretorios, ...pessoas.map((p) => `/presidente/${encodeURIComponent(String(p.pessoa_id))}`)]

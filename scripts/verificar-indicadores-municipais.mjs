@@ -74,7 +74,7 @@ for(const path of ['/economia/populacao/sao-paulo/campinas','/economia/emprego-f
  const html=await(await fetch(root+path)).text();const graph=[...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)].flatMap(m=>JSON.parse(m[1])['@graph']??[]),d=graph.find(s=>s['@type']==='Dataset');
  assert(d.dateModified);assert.equal(d.dateModified,datas.get(path),path+' sitemap/schema');assert(html.includes('Revisão do conteúdo'));assert(html.includes('/correcoes'));
 }
-for(const path of ['/','/economia','/metodologia','/sobre','/correcoes','/meio-ambiente','/dinheiro']){
+for(const path of ['/','/explorar','/metodologia','/sobre','/correcoes','/meio-ambiente','/dinheiro']){
  const r=await fetch(root+path);assert.equal(r.status,200,path);const html=await r.text();assert(html.includes(`rel="canonical" href="https://desempenhodogoverno.com.br${path==='/'?'':path}"`) || html.includes(`rel="canonical" href="https://desempenhodogoverno.com.br${path}"`),path+' canonical');assert(!html.includes('noindex'));assert(!/href="\/prototipo(?:[?"/])/.test(html));
  if(path==='/'){assert(html.includes('painel-governo'));assert(html.includes('governo-a-governo'));assert.equal([...html.matchAll(/<h1[ >]/g)].length,1);assert(html.includes('href="/economia/municipios"'));assert(!html.includes('/prototipo/'));}
 }

@@ -16,6 +16,8 @@ export async function POST(request: NextRequest) {
     revalidatePath('/metodologia');
     revalidatePath('/sobre');
     revalidatePath('/economia', 'layout');
+    revalidatePath('/explorar');
+    revalidatePath('/presidente/[pessoa]', 'page');
     revalidatePath('/sitemap.xml');
     revalidatePath('/sitemaps/[id]', 'page');
     return NextResponse.json({ revalidated: true, now: Date.now() });

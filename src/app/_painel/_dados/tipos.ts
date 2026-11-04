@@ -303,7 +303,7 @@ export type IndicadorMandato = Pick<Indicador,
 >;
 
 export type MandatoVisual = Pick<Presidente,
-  "id" | "nome" | "nomeCurto" | "mandato" | "inicio" | "fim" | "partido" | "emCurso"
+  "id" | "pessoaId" | "nome" | "nomeCurto" | "mandato" | "inicio" | "fim" | "partido" | "emCurso"
 >;
 
 /** Um município, como o painel recebe ao entrar num estado. */

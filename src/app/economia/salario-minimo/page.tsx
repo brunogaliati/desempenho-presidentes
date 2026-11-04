@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { carregarSalarioMinimo } from "@/lib/salarioMinimo";
 import { mesPorExtenso, numero, reais } from "@/lib/formatar";
-import { jsonLd, metadataPagina, NOME_SITE, URL_SITE } from "@/lib/seo";
+import { jsonLd, metadataPagina, URL_SITE } from "@/lib/seo";
 import { ROTA_SALARIO } from "@/lib/catalogoEconomia";
 import { HistoricoSalario } from "./HistoricoSalario";
 import styles from "../indicador.module.css";
@@ -52,14 +52,14 @@ export default async function SalarioMinimo() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <header className="border-b border-[var(--borda)] py-5">
         <nav aria-label="Navegação estrutural" className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-[var(--tinta-2)]">
-          <Link href="/">{NOME_SITE}</Link><span aria-hidden="true">/</span><span aria-current="page">Salário mínimo</span>
+          <Link href="/explorar">Explorar dados</Link><span aria-hidden="true">/</span><span aria-current="page">Salário mínimo</span>
         </nav>
         <h1 className="mt-10 max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">Salário mínimo: valor, reajuste e poder de compra</h1>
         <p className="mb-5 mt-5 max-w-prose text-lg leading-relaxed">
           O salário mínimo nacional registrado em <strong>{mesPorExtenso(ultimo.mes)}</strong> é de <strong>{reais(ultimo.nominal)} por mês</strong>.
           {anterior && <> O último reajuste identificado na série, em {mesPorExtenso(reajuste.mes)}, foi de {reais(aumento)} ({numero(percentual)}%), sobre {reais(anterior.nominal)}.</>}
         </p>
-        <p className="text-sm leading-relaxed text-[var(--tinta-2)]">Último mês nominal disponível: {mesPorExtenso(ultimo.mes)}. Poder de compra calculado até {mesPorExtenso(referenciaReal)}. Coleta das séries em <time dateTime={atualizadoEm}>{new Date(atualizadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>. Revisão do conteúdo em <time dateTime={revisadoEm}>{new Date(revisadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>.</p>
+        <p className="text-sm leading-relaxed text-[var(--tinta-2)]">Fonte: Banco Central · IBGE. Brasil · {mesPorExtenso(ultimo.mes)}. Poder de compra até {mesPorExtenso(referenciaReal)}.</p>
         <nav aria-label="Nesta página" className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm">
           <a href="#historico">Explorar o histórico</a><a href="#tabela">Tabela por ano</a><a href="#reajustes">Todos os reajustes</a><a href="#fontes">Fontes e cálculo</a>
         </nav>
@@ -98,7 +98,7 @@ export default async function SalarioMinimo() {
 
       <section id="fontes" className="vidro border-t border-[var(--borda)] py-9" data-lustro="fixo">
         <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">Fontes e como fazemos a conta</TituloCompartilhavel>
-        <div className="mt-4 max-w-prose space-y-4 leading-relaxed">
+        <div className="mt-4 max-w-prose space-y-4 leading-relaxed"><p className="text-sm leading-relaxed text-[var(--tinta-2)]">Último mês nominal disponível: {mesPorExtenso(ultimo.mes)}. Poder de compra calculado até {mesPorExtenso(referenciaReal)}. Coleta das séries em <time dateTime={atualizadoEm}>{new Date(atualizadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>. Revisão do conteúdo em <time dateTime={revisadoEm}>{new Date(revisadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>.</p>
           <p>O valor nominal vem da <a href={SERIE}>série 1619 do Banco Central</a>. O <a href={DECRETO}>Decreto nº 12.797/2025</a> fixou R$ 1.621,00 a partir de 1º de janeiro de 2026. A tabela mostra o piso nacional, sem incluir pisos estaduais, de categorias ou descontos.</p>
           <p>O poder de compra é calculado com o <a href={IPCA}>IPCA do IBGE</a>, distribuído também pela série 433 do Banco Central. Multiplicamos o salário de cada mês pela razão entre o índice de preços do mês-base e o índice daquele mês. As taxas mensais são compostas, nunca somadas.</p>
           <p>O mês-base é {mesPorExtenso(referenciaReal)}, último IPCA disponível. Por isso, o valor nominal mais recente pode ter uma referência posterior à série real. Datas futuras não entram na página.</p>

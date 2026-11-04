@@ -1,4 +1,7 @@
 "use client";
+import { SeletorDados } from "@/components/SeletorDados";
+import { SeletorPeriodo } from "@/components/SeletorPeriodo";
+import styles from "@/app/economia/indicador.module.css";
 import { opcaoCompartilhada } from "@/lib/compartilhamento";
 import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
@@ -19,18 +22,11 @@ export function HistoricoIndicador({ series, principal, trimestral, moeda }: { s
   const comparacao = compararPontosPublicos(serie.pontos, desde, ate, !moeda);
   const recorte = serie.pontos.filter((p) => p.mes >= desde && p.mes <= ate);
   const formato = (v: number) => moeda ? `${reais(v)}/litro` : `${numero(v,1)}%`;
-  const classe = "rounded-md border border-[var(--borda)] px-3 py-2 text-base";
   const data = (mes: string) => rotuloPeriodoPublico(mes,trimestral);
   return <div ref={ref}>
-    <div className="my-5 flex flex-wrap items-end gap-4">
-      {series.length > 1 && <label className="grid gap-1 text-sm">Território<select className={classe} value={codigo} onChange={(e) => {
-        const proxima = series.find((s) => s.codigo === e.target.value)!;
-        setCodigo(proxima.codigo); setDesde(padrao(proxima)); setAte(ultimaReferenciaPublica(proxima.pontos)!.mes);
-      }}>{series.map((s) => <option key={s.codigo} value={s.codigo}>{s.nome}</option>)}</select></label>}
-      {([['De',desde,setDesde],['Até',ate,setAte]] as const).map(([nome,valor,mudar]) => <label className="grid gap-1 text-sm" key={nome}>{nome}
-        {trimestral ? <select className={classe} value={valor} onChange={(e) => mudar(e.target.value)}>{serie.pontos.map((p) => <option key={p.mes} value={p.mes}>{data(p.mes)}</option>)}</select>
-          : <input className={classe} type="month" min={serie.pontos[0].mes} max={ultima.mes} value={valor} onChange={(e) => mudar(e.target.value)} />}
-      </label>)}
+    <div className={styles.filtros}>
+      {series.length > 1 && <SeletorDados rotulo="Território" valor={codigo} opcoes={series.map(s=>({valor:s.codigo,rotulo:s.nome}))} aoEscolher={codigo=>{const proxima=series.find(s=>s.codigo===codigo)!;setCodigo(codigo);setDesde(padrao(proxima));setAte(ultimaReferenciaPublica(proxima.pontos)!.mes);}}/>}
+      {([['De',desde,setDesde],['Até',ate,setAte]] as const).map(([rotulo,valor,mudar])=><SeletorPeriodo key={rotulo} rotulo={rotulo} valor={valor} referencias={serie.pontos.map(p=>p.mes)} precisao={trimestral?'trimestre':'mes'} aoEscolher={mudar}/>)}
     </div>
     {comparacao !== null ? <>
       <p aria-live="polite" className="max-w-prose text-sm leading-relaxed"><strong>{serie.nome}</strong>: de {data(desde)} a {data(ate)}, a mudança foi de <strong>{comSinal(comparacao,moeda ? 2 : 1)}{moeda ? "%" : " pontos percentuais"}</strong>. {moeda ? "Comparação dos preços nominais nas duas datas, sem descontar a inflação." : "Diferença entre as taxas nas duas referências, sem atribuição de causa."}</p>

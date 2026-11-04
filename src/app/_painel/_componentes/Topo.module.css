@@ -1,0 +1,9 @@
+.explorar[aria-current="page"] { color:var(--tinta); background:var(--faixa-ativa); font-weight:650; }
+.semMandato :global(.cabecalho-principal) { grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"marca temas acoes"; }
+@media(max-width:760px) {
+  .semMandato :global(.cabecalho-principal) { grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"marca acoes" "temas temas"; }
+  .cabecalho :global(.marca-painel) { width:140px; }
+  .cabecalho .explorar { min-height:44px; padding:8px; font-size:11px; gap:5px; }
+  .explorar svg { display:none; }
+}
+@media(max-width:380px) { .cabecalho :global(.marca-painel) { width:120px; } }

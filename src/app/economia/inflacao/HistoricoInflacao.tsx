@@ -1,4 +1,7 @@
 "use client";
+import { SeletorDados } from "@/components/SeletorDados";
+import { SeletorPeriodo } from "@/components/SeletorPeriodo";
+import styles from "@/app/economia/indicador.module.css";
 import { opcaoCompartilhada } from "@/lib/compartilhamento";
 import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
@@ -20,14 +23,11 @@ export function HistoricoInflacao({ historico }: { historico: MesInflacao[] }) {
   const { ref, largura } = useLargura<HTMLDivElement>();
   const acumulado = acumuladoPeriodo({ datas: historico.map((r) => r.mes), valores: historico.map((r) => r.mensal) }, desde, ate);
   const recorte = historico.filter((r) => r.mes >= desde && r.mes <= ate);
-  const classe = "rounded-md border border-[var(--borda)] bg-[var(--superficie)] px-3 py-2 text-base";
   return <div ref={ref}>
-    <div className="my-5 flex flex-wrap items-end gap-4">
-      <label className="grid gap-1 text-sm">Mostrar<select className={classe} value={medida} onChange={(e) => setMedida(e.target.value as keyof typeof MEDIDAS)}>
-        {Object.entries(MEDIDAS).map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}
-      </select></label>
-      <label className="grid gap-1 text-sm">De<input className={classe} type="month" min={historico[0].mes} max={ultimo.mes} value={desde} onChange={(e) => setDesde(e.target.value)} /></label>
-      <label className="grid gap-1 text-sm">Até<input className={classe} type="month" min={historico[0].mes} max={ultimo.mes} value={ate} onChange={(e) => setAte(e.target.value)} /></label>
+    <div className={styles.filtros}>
+      <SeletorDados rotulo="Mostrar" valor={medida} opcoes={Object.entries(MEDIDAS).map(([valor,rotulo])=>({valor,rotulo}))} aoEscolher={v=>setMedida(v as keyof typeof MEDIDAS)}/>
+      <SeletorPeriodo rotulo="De" valor={desde} referencias={historico.map(r=>r.mes)} aoEscolher={setDesde}/>
+      <SeletorPeriodo rotulo="Até" valor={ate} referencias={historico.map(r=>r.mes)} aoEscolher={setAte}/>
     </div>
     {acumulado !== null ? <>
       <p aria-live="polite" className="max-w-prose text-sm leading-relaxed">De {mesPorExtenso(desde)} a {mesPorExtenso(ate)}, o IPCA acumulou <strong>{numero(acumulado)}%</strong>, considerando cada mês do intervalo uma única vez. Esse é o acumulado do intervalo escolhido, não a taxa de cada ponto do gráfico.</p>

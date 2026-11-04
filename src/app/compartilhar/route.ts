@@ -4,7 +4,7 @@ import { buscarHubEconomia, tituloHub, resumoHub } from "@/lib/hubsEconomia";
 
 const capas: Record<string, [string,string]> = {
   '/': ['O Brasil em dados,\ngoverno a governo.', 'Indicadores oficiais, séries históricas e comparações entre mandatos e territórios.'],
-  '/economia': ['Economia do Brasil', 'Preços, renda, trabalho e indicadores dos estados e municípios.'],
+  '/explorar': ['Explorar dados', 'Presidentes, indicadores, estados e municípios. Encontre históricos e fontes oficiais.'],
   '/meio-ambiente': ['Meio ambiente', 'Desmatamento, queimadas e fiscalização, com fontes do INPE e do Ibama.'],
   '/dinheiro': ['Dinheiro público', 'Explore o orçamento e as transferências, com fontes e períodos identificados.'],
   '/metodologia': ['Como lemos os dados', 'Fontes, critérios e limites das comparações. A mesma régua para todos os governos.'],

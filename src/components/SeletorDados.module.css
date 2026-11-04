@@ -1,0 +1,15 @@
+.campo { position:relative; min-width:0; width: min(100%, 19rem); flex:1 1 10rem; }
+.rotulo { display:block; margin-bottom:6px; font-size:13px; color:var(--tinta-2); }
+.gatilho { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-height:44px; padding:10px 14px; border:1px solid var(--borda); border-radius:12px; background:var(--superficie); color:var(--tinta); text-align:left; font-size:14px; }
+.gatilho span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gatilho svg { flex-shrink:0; }
+.gatilho:hover { background:var(--faixa-a); }
+.gatilho:disabled { opacity:.55; cursor:not-allowed; }
+.campo :is(button,input):focus-visible { outline:2px solid var(--foco,var(--serie)); outline-offset:2px; }
+.menu { position:absolute; top:calc(100% + 6px); left:0; z-index:35; width:100%; min-width: min(16rem,100%); padding:6px; border:1px solid var(--borda); border-radius:14px; background:var(--superficie); box-shadow:0 12px 30px color-mix(in srgb,var(--tinta) 14%,transparent); }
+.campo .busca { width:100%; padding:10px; margin-bottom:4px; min-height:44px; border:1px solid var(--borda); border-radius:8px; background:var(--fundo); font-size:14px; }
+.lista { max-height: min(260px,40dvh); overflow:auto; scrollbar-width:thin; scrollbar-color:var(--tinta-3) transparent; }
+.opcao { display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%; padding:10px; min-height:44px; border-radius:8px; text-align:left; font-size:14px; }
+.opcao:hover,.opcao:focus-visible { background:var(--faixa-a); }
+.opcao[aria-selected="true"] { background:var(--faixa-ativa); font-weight:600; }
+.vazio { padding:12px; font-size:14px; color:var(--tinta-2); }

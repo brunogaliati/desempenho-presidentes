@@ -1,5 +1,6 @@
 "use client";
 import { Compartilhar } from "@/components/Compartilhar";
+import { usePerfilPainel } from "./ContextoPerfil";
 import { opcaoCompartilhada, inteiroCompartilhado } from "@/lib/compartilhamento";
 import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
@@ -839,6 +840,7 @@ function Destaque({
   leituras: Leitura[];
   aoTrocarLeitura: (l: Leitura) => void;
 }) {
+  const perfil=usePerfilPainel();
   const serie = uf ? l.ufs[uf.codigo] : l.brasil;
   const d = desdeAPosse(l, serie, periodo);
   const sent = d !== null ? sentidoDe(l, d) : "neutro";
@@ -854,7 +856,7 @@ function Destaque({
 
   return (
     <div className="order-1 animate-[subir_.5s_ease-out_backwards]" data-destaque={l.id}>
-            <h1 className="titulo-painel">Economia</h1>
+            <h1 className="titulo-painel">{perfil?`Economia no governo ${perfil.nome}`:"Economia"}</h1>
       <p className="mono text-[11px] font-medium uppercase tracking-[0.18em]" style={{ color: "var(--serie)" }}>
         {uf ? uf.nome : "Brasil"}
       </p>

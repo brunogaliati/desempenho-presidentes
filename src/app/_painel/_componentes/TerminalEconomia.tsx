@@ -5,6 +5,7 @@ import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 import Image from "next/image";
 import Link from "next/link";
 import { Compartilhar } from "@/components/Compartilhar";
+import { usePerfilPainel } from "./ContextoPerfil";
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 
 import { COR_BOM, COR_RUIM, corDoVeredito, GraficoTempo } from "@/components/GraficoTempo";
@@ -1298,6 +1299,7 @@ function GovernoAGoverno({
   uf: UF | null;
   className: string;
 }) {
+  const perfil=usePerfilPainel();
   const caixa = useRef<HTMLDivElement>(null);
   const faixa = useRef<HTMLDivElement>(null);
   // A célula sob o ponteiro: `l` é a linha, nula no cabeçalho.
@@ -1383,6 +1385,7 @@ function GovernoAGoverno({
                 <button
                   type="button"
                   data-mandato={m.id}
+                  style={perfil?.pessoaId===m.pessoaId?{background:"var(--faixa-ativa)",outline:"1px solid var(--ouro-forte,var(--serie))"}:undefined}
                   aria-pressed={mandatoFixo === m.id}
                   className="flex w-full flex-col items-center gap-1.5 rounded-lg pt-2"
                   title={`${m.nome} · ${m.inicio.slice(0, 4)}–${m.emCurso ? "hoje" : m.fim.slice(0, 4)}. Toque para fixar o destaque no gráfico.`}
@@ -1476,7 +1479,7 @@ function GovernoAGoverno({
         </tbody>
       </table>
     );
-  }, [ordem, linhas, mandatos, governos, ativa, mandatoFixo]);
+  }, [ordem, linhas, mandatos, governos, ativa, mandatoFixo, perfil]);
 
   return (
     <Bloco

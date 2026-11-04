@@ -1,4 +1,7 @@
 "use client";
+import { SeletorDados } from "@/components/SeletorDados";
+import { SeletorPeriodo } from "@/components/SeletorPeriodo";
+import styles from "@/app/economia/indicador.module.css";
 import { opcaoCompartilhada } from "@/lib/compartilhamento";
 import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
@@ -15,21 +18,12 @@ export function HistoricoSalario({ historico, referenciaReal }: { historico: Mes
   const { ref, largura } = useLargura<HTMLDivElement>();
   const comparacao = compararSalario(historico, desde, ate);
   const recorte = historico.filter((r) => r.mes >= desde && r.mes <= ate);
-  const classe = "rounded-md border border-[var(--borda)] bg-[var(--superficie)] px-3 py-2 text-base";
   return (
     <div ref={ref}>
-      <div className="my-5 flex flex-wrap items-end gap-4">
-        <label className="grid gap-1 text-sm">Mostrar
-          <select className={classe} value={medida} onChange={(e) => setMedida(e.target.value as "real" | "nominal")}>
-            <option value="real">Poder de compra (IPCA)</option><option value="nominal">Valor da época</option>
-          </select>
-        </label>
-        <label className="grid gap-1 text-sm">De
-          <input className={classe} type="month" min={historico[0].mes} max={historico.at(-1)!.mes} value={desde} onChange={(e) => setDesde(e.target.value)} />
-        </label>
-        <label className="grid gap-1 text-sm">Até
-          <input className={classe} type="month" min={historico[0].mes} max={historico.at(-1)!.mes} value={ate} onChange={(e) => setAte(e.target.value)} />
-        </label>
+        <div className={styles.filtros}>
+        <SeletorDados rotulo="Mostrar" valor={medida} opcoes={[{valor:'real',rotulo:'Poder de compra (IPCA)'},{valor:'nominal',rotulo:'Valor da época'}]} aoEscolher={v=>setMedida(v as 'real'|'nominal')}/>
+        <SeletorPeriodo rotulo="De" valor={desde} referencias={historico.map(r=>r.mes)} aoEscolher={setDesde}/>
+        <SeletorPeriodo rotulo="Até" valor={ate} referencias={historico.map(r=>r.mes)} aoEscolher={setAte}/>
       </div>
       {comparacao ? <>
         <p aria-live="polite" className="max-w-prose text-sm leading-relaxed">

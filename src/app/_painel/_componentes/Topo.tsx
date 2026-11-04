@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Compartilhar } from "@/components/Compartilhar";
+import styles from "./Topo.module.css";
 import Link from "next/link";
 import { LinkTema } from "./LinkTema";
 import { destinoPainel } from "@/lib/rotasPainel";
@@ -48,6 +48,7 @@ export function Cabecalho({
   publico=false,
   recorte={},
   semTemaAtivo=false,
+  explorarAtivo=false,
 }: {
   aba: AbaId;
   aoTrocar: (a: AbaId) => void;
@@ -55,6 +56,7 @@ export function Cabecalho({
   publico?: boolean;
   recorte?: { uf?: string; mandato?: string };
   semTemaAtivo?: boolean;
+  explorarAtivo?: boolean;
 }) {
   const [escuro, setEscuro] = useState(false);
 
@@ -72,7 +74,7 @@ export function Cabecalho({
   };
 
   return (
-    <header className="cabecalho-painel vidro">
+    <header className={`cabecalho-painel vidro ${styles.cabecalho} ${!mandato ? styles.semMandato : ""}`}>
       <div className="cabecalho-principal">
         <Link href="/" className="marca-painel" aria-label="Desempenho do Governo — início">
           <Marca />
@@ -82,13 +84,12 @@ export function Cabecalho({
         </nav>
         {mandato}
         <div className="cabecalho-acoes">
-          <Link href="/#governo-a-governo" className="acao-cabecalho" aria-label="Comparar governos" title="Comparar governos">
+          <Link href="/explorar" className={`acao-cabecalho ${styles.explorar}`} aria-current={explorarAtivo ? "page" : undefined}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
-              <path d="M5 19V9m7 10V4m7 15v-7" />
+              <circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4" />
             </svg>
-            <span className="rotulo-acao">Comparar governos</span>
+            <span>Explorar dados</span>
           </Link>
-          <Compartilhar mensagem="Painel do governo" compacto/>
           <button type="button" role="switch" aria-checked={escuro} onClick={alternarTema} className="tema-interruptor" aria-label="Alternar tema claro e escuro" title={escuro ? "Ativar tema claro" : "Ativar tema escuro"}>
             <span className="tema-marcador" aria-hidden />
             <svg className="tema-sol" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden><circle cx="12" cy="12" r="3.5" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" /></svg>

@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { carregarInflacao } from "@/lib/inflacao";
 import { mesPorExtenso, numero } from "@/lib/formatar";
-import { jsonLd, metadataPagina, NOME_SITE, URL_SITE } from "@/lib/seo";
+import { jsonLd, metadataPagina, URL_SITE } from "@/lib/seo";
 import { ROTA_INFLACAO, ROTA_SALARIO } from "@/lib/catalogoEconomia";
 import { HistoricoInflacao } from "./HistoricoInflacao";
 import styles from "../indicador.module.css";
@@ -41,13 +41,13 @@ export default async function Inflacao() {
   return <main className={`${styles.pagina} mx-auto max-w-6xl pb-20`}>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
     <header className="border-b border-[var(--borda)] py-5">
-      <nav aria-label="Navegação estrutural" className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-[var(--tinta-2)]"><Link href="/">{NOME_SITE}</Link><span aria-hidden="true">/</span><span aria-current="page">Inflação</span></nav>
+      <nav aria-label="Navegação estrutural" className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-[var(--tinta-2)]"><Link href="/explorar">Explorar dados</Link><span aria-hidden="true">/</span><span aria-current="page">Inflação</span></nav>
       <h1 className="mt-10 max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">IPCA acumulado: inflação em 12 meses, no ano e mês a mês</h1>
       <p className="mb-5 mt-5 max-w-prose text-lg leading-relaxed">Em <strong>{mesPorExtenso(ultimo.mes)}</strong>, último mês disponível, o IPCA variou <strong>{pct(ultimo.mensal)}</strong>.
         {ultimo.dozeMeses !== null ? <> Nos 12 meses encerrados nessa referência, a inflação acumulou <strong>{pct(ultimo.dozeMeses)}</strong>.</> : " O acumulado em 12 meses ainda não tem cobertura completa."}
         {ultimo.ano !== null ? <> De janeiro até esse mês, o acumulado foi de <strong>{pct(ultimo.ano)}</strong>.</> : " O acumulado no ano não tem cobertura completa."}
       </p>
-      <p className="text-sm leading-relaxed text-[var(--tinta-2)]">Fonte: IBGE, IPCA geral, via Banco Central (SGS 433). Referência dos dados: {mesPorExtenso(ultimo.mes)}. Coleta da série em <time dateTime={atualizadoEm}>{new Date(atualizadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>. Revisão do conteúdo em <time dateTime={revisadoEm}>{new Date(revisadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>.</p>
+      <p className="text-sm leading-relaxed text-[var(--tinta-2)]">Fonte: IBGE · Banco Central. Brasil · {mesPorExtenso(ultimo.mes)}.</p>
       <nav aria-label="Nesta página" className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm"><a href="#historico">Explorar o histórico</a><a href="#mensal">Tabela mês a mês</a><a href="#anual">Inflação por ano</a><a href="#fontes">Fontes e cálculo</a></nav>
     </header>
 
@@ -85,7 +85,7 @@ export default async function Inflacao() {
 
     <section id="fontes" className="vidro border-t border-[var(--borda)] py-9" data-lustro="fixo">
       <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">Fontes e como calculamos a inflação</TituloCompartilhavel>
-      <div className="mt-4 max-w-prose space-y-4 leading-relaxed">
+      <div className="mt-4 max-w-prose space-y-4 leading-relaxed"><p className="text-sm leading-relaxed text-[var(--tinta-2)]">Fonte: IBGE, IPCA geral, via Banco Central (SGS 433). Referência dos dados: {mesPorExtenso(ultimo.mes)}. Coleta da série em <time dateTime={atualizadoEm}>{new Date(atualizadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>. Revisão do conteúdo em <time dateTime={revisadoEm}>{new Date(revisadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</time>.</p>
         <p>O <a href={IPCA}>IPCA é produzido pelo IBGE</a>. Usamos a variação mensal do índice geral nacional, distribuída pela <a href={SGS}>série 433 do Banco Central</a>. O número não representa a inflação específica dos alimentos nem o custo de vida individual de cada família.</p>
         <p>Para acumular, multiplicamos os fatores mensais: (1 + taxa do mês ÷ 100). Depois subtraímos 1 e multiplicamos por 100. Por exemplo, doze meses de 1% resultam em 12,68%, e não em 12%. Não arredondamos os fatores antes de multiplicá-los; exibimos o resultado com duas casas decimais.</p>
         <p>O acumulado no ano usa janeiro até a referência. O acumulado em 12 meses usa a referência e os onze meses anteriores. A comparação de datas inclui as variações de todos os meses escolhidos, inclusive o primeiro e o último; um único mês retorna a taxa daquele mês.</p>

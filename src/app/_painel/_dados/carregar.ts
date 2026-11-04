@@ -411,7 +411,7 @@ async function carregarPainelSemCache(): Promise<{ painel: Omit<DadosPainel, "go
 
   // ---------------------------------------------------------------------------
 
-  const mandatos = dados.presidentes.map(({ id, nome, nomeCurto, mandato, inicio, fim, partido, emCurso }) => ({ id, nome, nomeCurto, mandato, inicio, fim, partido, emCurso }));
+  const mandatos = dados.presidentes.map(({ id, pessoaId, nome, nomeCurto, mandato, inicio, fim, partido, emCurso }) => ({ id, pessoaId, nome, nomeCurto, mandato, inicio, fim, partido, emCurso }));
   const painel: Omit<DadosPainel, "governos"> = {
     foco: focoDoMandato(mandatos, presidente.id)!,
     hoje: new Date().toISOString(),

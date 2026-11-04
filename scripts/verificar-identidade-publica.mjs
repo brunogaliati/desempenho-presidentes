@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 const raiz=process.env.AUDITORIA_URL??'http://localhost:3000';
 const pasta=new URL('../.wrangler/auditoria-identidade/',import.meta.url);await mkdir(pasta,{recursive:true});
-const simples=new Set(['/','/economia','/metodologia','/sobre','/correcoes','/meio-ambiente','/dinheiro']);
+const simples=new Set(['/','/explorar','/metodologia','/sobre','/correcoes','/meio-ambiente','/dinheiro']);
 function modelo(caminho){
  if(simples.has(caminho))return 'pagina:'+caminho;
  if(/^\/presidente\/[^/]+$/.test(caminho))return 'presidente';
