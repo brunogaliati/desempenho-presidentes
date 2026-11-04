@@ -39,6 +39,7 @@ interface Props {
 
 export function Painel({ dados: inteiros, retrato, children }: Props) {
   const router = useRouter(), parametros=useSearchParams();
+  const navegar=(url:string)=>{window.scrollTo({top:0,behavior:"instant"});router.push(url,{scroll:false});};
   const caminho=usePathname(), pessoaId=caminho.match(/^\/presidente\/([^/]+)$/)?.[1];
   const aba=temaDoCaminho(caminho), descricao=TEMAS_PAINEL[aba].descricao;
   const sigla=pessoaId?null:inteiros.ufs.find(u=>u.sigla===parametros.get('uf')?.toUpperCase())?.sigla??null;
@@ -54,7 +55,7 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
   const dados=useMemo(()=>mandatoId===emCurso?atual:recortarAoMandato(inteiros,mandatoId),[inteiros,mandatoId,emCurso,atual]);
   const setMandatoId=(id:string)=>{
     const proximo=mandatos.find(m=>m.id===id);
-    if(pessoaId&&proximo&&proximo.pessoaId!==pessoaId){router.push(`/presidente/${proximo.pessoaId}?mandato=${encodeURIComponent(id)}`);return;}
+    if(pessoaId&&proximo&&proximo.pessoaId!==pessoaId){navegar(`/presidente/${proximo.pessoaId}?mandato=${encodeURIComponent(id)}`);return;}
     const url=new URL(location.href);url.searchParams.set('mandato',id);
     // O Next copia o estado interno e notifica useSearchParams nesta chamada pública.
     window.history.replaceState(null,'',url);
@@ -65,7 +66,7 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
     if(pessoaId){url.pathname='/';url.searchParams.set('mandato',mandatoId);}
     if(s&&presidentesDe2015.includes(mandatoId)){presidenteAntes.current=mandatoId;url.searchParams.set('mandato',TERMO_2015);}
     if(!s&&mandatoId===TERMO_2015)url.searchParams.set('mandato',presidenteAntes.current??presidentesDe2015[0]??emCurso);
-    if(pessoaId)router.push(url.pathname+url.search+url.hash);else window.history.replaceState(null,'',url);
+    if(pessoaId)navegar(url.pathname+url.search+url.hash);else window.history.replaceState(null,'',url);
   };
   const cabecalho = useRef<HTMLDivElement>(null);
   useVidro();
@@ -88,7 +89,7 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
 
   const trocarAba = (a: AbaId) => {
     if(a!=="economia"&&a!=="ambiente"&&a!=="dinheiro")return;
-    router.push(destinoPainel({aba:a,uf:sigla??undefined,mandato:mandatoId}));
+    navegar(destinoPainel({aba:a,uf:sigla??undefined,mandato:mandatoId}));
   };
 
   return (

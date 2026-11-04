@@ -76,7 +76,7 @@ export function Cabecalho({
   return (
     <header className={`cabecalho-painel vidro ${styles.cabecalho} ${!mandato ? styles.semMandato : ""}`}>
       <div className="cabecalho-principal">
-        <Link href="/" className="marca-painel" aria-label="Desempenho do Governo — início">
+        <Link href="/" scroll={false} onNavigate={()=>window.scrollTo({top:0,behavior:"instant"})} className="marca-painel" aria-label="Desempenho do Governo — início">
           <Marca />
         </Link>
         <nav className="navegacao-temas" aria-label="Temas">

@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import CarregandoPainel, { type TemaPainel } from "./CarregandoPainel";
 
 export function LinkTema({href,aba,rotulo,atual}:{href:string;aba:TemaPainel;rotulo:string;atual:boolean}) {
-  return <Link href={href} aria-current={atual?'page':undefined} className="px-3 py-2"><Conteudo aba={aba} rotulo={rotulo}/></Link>;
+  return <Link href={href} scroll={false} onNavigate={()=>window.scrollTo({top:0,behavior:"instant"})} aria-current={atual?'page':undefined} className="px-3 py-2"><Conteudo aba={aba} rotulo={rotulo}/></Link>;
 }
 
 function Conteudo({aba,rotulo}:{aba:TemaPainel;rotulo:string}) {
