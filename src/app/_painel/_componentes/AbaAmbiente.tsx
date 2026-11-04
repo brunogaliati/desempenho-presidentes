@@ -1,6 +1,8 @@
 "use client";
+import { opcaoCompartilhada, identificadorCompartilhado } from "@/lib/compartilhamento";
+import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import type { DadosPainel } from "../_dados/tipos";
 import { useMunicipiosAmbiente } from "./municipiosAmbiente";
@@ -35,9 +37,9 @@ export function AbaAmbiente({
   sigla: string | null;
   setSigla: (s: string | null) => void;
 }) {
-  const [foco, setFoco] = useState(dados.ambiente.series[0]?.id);
-  const [bioma, setBioma] = useState<string | null>(null);
-  const [municipio, setMunicipio] = useState<string | null>(null);
+  const [foco, setFoco] = useEstadoCompartilhavel("serie", dados.ambiente.series[0]?.id, identificadorCompartilhado);
+  const [bioma, setBioma] = useEstadoCompartilhavel<string | null>("bioma", null, opcaoCompartilhada([null,"amazonia","cerrado","caatinga","mata_atlantica","pampa","pantanal"]));
+  const [municipio, setMunicipio] = useEstadoCompartilhavel<string | null>("municipio", null, v=>v===null||typeof v==="string"&&/^\d{7}$/.test(v));
   const { formas, municipal } = useMunicipiosAmbiente(dados.foco);
   const placar = useMemo(() => placarDoAmbiente(dados), [dados]);
 

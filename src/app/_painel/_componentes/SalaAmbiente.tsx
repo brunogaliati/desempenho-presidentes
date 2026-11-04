@@ -1,4 +1,7 @@
 "use client";
+import { Compartilhar } from "@/components/Compartilhar";
+import { opcaoCompartilhada, textoCompartilhado } from "@/lib/compartilhamento";
+import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
@@ -333,13 +336,13 @@ export function SalaAmbiente({
   aoFocarSerie,
   aoVerHistorico,
 }: Props) {
-  const [lente, setLente] = useState<Lente>("desmatamento");
-  const [modoEscolhido, setModo] = useState<ModoMapa>("area");
-  const [recorte, setRecorte] = useState<"municipios" | "estados">("municipios");
-  const [anoEscolhido, setAno] = useState<{ desmatamento: number | null; fogo: number | null; protegidas: number | null }>({ desmatamento: null, fogo: null, protegidas: null });
+  const [lente, setLente] = useEstadoCompartilhavel<Lente>("mapa.lente", "desmatamento", opcaoCompartilhada(["desmatamento","alertas","fogo","queimada","ti","uc","fiscalizacao","multas","embargos"]));
+  const [modoEscolhido, setModo] = useEstadoCompartilhavel<ModoMapa>("mapa.modo", "area", opcaoCompartilhada(["area","total","posse"]));
+  const [recorte, setRecorte] = useEstadoCompartilhavel<"municipios" | "estados">("mapa.recorte", "municipios", opcaoCompartilhada(["municipios","estados"]));
+  const [anoEscolhido, setAno] = useEstadoCompartilhavel<{ desmatamento: number | null; fogo: number | null; protegidas: number | null }>("mapa.anos", { desmatamento: null, fogo: null, protegidas: null }, v=>!!v&&typeof v==="object"&&["desmatamento","fogo","protegidas"].every(k=>k in v)&&Object.values(v).every(n=>n===null||typeof n==="number"&&Number.isInteger(n)&&n>=1900&&n<=2200), (v):{desmatamento:number|null;fogo:number|null;protegidas:number|null}=>chaveDoAno?{...v,[chaveDoAno]:ano}:v);
   // A linha do placar nacional que separa um pedaço do Brasil: pinta só os municípios dele.
-  const [regiao, setRegiao] = useState<RegiaoPlacar | null>(null);
-  const [areaEscolhida, setAreaEscolhida] = useState<string | null>(null);
+  const [regiao, setRegiao] = useEstadoCompartilhavel<RegiaoPlacar | null>("mapa.regiao", null, opcaoCompartilhada([null,"amazonia","cerrado","caatinga","mata_atlantica","pampa","pantanal","outros"]));
+  const [areaEscolhida, setAreaEscolhida] = useEstadoCompartilhavel<string | null>("mapa.area", null, v=>v===null||textoCompartilhado(v));
   // O bioma e o estado também se escolhem nas tabelas lá embaixo: o pedaço do Brasil aceso aqui não sobrevive a isso.
   const recorteAgora = `${bioma}|${sigla}`;
   const [recorteVisto, setRecorteVisto] = useState(recorteAgora);
@@ -376,8 +379,8 @@ export function SalaAmbiente({
     return ultimo && !completos.includes(ultimo) ? [...completos, ultimo] : completos;
   }, [lente, ehArea, bioma, regiao, uf, dados]);
   const chaveDoAno = lente === "fogo" ? "fogo" : lente === "desmatamento" ? "desmatamento" : ehArea ? "protegidas" : null;
-  const pedido = chaveDoAno ? anoEscolhido[chaveDoAno] : null;
-  const ano = pedido !== null && anosDaLente.includes(pedido) ? pedido : (anosDaLente.at(-1) ?? null);
+  const pedido: number | null = chaveDoAno ? anoEscolhido[chaveDoAno] : null;
+  const ano: number | null = pedido !== null && anosDaLente.includes(pedido) ? pedido : (anosDaLente.at(-1) ?? null);
 
   // Os governos antigos não têm número por município em tudo: o mapa fica nos estados, e diz por quê.
   const semMunicipio = Boolean(
@@ -539,7 +542,7 @@ export function SalaAmbiente({
   const placarDaVez = uf ? placarDoEstado(dados, uf, municipal) : bioma ? placarDoBioma(dados, bioma, municipal) : placar;
 
   return (
-    <section className="sala-tema relative -mx-3 -mt-3 overflow-hidden" aria-label="Meio ambiente no Brasil">
+    <section id="mapa-ambiente" className="sala-tema relative -mx-3 -mt-3 overflow-hidden" aria-label="Meio ambiente no Brasil">
       <div
         className="relative mx-auto flex max-w-[1680px] flex-col gap-4 px-3 py-4 lg:block lg:h-[calc(100dvh-var(--altura-cabecalho,4rem))] lg:min-h-[640px] lg:p-0"
         style={{ "--largura": LARGURA_BARRA } as React.CSSProperties}
@@ -565,7 +568,7 @@ export function SalaAmbiente({
                 </button>
               )}
             </p>
-            <h2 className="mt-1 truncate text-[15px] font-semibold">{MEDIDAS[lente].rotulo}</h2>
+            <div className="flex items-center justify-between gap-2"><h2 className="mt-1 truncate text-[15px] font-semibold">{MEDIDAS[lente].rotulo}</h2><Compartilhar mensagem={MEDIDAS[lente].rotulo+" · "+nomeRecorte} ancora="mapa-ambiente" compacto/></div>
             <div className="mt-1.5 flex h-11 items-end gap-3">
               <p className="manchete shrink-0 text-4xl font-bold leading-none xl:text-[2.75rem]">
                 <NumeroRolante texto={resumo.valor === null ? "—" : formatar(resumo.valor, resumo.formato)} />

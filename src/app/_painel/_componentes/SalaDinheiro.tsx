@@ -1,4 +1,5 @@
 "use client";
+import { Compartilhar } from "@/components/Compartilhar";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
@@ -109,7 +110,7 @@ export function SalaDinheiro(props: PropsSala) {
   })();
 
   return (
-    <section className="dn-sala" data-aberta={aberto ? "" : undefined} aria-label="De cada R$ 100">
+    <section id="orcamento" className="dn-sala" data-aberta={aberto ? "" : undefined} aria-label="De cada R$ 100">
       <ColunaDinheiro {...props} ente={ente} ponto={ponto} base={base} aoAbrir={(id) => {
         setSelecionado(id);
         const f = itemDe(id)?.familia;
@@ -232,6 +233,7 @@ function ColunaDinheiro({
   const gov = sigla ? governoEm(governos, sigla, `${ano}-07-01`) : null;
   return (
     <div className="dn-coluna">
+      <div className="mb-3 flex justify-end"><Compartilhar mensagem={"Orçamento de "+ente.nome+" · "+ano} contexto="" ancora="orcamento" compacto/></div>
       <label className={ROTULO} htmlFor="dn-ente" style={{ color: "var(--tinta-3)" }}>Quem gasta</label>
       <span className="dn-seletor-ente">
         <select id="dn-ente" value={sigla ?? "BR"} onChange={(e) => setSigla(e.target.value === "BR" ? null : e.target.value)}>
@@ -554,12 +556,13 @@ function DetalheItem({
   const uniao = sigla ? painel.entes.BR?.anos[String(ano)] : null;
   const abre = ente.abre?.[String(ano)]?.[id];
   return (
-    <div className={`dn-detalhe dn-f-${item.familia}`}>
+    <div id="orcamento-detalhe" className={`dn-detalhe dn-f-${item.familia}`}>
       <div className="dn-detalhe-topo">
         <div>
           <h3 className="dn-detalhe-nome">{nomeDoItem(id)}</h3>
           <div className="dn-detalhe-familia"><i className={`dn-q dn-f-${item.familia}`} />{NOME_FAMILIA[item.familia]}</div>
         </div>
+        <Compartilhar mensagem={`${nomeDoItem(id)} · ${ente.nome} · ${ano}`} contexto="" ancora="orcamento-detalhe" compacto/>
         <button type="button" className="dn-fechar" aria-label="Fechar detalhe" onClick={aoFechar}>×</button>
       </div>
       <div className="dn-detalhe-numero">

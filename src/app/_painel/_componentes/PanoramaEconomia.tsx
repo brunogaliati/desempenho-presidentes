@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
+import { opcaoCompartilhada } from "@/lib/compartilhamento";
 
 import { corDoVeredito } from "@/components/GraficoTempo";
 import { comSinal, numero, sentido, type Sentido, mesLegivel } from "@/lib/formatar";
@@ -281,7 +282,7 @@ const QUEM: Record<Quem, { nome: string; de: string; as: string }> = {
  * empresas no número principal e no gráfico; a outra fica nos de apoio.
  */
 export function Credito({ dados, className }: { dados: DadosPainel; className: string }) {
-  const [escolha, setEscolha] = useState<Quem>("pf");
+  const [escolha, setEscolha] = useEstadoCompartilhavel<Quem>("credito.pessoa", "pf", opcaoCompartilhada(["pf","pj"]));
   const inad: Record<Quem, SerieEconomia | undefined> = {
     pf: achar(dados, "credito_pf_inadimplencia"),
     pj: achar(dados, "credito_pj_inadimplencia"),

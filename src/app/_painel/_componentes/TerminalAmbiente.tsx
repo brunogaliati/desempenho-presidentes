@@ -1,4 +1,6 @@
 "use client";
+import { opcaoCompartilhada } from "@/lib/compartilhamento";
+import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
 import { useMemo, useState } from "react";
 
@@ -80,7 +82,7 @@ interface Props {
 export function TerminalAmbiente({ dados, atual, foco, setFoco, placar, sigla, bioma, formas, municipal, aoSelecionarUf, aoSelecionarBioma, aoSelecionarMunicipio, aoVerSerie }: Props) {
   const { series, porBioma, fiscalizacao, focosMensais, focosParcial, protegidas } = dados.ambiente;
   const { mandatos } = dados.economia;
-  const [faixa, setFaixa] = useState<"mandato" | "tudo">("mandato");
+  const [faixa, setFaixa] = useEstadoCompartilhavel<"mandato" | "tudo">("faixa", "mandato", opcaoCompartilhada(["mandato","tudo"]));
 
   // Os biomas também abrem no gráfico de cima.
   const comFontes = useMemo(
@@ -242,7 +244,7 @@ function Biomas({
   aoSelecionarBioma: (id: string | null) => void;
   className: string;
 }) {
-  const [modo, setModo] = useState<"posse" | "hoje">("posse");
+  const [modo, setModo] = useEstadoCompartilhavel<"posse" | "hoje">("fiscalizacao.modo", "posse", opcaoCompartilhada(["posse","hoje"]));
   const posse = modo === "posse";
   const linhas = useMemo(
     () => [
@@ -413,7 +415,7 @@ function semDecimal(texto: string): string {
  * preliminar leva só o contorno.
  */
 function BarrasDesmatamento({ dados, mandatos, foco, className }: { dados: DadosPainel; mandatos: MandatoVisual[]; foco: FocoMandato; className: string }) {
-  const [escopo, setEscopo] = useState<Escopo>("amazonia");
+  const [escopo, setEscopo] = useEstadoCompartilhavel<Escopo>("desmatamento.bioma", "amazonia", opcaoCompartilhada(["amazonia","cerrado","caatinga","mata_atlantica","pampa","pantanal","todos"]));
   const { ref, largura } = useLargura<HTMLDivElement>();
   const [sob, setSob] = useState<number | null>(null);
 
@@ -848,8 +850,8 @@ function TemporadaFogo({
  * não na cor. Tocar numa barra mostra quem mais perdeu naquele ano.
  */
 function AreasProtegidas({ p, anoRecebido, className }: { p: NonNullable<DadosPainel["ambiente"]["protegidas"]>; anoRecebido: number; className: string }) {
-  const [recorte, setRecorte] = useState<"ti" | "uc">("ti");
-  const [anoLista, setAnoLista] = useState(p.ano);
+  const [recorte, setRecorte] = useEstadoCompartilhavel<"ti" | "uc">("protegidas.tipo", "ti", opcaoCompartilhada(["ti","uc"]));
+  const [anoLista, setAnoLista] = useEstadoCompartilhavel("protegidas.ano", p.ano, v=>typeof v==="number"&&String(v) in p.maisPorAno);
   const s = recorte === "ti" ? p.ti : p.uc;
   if (!s) return null;
   const u = ultimoDado(s);

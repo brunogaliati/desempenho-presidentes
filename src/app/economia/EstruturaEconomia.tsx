@@ -8,6 +8,7 @@ import { FiltroRefracao, useVidro } from "@/app/_painel/_componentes/Vidro";
 import { buscarPaginaEconomia, PAGINAS_ECONOMIA, rotaEconomia } from "@/lib/catalogoEconomia";
 import styles from "./indicador.module.css";
 import { idsMunicipais } from "@/lib/indicadoresMunicipais";
+import { RecortesCompartilhaveis } from "@/components/RecortesCompartilhaveis";
 
 export function EstruturaEconomia({ children }: { children: React.ReactNode }) {
   const caminho = usePathname();
@@ -26,7 +27,7 @@ export function EstruturaEconomia({ children }: { children: React.ReactNode }) {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  return <div className={`painel-governo min-h-dvh px-3 pb-10 ${styles.estrutura}`} data-aba="economia" data-visual="governo-v1">
+  return <RecortesCompartilhaveis><div className={`painel-governo min-h-dvh px-3 pb-10 ${styles.estrutura}`} data-aba="economia" data-visual="governo-v1">
     <div aria-hidden className="fundo-painel" />
     <FiltroRefracao />
     <div ref={cabecalho} className="painel-cabecalho">
@@ -41,5 +42,5 @@ export function EstruturaEconomia({ children }: { children: React.ReactNode }) {
     </div>
     {children}
     <footer className="mx-auto flex max-w-6xl flex-wrap gap-x-6 gap-y-3 px-4 py-6 text-sm text-[var(--tinta-2)]"><Link href="/economia">Economia</Link><Link href="/metodologia">Metodologia</Link><Link href="/sobre">Sobre o projeto</Link><Link href="/correcoes">Relatar um erro</Link></footer>
-  </div>;
+  </div></RecortesCompartilhaveis>;
 }

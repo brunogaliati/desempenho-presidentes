@@ -1,5 +1,7 @@
 "use client";
-import { useState } from "react";
+import { inteiroCompartilhado } from "@/lib/compartilhamento";
+import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
+
 import { GraficoTempo } from "@/components/GraficoTempo";
 import { useLargura } from "@/lib/useLargura";
 import { numero, comSinal } from "@/lib/formatar";
@@ -7,7 +9,7 @@ import { INDICADORES_MUNICIPAIS, rotuloReferenciaMunicipal, type IndicadorMunici
 
 export function HistoricoMunicipal({id,nome,pontos}:{id:IndicadorMunicipal;nome:string;pontos:LinhaMunicipal[]}) {
   const cfg=INDICADORES_MUNICIPAIS[id],ultimo=pontos.at(-1)!.referencia;
-  const [medida,setMedida]=useState(0),[de,setDe]=useState(pontos.find(p=>Number(p.referencia.slice(0,4))>=Number(ultimo.slice(0,4))-10)?.referencia??pontos[0].referencia),[ate,setAte]=useState(ultimo);
+  const [medida,setMedida]=useEstadoCompartilhavel("medida",0,v=>inteiroCompartilhado(v)&&Number(v)<cfg.medidas.length),[de,setDe]=useEstadoCompartilhavel("de",pontos.find(p=>Number(p.referencia.slice(0,4))>=Number(ultimo.slice(0,4))-10)?.referencia??pontos[0].referencia,v=>pontos.some(p=>p.referencia===v)),[ate,setAte]=useEstadoCompartilhavel("ate",ultimo,v=>pontos.some(p=>p.referencia===v));
   const {ref,largura}=useLargura<HTMLDivElement>();
   const valor=(p:LinhaMunicipal|undefined)=>p?[p.valor,...p.extras][medida]??null:null;
   const a=valor(pontos.find(p=>p.referencia===de)),b=valor(pontos.find(p=>p.referencia===ate));

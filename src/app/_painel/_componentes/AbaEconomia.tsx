@@ -1,6 +1,8 @@
 "use client";
+import { opcaoCompartilhada } from "@/lib/compartilhamento";
+import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
-import { useState } from "react";
+
 
 import type { AbaId, DadosPainel } from "../_dados/tipos";
 import { ultimoDado } from "./formatos";
@@ -39,11 +41,11 @@ export function AbaEconomia({
   aoTrocarAba: (a: AbaId) => void;
 }) {
   const series = dados.economia.series.filter((s) => ultimoDado(s));
-  const [foco, setFoco] = useState(series[0]?.id);
+  const [foco, setFoco] = useEstadoCompartilhavel("serie", series[0]?.id, opcaoCompartilhada(series.map(s=>s.id)));
   // Com um estado escolhido, o gráfico de baixo mostra esta medida dele;
   // `null` deixa a série nacional de `foco`.
   const primeira = dados.leituras.economia[0]?.id ?? null;
-  const [leituraFoco, setLeituraFoco] = useState<string | null>(primeira);
+  const [leituraFoco, setLeituraFoco] = useEstadoCompartilhavel<string | null>("leitura", primeira, v=>v===null||dados.leituras.economia.some(l=>l.id===v));
 
   // "Histórico completo" de um indicador na barra da sala: desce até o gráfico dele.
   const escolher = (id: string) => {

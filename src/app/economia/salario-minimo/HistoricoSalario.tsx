@@ -1,15 +1,17 @@
 "use client";
+import { opcaoCompartilhada } from "@/lib/compartilhamento";
+import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
-import { useState } from "react";
+
 import { GraficoTempo } from "@/components/GraficoTempo";
 import { comSinal, mesPorExtenso, reais } from "@/lib/formatar";
 import { compararSalario, type MesSalario } from "@/lib/salarioMinimoModelo";
 import { useLargura } from "@/lib/useLargura";
 
 export function HistoricoSalario({ historico, referenciaReal }: { historico: MesSalario[]; referenciaReal: string }) {
-  const [medida, setMedida] = useState<"real" | "nominal">("real");
-  const [desde, setDesde] = useState(historico[0].mes);
-  const [ate, setAte] = useState(referenciaReal);
+  const [medida, setMedida] = useEstadoCompartilhavel<"real" | "nominal">("medida", "real", opcaoCompartilhada(["real","nominal"]));
+  const [desde, setDesde] = useEstadoCompartilhavel("de", historico[0].mes, v=>historico.some(r=>r.mes===v));
+  const [ate, setAte] = useEstadoCompartilhavel("ate", referenciaReal, v=>historico.some(r=>r.mes===v));
   const { ref, largura } = useLargura<HTMLDivElement>();
   const comparacao = compararSalario(historico, desde, ate);
   const recorte = historico.filter((r) => r.mes >= desde && r.mes <= ate);

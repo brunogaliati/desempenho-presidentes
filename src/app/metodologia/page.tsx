@@ -1,3 +1,5 @@
+import { DetalhesCompartilhaveis } from "@/components/DetalhesCompartilhaveis";
+import { TituloCompartilhavel } from "@/components/TituloCompartilhavel";
 import Link from "next/link";
 import LayoutEconomia from "../economia/layout";
 import styles from "../economia/indicador.module.css";
@@ -24,7 +26,7 @@ export const metadata: Metadata = metadataPagina("Metodologia · Desempenho do G
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section className="vidro" data-lustro="fixo">
-      <h2 className="text-lg font-semibold">{titulo}</h2>
+      <TituloCompartilhavel className="text-lg font-semibold">{titulo}</TituloCompartilhavel>
       <div className="mt-3 max-w-prose space-y-3 text-[15px] leading-relaxed"
            style={{ color: "var(--tinta-2)" }}>
         {children}
@@ -264,7 +266,7 @@ export default async function Metodologia() {
             </li>
           ))}
         </ul>
-        <details>
+        <DetalhesCompartilhaveis>
           <summary className="cursor-pointer font-medium">Fotografias de governadores</summary>
           <p className="mt-2">Imagens redimensionadas e exibidas com recorte circular.</p>
           <ul className="mt-2 space-y-2 text-sm">
@@ -275,7 +277,7 @@ export default async function Metodologia() {
               </li>
             ))}
           </ul>
-        </details>
+        </DetalhesCompartilhaveis>
       </Secao>
 
       <footer className="border-t py-8" style={{ borderColor: "var(--borda)" }}>

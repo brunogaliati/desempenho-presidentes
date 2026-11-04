@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+.compartilhar-gatilho { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-width:36px; min-height:36px; padding:8px 10px; border:1px solid var(--borda); border-radius:999px; background:var(--vidro-tinta,var(--superficie)); color:var(--tinta-2); font-size:12px; line-height:1; white-space:nowrap; }
+.compartilhar-gatilho:hover { background:var(--faixa-ativa); color:var(--tinta); }
+.compartilhar-gatilho:focus-visible { outline:2px solid var(--serie); outline-offset:3px; }
+.titulo-compartilhavel { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+.titulo-compartilhavel > h2 { min-width:0; }
+.titulo-compartilhavel > .compartilhar-gatilho { flex-shrink:0; }
+.painel-governo.compartilhar-portal { position:fixed; inset:0; z-index:2000; pointer-events:none; background:transparent; }
+.compartilhar-menu { position:fixed; width:min(340px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); overflow:auto; pointer-events:auto; padding:20px; border-radius:20px; color:var(--tinta); background:light-dark(rgba(248,250,253,.98),rgba(23,35,45,.98)); }
+.compartilhar-topo { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:15px; }
+.compartilhar-topo > button { padding:8px; border-radius:999px; }
+.compartilhar-descricao { margin:12px 0; font-size:12px; line-height:1.5; color:var(--tinta-2); }
+.compartilhar-menu input { width:100%; min-width:0; border:1px solid var(--borda); border-radius:10px; padding:10px; font-size:12px; color:var(--tinta-2); background:var(--superficie); }
+.compartilhar-opcoes,.compartilhar-plataformas { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+.compartilhar-opcoes button,.compartilhar-plataformas a { display:flex; align-items:center; justify-content:center; min-height:40px; padding:9px; border:1px solid var(--borda); border-radius:12px; font-size:12px; text-decoration:none; }
+.compartilhar-opcoes button:first-child { background:var(--serie); color:var(--plano); }
+.compartilhar-plataformas a:hover,.compartilhar-opcoes button:hover { filter:brightness(.94); }
+.compartilhar-menu :is(a,button,input):focus-visible { outline:2px solid var(--serie); outline-offset:2px; }
+.compartilhar-nota,.compartilhar-status { margin-top:12px; color:var(--tinta-2); font-size:11px; line-height:1.5; }
+.compartilhar-status { min-height:17px; color:var(--tinta); }
+[data-compartilhado="true"] { outline:2px solid var(--ouro-forte,var(--serie)); outline-offset:4px; }
+.compartilhar-metrica { position:absolute; right:4px; bottom:3px; opacity:0; }
+.grupo-cotacao:hover .compartilhar-metrica,.grupo-cotacao:focus-within .compartilhar-metrica { opacity:1; }
+.compartilhar-metrica .compartilhar-gatilho { min-width:28px; min-height:28px; padding:5px; }
+@media(pointer:coarse) { .compartilhar-gatilho { min-width:44px; min-height:44px; } }
+@media(hover:none) { .compartilhar-metrica { opacity:1; } .grupo-cotacao > button { padding-bottom:44px; } .compartilhar-metrica .compartilhar-gatilho { min-width:40px; min-height:40px; } }
+
 /*
  * Paleta validada com o script de checagem de daltonismo da skill de dataviz.
  *

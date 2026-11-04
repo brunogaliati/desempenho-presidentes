@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEstadoCompartilhavel } from "./RecortesCompartilhaveis";
+import { Compartilhar } from "./Compartilhar";
 
 import { numero, rotuloMandato, sentido } from "@/lib/formatar";
 import { SERIES_UI_POR_ID, seriesOrdenadas } from "@/lib/registroSeries";
@@ -29,7 +30,7 @@ export function ComparacaoPropriosMandatos({ mandatos, todos }: Props) {
     ),
   );
 
-  const [serieId, setSerieId] = useState(disponiveis[0]?.id ?? "");
+  const [serieId, setSerieId] = useEstadoCompartilhavel("pessoa.comparacao", disponiveis[0]?.id ?? "", v => disponiveis.some(s => s.id === v));
   const ui = SERIES_UI_POR_ID[serieId];
   const { ref, visivel } = useVisivel<HTMLElement>();
 
@@ -53,8 +54,8 @@ export function ComparacaoPropriosMandatos({ mandatos, todos }: Props) {
   const zero = ((0 - min) / faixa) * 100;
 
   return (
-    <section className="vidro mt-5 rounded-[26px] p-6 sm:p-8" data-lustro="fixo" ref={ref}>
-      <h2 className="text-xl font-semibold">Um mandato contra o outro</h2>
+    <section id="comparacao-de-mandatos" className="vidro mt-5 rounded-[26px] p-6 sm:p-8" data-lustro="fixo" ref={ref}>
+      <div className="titulo-compartilhavel"><h2 className="text-xl font-semibold">Um mandato contra o outro</h2><Compartilhar mensagem={`Comparação dos mandatos · ${ui?.rotulo ?? serieId}`} ancora="comparacao-de-mandatos" compacto/></div>
       <p
         className="mt-1.5 max-w-prose text-[15px] leading-relaxed"
         style={{ color: "var(--tinta-2)" }}

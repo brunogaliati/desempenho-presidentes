@@ -3,6 +3,7 @@ import LayoutEconomia from "@/app/economia/layout";
 import styles from "@/app/economia/indicador.module.css";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { idCompartilhavel } from "@/lib/compartilhamento";
 import { metadataPagina } from "@/lib/seo";
 
 import { CapaPessoa } from "@/components/CapaPessoa";
@@ -90,14 +91,16 @@ function anosDecorridos(p: Presidente, agora: Date): number {
 
 function Secao({
   titulo,
+  prefixo,
   children,
 }: {
   titulo: string;
+  prefixo: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="vidro mt-5 rounded-[26px] p-6 sm:p-8" data-lustro="fixo">
-      <h3 className="text-lg font-semibold">{titulo}</h3>
+    <section id={`${prefixo}-${idCompartilhavel(titulo)}`} className="vidro mt-5 rounded-[26px] p-6 sm:p-8" data-lustro="fixo">
+      <div className="titulo-compartilhavel"><h3 className="text-lg font-semibold">{titulo}</h3><Compartilhar mensagem={titulo} ancora={`${prefixo}-${idCompartilhavel(titulo)}`} compacto/></div>
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -241,7 +244,7 @@ export default async function PaginaPessoa({
           className="scroll-mt-4 border-t pt-10"
           style={{ borderColor: "var(--eixo)" }}
         >
-          <h2 className="text-2xl font-bold tracking-tight">
+          <div className="titulo-compartilhavel"><h2 className="text-2xl font-bold tracking-tight">
             {m.mandato}º mandato
             <span
               className="ml-3 text-base font-normal"
@@ -250,7 +253,7 @@ export default async function PaginaPessoa({
               {m.inicio.slice(0, 4)}–{m.fim.slice(0, 4)}
               {m.emCurso ? " · em curso" : ""}
             </span>
-          </h2>
+          </h2><Compartilhar mensagem={`${m.nome} · ${m.inicio.slice(0,4)}–${m.fim.slice(0,4)}`} ancora={ancoraMandato(m.mandato)} compacto/></div>
 
           {m.observacao && (
             <p
@@ -265,18 +268,18 @@ export default async function PaginaPessoa({
             </p>
           )}
 
-          <Secao titulo="Os números">
+          <Secao prefixo={ancoraMandato(m.mandato)} titulo="Os números">
             <FichaIndicadores
               presidente={m}
               series={seriesDoMandato(dados, m)}
             />
           </Secao>
 
-          <Secao titulo="Onde este mandato cai entre os nove">
+          <Secao prefixo={ancoraMandato(m.mandato)} titulo="Onde este mandato cai entre os nove">
             <PosicaoEntreMandatos presidente={m} todos={dados.presidentes} />
           </Secao>
 
-          <Secao titulo="O que herdou">
+          <Secao prefixo={ancoraMandato(m.mandato)} titulo="O que herdou">
             <ul className="space-y-2">
               {m.indicadores
                 .filter(
@@ -340,7 +343,7 @@ export default async function PaginaPessoa({
           </Secao>
 
           {m.benchmark.length > 0 && (
-            <Secao titulo="O mundo no mesmo período">
+            <Secao prefixo={ancoraMandato(m.mandato)} titulo="O mundo no mesmo período">
               <div className="grid gap-4 sm:grid-cols-2">
                 {Object.entries(
                   m.benchmark.reduce<Record<string, typeof m.benchmark>>(

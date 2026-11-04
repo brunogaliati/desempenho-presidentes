@@ -1,3 +1,5 @@
+import { DetalhesCompartilhaveis } from "@/components/DetalhesCompartilhaveis";
+import { TituloCompartilhavel } from "@/components/TituloCompartilhavel";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { carregarInflacao } from "@/lib/inflacao";
@@ -50,30 +52,30 @@ export default async function Inflacao() {
     </header>
 
     <section id="historico" className="vidro py-9" data-lustro="fixo">
-      <h2 className="text-2xl font-semibold tracking-tight">Quanto os preços mudaram no período?</h2>
+      <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">Quanto os preços mudaram no período?</TituloCompartilhavel>
       <p className="mt-3 max-w-prose leading-relaxed text-[var(--tinta-2)]">Escolha as datas e veja o acumulado. No gráfico, alterne entre a variação mensal, o acumulado no ano e a inflação em 12 meses.</p>
       <HistoricoInflacao historico={historico} />
       <p className="mt-5 max-w-prose leading-relaxed">Inflação mais baixa significa que os preços subiram menos, quando a taxa continua positiva. Não significa que voltaram ao patamar anterior. Uma variação negativa indica queda do índice no período.</p>
     </section>
 
     <section id="mensal" className="vidro border-t border-[var(--borda)] py-9" data-lustro="fixo">
-      <h2 className="text-2xl font-semibold tracking-tight">IPCA mês a mês e acumulado</h2>
+      <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">IPCA mês a mês e acumulado</TituloCompartilhavel>
       <p className="my-3 max-w-prose leading-relaxed text-[var(--tinta-2)]">As referências mais recentes, com três medidas diferentes. O acumulado no ano começa em janeiro; o de 12 meses pode atravessar dois anos.</p>
       <div className={styles.tabelaRolagem} tabIndex={0} role="region" aria-label="IPCA mensal e acumulado">
         <table><caption>Últimos 24 meses da série, em porcentagem</caption><thead><tr><th scope="col">Referência</th><th scope="col">No mês</th><th scope="col">No ano</th><th scope="col">Em 12 meses</th></tr></thead>
           <tbody>{historico.slice(-24).reverse().map((r) => <tr key={r.mes}><th scope="row">{mesPorExtenso(r.mes)}</th><td>{pct(r.mensal)}</td><td>{pct(r.ano)}</td><td>{pct(r.dozeMeses)}</td></tr>)}</tbody>
         </table>
       </div>
-      <details className="mt-5"><summary className="cursor-pointer py-2 font-medium">Ver todos os meses desde {mesPorExtenso(historico[0].mes)}</summary>
+      <DetalhesCompartilhaveis className="mt-5"><summary className="cursor-pointer py-2 font-medium">Ver todos os meses desde {mesPorExtenso(historico[0].mes)}</summary>
         <div className={styles.tabelaRolagem} tabIndex={0} role="region" aria-label="Histórico mensal completo do IPCA"><table>
           <caption>Série mensal completa do recorte, em porcentagem; indisponível indica falta de cobertura</caption><thead><tr><th scope="col">Referência</th><th scope="col">No mês</th><th scope="col">No ano</th><th scope="col">Em 12 meses</th></tr></thead>
           <tbody>{[...historico].reverse().map((r) => <tr key={r.mes}><th scope="row">{mesPorExtenso(r.mes)}</th><td>{pct(r.mensal)}</td><td>{pct(r.ano)}</td><td>{pct(r.dozeMeses)}</td></tr>)}</tbody>
         </table></div>
-      </details>
+      </DetalhesCompartilhaveis>
     </section>
 
     <section id="anual" className="vidro border-t border-[var(--borda)] py-9" data-lustro="fixo">
-      <h2 className="text-2xl font-semibold tracking-tight">Inflação por ano, desde 1995</h2>
+      <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">Inflação por ano, desde 1995</TituloCompartilhavel>
       <p className="my-3 max-w-prose leading-relaxed text-[var(--tinta-2)]">Acumulado de janeiro até o mês indicado. Somente a linha encerrada em dezembro representa um ano completo; as outras são parciais. Anos com lacunas não recebem acumulado.</p>
       <div className={styles.tabelaRolagem} tabIndex={0} role="region" aria-label="Inflação acumulada por ano"><table>
         <caption>Acumulado no ano até a referência, em porcentagem</caption><thead><tr><th scope="col">Referência</th><th scope="col">IPCA no ano</th><th scope="col">Cobertura</th></tr></thead>
@@ -82,7 +84,7 @@ export default async function Inflacao() {
     </section>
 
     <section id="fontes" className="vidro border-t border-[var(--borda)] py-9" data-lustro="fixo">
-      <h2 className="text-2xl font-semibold tracking-tight">Fontes e como calculamos a inflação</h2>
+      <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">Fontes e como calculamos a inflação</TituloCompartilhavel>
       <div className="mt-4 max-w-prose space-y-4 leading-relaxed">
         <p>O <a href={IPCA}>IPCA é produzido pelo IBGE</a>. Usamos a variação mensal do índice geral nacional, distribuída pela <a href={SGS}>série 433 do Banco Central</a>. O número não representa a inflação específica dos alimentos nem o custo de vida individual de cada família.</p>
         <p>Para acumular, multiplicamos os fatores mensais: (1 + taxa do mês ÷ 100). Depois subtraímos 1 e multiplicamos por 100. Por exemplo, doze meses de 1% resultam em 12,68%, e não em 12%. Não arredondamos os fatores antes de multiplicá-los; exibimos o resultado com duas casas decimais.</p>
@@ -92,10 +94,10 @@ export default async function Inflacao() {
       </div>
     </section>
     <section className="vidro border-t border-[var(--borda)] pt-9" data-lustro="fixo">
-      <h2 className="text-2xl font-semibold tracking-tight">Dúvidas sobre inflação e IPCA</h2>
-      <details className="mt-4"><summary className="cursor-pointer py-3 font-medium">Qual é a diferença entre IPCA mensal, no ano e em 12 meses?</summary><p className="max-w-prose pb-4 leading-relaxed">O mensal mede a variação de um mês. O acumulado no ano considera de janeiro até a referência. O de 12 meses considera os doze meses encerrados na referência, mesmo quando atravessam dois anos.</p></details>
-      <details><summary className="cursor-pointer py-3 font-medium">Por que os preços continuam altos quando a inflação cai?</summary><p className="max-w-prose pb-4 leading-relaxed">Uma taxa positiva menor ainda significa aumento de preços, em ritmo mais lento. A queda do nível de preços no período exige uma variação negativa do índice.</p></details>
-      <details><summary className="cursor-pointer py-3 font-medium">O IPCA é igual ao INPC ou ao IPCA-15?</summary><p className="max-w-prose pb-4 leading-relaxed">Não. São índices com diferenças de população de referência, abrangência ou período de coleta. Esta página apresenta somente o IPCA geral nacional; não substitui uma série pela outra.</p></details>
+      <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">Dúvidas sobre inflação e IPCA</TituloCompartilhavel>
+      <DetalhesCompartilhaveis className="mt-4"><summary className="cursor-pointer py-3 font-medium">Qual é a diferença entre IPCA mensal, no ano e em 12 meses?</summary><p className="max-w-prose pb-4 leading-relaxed">O mensal mede a variação de um mês. O acumulado no ano considera de janeiro até a referência. O de 12 meses considera os doze meses encerrados na referência, mesmo quando atravessam dois anos.</p></DetalhesCompartilhaveis>
+      <DetalhesCompartilhaveis><summary className="cursor-pointer py-3 font-medium">Por que os preços continuam altos quando a inflação cai?</summary><p className="max-w-prose pb-4 leading-relaxed">Uma taxa positiva menor ainda significa aumento de preços, em ritmo mais lento. A queda do nível de preços no período exige uma variação negativa do índice.</p></DetalhesCompartilhaveis>
+      <DetalhesCompartilhaveis><summary className="cursor-pointer py-3 font-medium">O IPCA é igual ao INPC ou ao IPCA-15?</summary><p className="max-w-prose pb-4 leading-relaxed">Não. São índices com diferenças de população de referência, abrangência ou período de coleta. Esta página apresenta somente o IPCA geral nacional; não substitui uma série pela outra.</p></DetalhesCompartilhaveis>
     </section>
   </main>;
 }

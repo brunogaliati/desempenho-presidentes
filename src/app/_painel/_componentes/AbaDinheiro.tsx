@@ -1,8 +1,10 @@
 "use client";
+import { identificadorCompartilhado } from "@/lib/compartilhamento";
+import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { gruposDeGovernadores, gruposDePresidentes, type FamiliaId, type PainelDinheiro } from "../_dados/dinheiroModelo";
+import { gruposDeGovernadores, gruposDePresidentes, ORDEM_FAMILIAS, type FamiliaId, type PainelDinheiro } from "../_dados/dinheiroModelo";
 import type { DadosPainel } from "../_dados/tipos";
 import { termosDoGoverno } from "./governos";
 import { NavTerminal } from "./NavTerminal";
@@ -45,9 +47,9 @@ export function AbaDinheiro({
   const [painel, setPainel] = useState<PainelDinheiro | null>(null);
   const [erro, setErro] = useState(false);
   const [tentativa, setTentativa] = useState(0);
-  const [anoPedido, setAnoPedido] = useState<number | null>(null);
-  const [selecionado, setSelecionado] = useState<string | null>(null);
-  const [zoom, setZoom] = useState<FamiliaId | null>(null);
+  const [anoPedido, setAnoPedido] = useEstadoCompartilhavel<number | null>("ano", null, v=>v===null||typeof v==="number"&&Number.isInteger(v)&&v>=1990&&v<=2200, ():number|null=>ano||null);
+  const [selecionado, setSelecionado] = useEstadoCompartilhavel<string | null>("orcamento.item", null, identificadorCompartilhado);
+  const [zoom, setZoom] = useEstadoCompartilhavel<FamiliaId | null>("orcamento.familia", null, v=>v===null||typeof v==="string"&&ORDEM_FAMILIAS.includes(v as FamiliaId));
 
   useEffect(() => {
     const controle = new AbortController();
@@ -74,7 +76,7 @@ export function AbaDinheiro({
   }, [painel, sigla, dados.governos, atual.economia.mandatos]);
 
   const foco = dados.foco;
-  const ano = useMemo(() => {
+  const ano: number = useMemo<number>(() => {
     if (!painel) return 0;
     // Quem governava em julho fica com o ano, a mesma regra do trilho.
     const doMandato = painel.anos.filter((a) => foco.posse <= `${a}-07` && (foco.ate === null || `${a}-07` < foco.ate));

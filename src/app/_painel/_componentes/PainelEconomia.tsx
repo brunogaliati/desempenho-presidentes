@@ -1,4 +1,7 @@
 "use client";
+import { Compartilhar } from "@/components/Compartilhar";
+import { opcaoCompartilhada, inteiroCompartilhado } from "@/lib/compartilhamento";
+import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
 import Image from "next/image";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
@@ -230,12 +233,12 @@ export function PainelEconomia({
 
 export function SalaDoTema({ dados, tema, sigla, setSigla, aoTrocarAba }: Props) {
   const leituras = tema.leituras;
-  const [id, setId] = useState(leituras[0]?.id);
+  const [id, setId] = useEstadoCompartilhavel("mapa.indicador", leituras[0]?.id, opcaoCompartilhada(leituras.map(l=>l.id)));
   const leitura = leituras.find((l) => l.id === id) ?? leituras[0];
-  const [historico, setHistorico] = useState(false);
-  const [periodoEscolhido, setPeriodo] = useState(leitura.periodos.length - 1);
+  const [historico, setHistorico] = useEstadoCompartilhavel("mapa.historico", false, opcaoCompartilhada([true,false]));
+  const [periodoEscolhido, setPeriodo] = useEstadoCompartilhavel("mapa.periodo", leitura.periodos.length - 1, inteiroCompartilhado);
   // Abre em "desde a posse", como o placar; medida sem esse modo cai no primeiro que tiver.
-  const [modoEscolhido, setModo] = useState<Modo>("mudanca");
+  const [modoEscolhido, setModo] = useEstadoCompartilhavel<Modo>("mapa.modo", "mudanca", opcaoCompartilhada(modosDe(leitura)));
   const modos = modosDe(leitura);
   const modo = modos.includes(modoEscolhido) ? modoEscolhido : modos[0];
   const inicioPeriodo = modo === "mudanca" ? leitura.indiceRecebido ?? 0 : 0;
@@ -262,8 +265,8 @@ export function SalaDoTema({ dados, tema, sigla, setSigla, aoTrocarAba }: Props)
 
   // Abre com o mapa e pouca coisa em volta; o detalhe vem quando se toca numa
   // medida ou num estado. Estado escolhido sempre abre a barra.
-  const [abertaEscolhida, setAberta] = useState(sigla !== null);
-  const [painelIndicadores, setPainelIndicadores] = useState<"estados" | "brasil">(sigla ? "estados" : "brasil");
+  const [abertaEscolhida, setAberta] = useEstadoCompartilhavel("mapa.detalhe", sigla !== null, opcaoCompartilhada([true,false]));
+  const [painelIndicadores, setPainelIndicadores] = useEstadoCompartilhavel<"estados" | "brasil">("mapa.painel", sigla ? "estados" : "brasil", opcaoCompartilhada(["estados","brasil"]));
   const aberta = abertaEscolhida || uf !== null || painelIndicadores === "brasil";
 
   // O último estado visto fica na tela enquanto a ficha dele se fecha.
@@ -296,6 +299,7 @@ export function SalaDoTema({ dados, tema, sigla, setSigla, aoTrocarAba }: Props)
   // A manchete passeia sozinha pelas medidas até a pessoa escolher uma; o
   // número troca rolando os algarismos (`NumeroRolante`).
   const [alternar, setAlternar] = useState(true);
+  useEffect(()=>{if(new URLSearchParams(location.search).has("r.mapa.indicador"))setAlternar(false);},[]);
   const [pausa, setPausa] = useState(false);
 
   const regua = useMemo(() => reguaDeCor(Object.values(leitura.ufs).flat(), leitura.escala, leitura.rampa ?? "mapa"), [leitura]);
@@ -472,6 +476,7 @@ export function SalaDoTema({ dados, tema, sigla, setSigla, aoTrocarAba }: Props)
 
   return (
     <section
+      id="mapa-economia"
       className="sala-tema relative -mx-3 -mt-3 overflow-hidden"
       aria-label={tema.rotulo}
     >
@@ -852,7 +857,7 @@ function Destaque({
       <p className="mono text-[11px] font-medium uppercase tracking-[0.18em]" style={{ color: "var(--serie)" }}>
         {uf ? uf.nome : "Brasil"}
       </p>
-      <SeletorMedida atual={l} leituras={leituras} uf={uf} aoTrocar={aoTrocarLeitura} />
+      <div className="flex items-center justify-between gap-2"><SeletorMedida atual={l} leituras={leituras} uf={uf} aoTrocar={aoTrocarLeitura} /><Compartilhar mensagem={l.titulo+" · "+(uf?.nome??"Brasil")} ancora="mapa-economia" compacto/></div>
       {/* Alturas fixas: a manchete passeia pelas medidas e nada embaixo dela pode pular. */}
       <div className="mt-2 flex h-11 items-end gap-3">
         <p className="manchete shrink-0 text-4xl font-bold leading-none xl:text-[2.75rem]">

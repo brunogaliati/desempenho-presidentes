@@ -1,4 +1,6 @@
 "use client";
+import { Compartilhar } from "@/components/Compartilhar";
+import { idCompartilhavel } from "@/lib/compartilhamento";
 
 /**
  * As peças comuns dos painéis do terminal da economia: o painel de vidro, o
@@ -21,6 +23,8 @@ export function Bloco({
   className = "",
   corpo = "",
   lustroFixo = false,
+  mensagemCompartilhamento,
+  contextoCompartilhamento,
   children,
 }: {
   id?: string;
@@ -32,11 +36,13 @@ export function Bloco({
   corpo?: string;
   /** Sem o reflexo que segue o ponteiro: num painel grande e denso, redesenhá-lo a cada movimento pesa. */
   lustroFixo?: boolean;
+  mensagemCompartilhamento?: string;
+  contextoCompartilhamento?: string;
   children: React.ReactNode;
 }) {
   return (
     <section
-      id={id}
+      id={id ?? idCompartilhavel(titulo)}
       aria-label={titulo}
       data-lustro={lustroFixo ? "fixo" : undefined}
       className={`vidro min-w-0 rounded-[1.6rem] p-4 ${className}`}
@@ -48,7 +54,7 @@ export function Bloco({
             {detalhe}
           </span>
         )}
-        {acao && <div className="ml-auto max-w-full shrink-0 self-center">{acao}</div>}
+        <div className="ml-auto flex max-w-full shrink-0 items-center gap-2 self-center">{acao}<Compartilhar mensagem={mensagemCompartilhamento??titulo} contexto={contextoCompartilhamento} ancora={id ?? idCompartilhavel(titulo)} compacto/></div>
       </header>
       <div className={`mt-3 ${corpo}`}>{children}</div>
     </section>

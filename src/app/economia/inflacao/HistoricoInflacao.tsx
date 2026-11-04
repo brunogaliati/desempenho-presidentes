@@ -1,6 +1,8 @@
 "use client";
+import { opcaoCompartilhada } from "@/lib/compartilhamento";
+import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
-import { useState } from "react";
+
 import { GraficoTempo } from "@/components/GraficoTempo";
 import { mesPorExtenso, numero } from "@/lib/formatar";
 import { useLargura } from "@/lib/useLargura";
@@ -12,9 +14,9 @@ const percentual = (v: number) => `${numero(v)}%`;
 export function HistoricoInflacao({ historico }: { historico: MesInflacao[] }) {
   const ultimo = historico.at(-1)!;
   const inicioPadrao = `${Number(ultimo.mes.slice(0, 4)) - 10}-01`;
-  const [desde, setDesde] = useState(historico.find((r) => r.mes >= inicioPadrao)?.mes ?? historico[0].mes);
-  const [ate, setAte] = useState(ultimo.mes);
-  const [medida, setMedida] = useState<keyof typeof MEDIDAS>("dozeMeses");
+  const [desde, setDesde] = useEstadoCompartilhavel("de", historico.find((r) => r.mes >= inicioPadrao)?.mes ?? historico[0].mes, v=>historico.some(r=>r.mes===v));
+  const [ate, setAte] = useEstadoCompartilhavel("ate", ultimo.mes, v=>historico.some(r=>r.mes===v));
+  const [medida, setMedida] = useEstadoCompartilhavel<keyof typeof MEDIDAS>("medida", "dozeMeses", opcaoCompartilhada(Object.keys(MEDIDAS)));
   const { ref, largura } = useLargura<HTMLDivElement>();
   const acumulado = acumuladoPeriodo({ datas: historico.map((r) => r.mes), valores: historico.map((r) => r.mensal) }, desde, ate);
   const recorte = historico.filter((r) => r.mes >= desde && r.mes <= ate);

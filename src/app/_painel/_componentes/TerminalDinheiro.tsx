@@ -1,6 +1,8 @@
 "use client";
+import { opcaoCompartilhada, identificadorCompartilhado, inteiroCompartilhado, textoCompartilhado } from "@/lib/compartilhamento";
+import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   baseDoAno,
@@ -177,10 +179,14 @@ const semAcento = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLo
 function Emendas({ painel, sigla, ano }: { painel: PainelDinheiro; sigla: string | null; ano: number }) {
   const anoEmendas = Math.max(2020, ano);
   const { dados, erro } = useDados<EmendasDoAno>(api({ tipo: "emendas", ano: String(anoEmendas) }));
-  const [busca, setBusca] = useState("");
-  const [modo, setModo] = useState<"hab" | "tot">("hab");
-  const [filtro, setFiltro] = useState<Filtro | null>(null);
-  useEffect(() => setFiltro(null), [anoEmendas, sigla]);
+  const [busca, setBusca] = useEstadoCompartilhavel("emendas.busca", "", textoCompartilhado);
+  const [modo, setModo] = useEstadoCompartilhavel<"hab" | "tot">("emendas.modo", "hab", opcaoCompartilhada(["hab","tot"]));
+  const [filtroId, setFiltroId] = useEstadoCompartilhavel<string | null>("emendas.detalhe", null, v=>v===null||typeof v==="string"&&(v.startsWith("cnpj:")?dados?.municipios.some(m=>m[5]===v.slice(5)):v.startsWith("parlamentar:")?dados?.parlamentares.some(p=>p[0]===v.slice(12)):false)===true);
+  const municipio=dados?.municipios.find(m=>"cnpj:"+m[5]===filtroId),parlamentar=dados?.parlamentares.find(p=>"parlamentar:"+p[0]===filtroId);
+  const filtro:Filtro|null=municipio?{rotulo:municipio[0]+" ("+municipio[1]+")",cnpj:municipio[5]}:parlamentar?{rotulo:parlamentar[0],parlamentar:parlamentar[0]}:null;
+  const setFiltro=(f:Filtro|null)=>setFiltroId(f?(f.cnpj?"cnpj:"+f.cnpj:"parlamentar:"+f.parlamentar):null);
+  const escopoAnterior=useRef(anoEmendas+"|"+sigla);
+  useEffect(()=>{const escopo=anoEmendas+"|"+sigla;if(escopoAnterior.current!==escopo){escopoAnterior.current=escopo;setFiltroId(null);}},[anoEmendas,sigla,setFiltroId]);
 
   const listas = useMemo(() => {
     if (!dados) return null;
@@ -297,8 +303,8 @@ interface DetalhePlano {
 const valorOuFalta = (v: number | null | undefined) => (v == null ? "não informado" : reais(v));
 
 function Planos({ filtro, ano, sigla, aoFechar }: { filtro: Filtro; ano: number; sigla: string | null; aoFechar: () => void }) {
-  const [pagina, setPagina] = useState(0);
-  const [aberto, setAberto] = useState<string | null>(null);
+  const [pagina, setPagina] = useEstadoCompartilhavel("emendas.pagina",0,inteiroCompartilhado);
+  const [aberto, setAberto] = useEstadoCompartilhavel<string | null>("emendas.plano",null,identificadorCompartilhado);
   const url = api({ tipo: "planos", ano: String(ano), uf: filtro.parlamentar && sigla ? sigla : "", cnpj: filtro.cnpj ?? "", parlamentar: filtro.parlamentar ?? "", pagina: String(pagina) });
   const { dados, erro } = useDados<Plano[]>(url);
   return (

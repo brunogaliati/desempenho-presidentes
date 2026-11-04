@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Compartilhar } from "@/components/Compartilhar";
 import Link from "next/link";
 import { destinoPainel } from "@/lib/rotasPainel";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
@@ -55,7 +56,6 @@ export function Cabecalho({
   recorte?: { uf?: string; mandato?: string };
   semTemaAtivo?: boolean;
 }) {
-  const [copiado, setCopiado] = useState(false);
   const [escuro, setEscuro] = useState(false);
 
   useEffect(() => {
@@ -88,22 +88,7 @@ export function Cabecalho({
             </svg>
             <span className="rotulo-acao">Comparar governos</span>
           </Link>
-          <button
-            type="button"
-            onClick={async () => {
-              await navigator.clipboard?.writeText(window.location.href);
-              setCopiado(true);
-              window.setTimeout(() => setCopiado(false), 2000);
-            }}
-            className="acao-cabecalho"
-            aria-label={copiado ? "Link copiado" : "Compartilhar"}
-            title={copiado ? "Link copiado" : "Compartilhar"}
-          >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              {copiado ? <path d="m5 12 4 4L19 6" /> : <><path d="M12 3v12m-5-7 5-5 5 5" /><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" /></>}
-            </svg>
-            <span className="sr-only" role="status">{copiado ? "Link copiado" : ""}</span>
-          </button>
+          <Compartilhar mensagem="Painel do governo" compacto/>
           <button type="button" role="switch" aria-checked={escuro} onClick={alternarTema} className="tema-interruptor" aria-label="Alternar tema claro e escuro" title={escuro ? "Ativar tema claro" : "Ativar tema escuro"}>
             <span className="tema-marcador" aria-hidden />
             <svg className="tema-sol" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden><circle cx="12" cy="12" r="3.5" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" /></svg>

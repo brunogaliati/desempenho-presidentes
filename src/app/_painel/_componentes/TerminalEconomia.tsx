@@ -1,8 +1,11 @@
 "use client";
+import { opcaoCompartilhada, textoCompartilhado } from "@/lib/compartilhamento";
+import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
 import Image from "next/image";
 import Link from "next/link";
-import { startTransition, useMemo, useRef, useState } from "react";
+import { Compartilhar } from "@/components/Compartilhar";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 
 import { COR_BOM, COR_RUIM, corDoVeredito, GraficoTempo } from "@/components/GraficoTempo";
 import { Retrato } from "@/components/Retrato";
@@ -168,11 +171,11 @@ export function TerminalEconomia({ dados, atual, foco, setFoco, sigla, leituraFo
   // O governo sob o ponteiro na grade; o gráfico destaca o mandato dele. Tocar
   // no rosto fixa o destaque até tocar de novo.
   const [mandatoSob, setMandatoFoco] = useState<string | null>(null);
-  const [mandatoFixo, setMandatoFixo] = useState<string | null>(null);
+  const [mandatoFixo, setMandatoFixo] = useEstadoCompartilhavel<string | null>("comparar", null, v=>v===null||mandatos.some(m=>m.id===v));
   const mandatoFoco = mandatoSob ?? mandatoFixo;
-  const [faixa, setFaixa] = useState<Faixa>("mandato");
+  const [faixa, setFaixa] = useEstadoCompartilhavel<Faixa>("faixa", "mandato", opcaoCompartilhada(["mandato","tudo"]));
   // A família de partido acesa no painel dos governadores; a tabela apaga os outros.
-  const [partidoFoco, setPartidoFoco] = useState<string | null>(null);
+  const [partidoFoco, setPartidoFoco] = useEstadoCompartilhavel<string | null>("partido", null, v=>v===null||textoCompartilhado(v));
   const origens = useMemo(() => new Set(dados.economia.series.filter((x) => ultimoDado(x)).map((x) => x.origem)), [dados.economia.series]);
   // O placar é a fonte das cores: o "Brasil agora", o gráfico e o ritmo
   // pintam o mandato em curso com o veredito dele, e nunca discordam.
@@ -354,6 +357,7 @@ function Cotacao({ s, item, ativa, aoEscolher }: { s: SerieEconomia; item: ItemP
   const cor = dif ? corDoVeredito(dif.sentido) : "var(--serie)";
   const faisca = recortar(s, antes?.data ?? s.datas[0], agora.data);
   return (
+    <div className="grupo-cotacao relative min-w-0">
     <button
       type="button"
       role="radio"
@@ -362,7 +366,7 @@ function Cotacao({ s, item, ativa, aoEscolher }: { s: SerieEconomia; item: ItemP
       aria-label={`${s.rotulo}: ${formatar(agora.valor, s.formato)} ${naReferencia(s, agora.data)}${
         dif ? `; ${crescimento ? "acumulado desde a posse" : "desde a posse"}, ${dif.texto}${dif.sentido !== "neutro" ? `, ${dif.sentido === "bom" ? "melhor" : "pior"}` : ""}` : ""
       }${antes && !crescimento ? `; na posse, ${formatar(antes.valor, s.formato)}` : ""}`}
-      className={`min-w-0 rounded-2xl px-3 pb-2 pt-2.5 text-left transition-colors ${ativa ? "vidro-lente" : "hover:bg-[var(--faixa-a)]"}`}
+      className={`w-full min-w-0 rounded-2xl px-3 pb-2 pt-2.5 text-left transition-colors ${ativa ? "vidro-lente" : "hover:bg-[var(--faixa-a)]"}`}
     >
       <span className="block truncate text-[11.5px] font-medium" style={{ color: ativa ? "var(--tinta)" : "var(--tinta-2)" }}>
         {s.rotulo}
@@ -389,6 +393,8 @@ function Cotacao({ s, item, ativa, aoEscolher }: { s: SerieEconomia; item: ItemP
         {s.parcial ? ", parcial" : ""}
       </span>
     </button>
+    <div className="compartilhar-metrica"><Compartilhar mensagem={s.rotulo+": "+formatar(agora.valor,s.formato)+" · "+referencia(s,agora.data)} ancora="de-perto" filtros={{"r.serie":s.id,"r.leitura":null,"r.faixa":"mandato","r.historico.tabela":false}} compacto/></div>
+    </div>
   );
 }
 
@@ -420,7 +426,7 @@ export function Historico({
   hoje: string;
   className: string;
 }) {
-  const [tabela, setTabela] = useState(false);
+  const [tabela, setTabela] = useEstadoCompartilhavel("historico.tabela", false, opcaoCompartilhada([true,false]));
   const inicio = s.cobertura.inicio ?? s.datas[0];
   const atual = mandatos.find((m) => m.emCurso);
   const posse = s.posse ?? atual?.inicio.slice(0, 7) ?? "2023-01";
@@ -1303,6 +1309,7 @@ function GovernoAGoverno({
     [ordem, porMandato, benchmark, origens, series, doPlacar],
   );
   const kFixo = ordem.findIndex((m) => m.id === mandatoFixo);
+  useEffect(()=>{if(new URLSearchParams(location.search).get("painel")==="governo-a-governo"&&mandatoFixo){[...caixa.current?.querySelectorAll<HTMLButtonElement>("button[data-mandato]")??[]].find(b=>b.dataset.mandato===mandatoFixo)?.scrollIntoView({block:"nearest",inline:"center"});}},[mandatoFixo]);
 
   const apagar = () => {
     if (!sob.current) return;
@@ -1475,6 +1482,8 @@ function GovernoAGoverno({
     <Bloco
       id="governo-a-governo"
       titulo="Governo a governo"
+      contextoCompartilhamento=""
+      mensagemCompartilhamento={mandatoFixo?"Agregados econômicos · "+(mandatos.find(m=>m.id===mandatoFixo)?.nomeCurto??"")+" · "+(mandatos.find(m=>m.id===mandatoFixo)?.inicio.slice(0,4)??""):"Agregados econômicos, governo a governo"}
       detalhe={
         uf
           ? `ritmo por ano · do país, mesmo com ${uf.sigla} escolhido: por estado os dados começam em 2021`
@@ -1660,8 +1669,8 @@ export function Estados({
   sigla: string | null;
   className: string;
 }) {
-  const [modo, setModo] = useState<"posse" | "hoje">("posse");
-  const [ordem, setOrdem] = useState<{ id: string; desc: boolean }>({ id: leituras[0]?.id ?? "", desc: true });
+  const [modo, setModo] = useEstadoCompartilhavel<"posse" | "hoje">("estados.modo", "posse", opcaoCompartilhada(["posse","hoje"]));
+  const [ordem, setOrdem] = useEstadoCompartilhavel<{ id: string; desc: boolean }>("estados.ordem", { id: leituras[0]?.id ?? "", desc: true }, v=>!!v&&typeof v==="object"&&"id" in v&&leituras.some(l=>l.id===v.id)&&"desc" in v&&typeof v.desc==="boolean");
   const posse = modo === "posse";
   // Desde a posse, só as medidas que têm o dado da posse: uma coluna inteira
   // de "—" não diz nada. Em "Hoje" entram todas.

@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { destinoPainel } from "@/lib/rotasPainel";
+import { RecortesCompartilhaveis } from "@/components/RecortesCompartilhaveis";
 
 import { focoDoMandato, recortarAoMandato, TERMO_2015 } from "../_dados/mandatoRecorte";
 import type { AbaId, DadosPainel } from "../_dados/tipos";
@@ -85,10 +86,10 @@ export function Painel({ publico=false, introducao, dados: inteiros, abaInicial,
     else url.searchParams.set("aba", aba);
     if (sigla) url.searchParams.set("uf", sigla);
     else url.searchParams.delete("uf");
-    if (mandatoId !== emCurso) url.searchParams.set("mandato", mandatoId);
+    if (mandatoId !== emCurso || url.searchParams.has('mandato') || url.searchParams.has('painel')) url.searchParams.set("mandato", mandatoId);
     else url.searchParams.delete("mandato");
     url.searchParams.delete("visao");
-    window.history.replaceState(null, "", url);
+    window.history.replaceState(window.history.state, "", url);
   }, [aba, sigla, mandatoId, emCurso, publico]);
 
   const trocarAba = (a: AbaId) => {
@@ -102,6 +103,7 @@ export function Painel({ publico=false, introducao, dados: inteiros, abaInicial,
   };
 
   return (
+    <RecortesCompartilhaveis titulo={`${sigla ? 'Governo de '+(dados.ufs.find(u=>u.sigla===sigla)?.nome??sigla) : mandatos.find(m=>m.id===mandatoId)?.nomeCurto??'Governo'} · ${dados.foco.posse.slice(0,4)}–${dados.foco.fim.slice(0,4)}`} filtros={{uf:sigla,mandato:mandatoId}}>
     <PosseContext.Provider value={dados.foco.posse}>
     <div
       className="painel-governo min-h-dvh px-3 pb-10"
@@ -142,5 +144,6 @@ export function Painel({ publico=false, introducao, dados: inteiros, abaInicial,
       </footer>
     </div>
     </PosseContext.Provider>
+    </RecortesCompartilhaveis>
   );
 }

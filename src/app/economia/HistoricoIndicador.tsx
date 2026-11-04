@@ -1,18 +1,20 @@
 "use client";
+import { opcaoCompartilhada } from "@/lib/compartilhamento";
+import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
-import { useState } from "react";
+
 import { GraficoTempo } from "@/components/GraficoTempo";
 import { comSinal, numero, reais } from "@/lib/formatar";
 import { useLargura } from "@/lib/useLargura";
 import { compararPontosPublicos, rotuloPeriodoPublico, ultimaReferenciaPublica, type SeriePublica } from "@/app/_painel/_dados/economiaModelo";
 
 export function HistoricoIndicador({ series, principal, trimestral, moeda }: { series: SeriePublica[]; principal: string; trimestral: boolean; moeda: boolean }) {
-  const [codigo, setCodigo] = useState(principal);
+  const [codigo, setCodigo] = useEstadoCompartilhavel("territorio", principal, opcaoCompartilhada(series.map(s=>s.codigo)));
   const serie = series.find((s) => s.codigo === codigo)!;
   const ultima = ultimaReferenciaPublica(serie.pontos)!;
   const padrao = (s: SeriePublica) => s.pontos.find((p) => p.mes >= `${Number(ultimaReferenciaPublica(s.pontos)!.mes.slice(0,4)) - 10}-01`)!.mes;
-  const [desde, setDesde] = useState(padrao(serie));
-  const [ate, setAte] = useState(ultima.mes);
+  const [desde, setDesde] = useEstadoCompartilhavel("de", padrao(serie), v=>serie.pontos.some(p=>p.mes===v));
+  const [ate, setAte] = useEstadoCompartilhavel("ate", ultima.mes, v=>serie.pontos.some(p=>p.mes===v));
   const { ref, largura } = useLargura<HTMLDivElement>();
   const comparacao = compararPontosPublicos(serie.pontos, desde, ate, !moeda);
   const recorte = serie.pontos.filter((p) => p.mes >= desde && p.mes <= ate);

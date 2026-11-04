@@ -1,3 +1,5 @@
+import { DetalhesCompartilhaveis } from "@/components/DetalhesCompartilhaveis";
+import { TituloCompartilhavel } from "@/components/TituloCompartilhavel";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { carregarSalarioMinimo } from "@/lib/salarioMinimo";
@@ -64,14 +66,14 @@ export default async function SalarioMinimo() {
       </header>
 
       <section id="historico" className="vidro py-9" data-lustro="fixo">
-        <h2 className="text-2xl font-semibold tracking-tight">O mínimo compra mais ou menos?</h2>
+        <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">O mínimo compra mais ou menos?</TituloCompartilhavel>
         <p className="mt-3 max-w-prose leading-relaxed text-[var(--tinta-2)]">O valor no papel e o poder de compra contam histórias diferentes. Compare duas datas: a linha corrigida desconta a inflação e coloca os salários na mesma moeda.</p>
         <HistoricoSalario historico={historico} referenciaReal={referenciaReal} />
         <p className="mt-5 max-w-prose leading-relaxed">Entre reajustes, o valor nominal pode ficar igual enquanto o poder de compra muda com os preços. A correção usa o IPCA geral; ela não representa a cesta de consumo de cada família.</p>
       </section>
 
       <section id="tabela" className="vidro border-t border-[var(--borda)] py-9" data-lustro="fixo">
-        <h2 className="text-2xl font-semibold tracking-tight">Salário mínimo por ano, desde 1995</h2>
+        <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">Salário mínimo por ano, desde 1995</TituloCompartilhavel>
         <p className="my-3 max-w-prose leading-relaxed text-[var(--tinta-2)]">Último mês de cada ano com valor nominal e real disponíveis. O ano em andamento é parcial. Um reajuste no meio do ano aparece no histórico mensal e na lista completa abaixo.</p>
         <div className={styles.tabelaRolagem} tabIndex={0} role="region" aria-label="Tabela histórica do salário mínimo">
           <table>
@@ -83,19 +85,19 @@ export default async function SalarioMinimo() {
       </section>
 
       <section id="reajustes" className="vidro border-t border-[var(--borda)] py-9" data-lustro="fixo">
-        <h2 className="text-2xl font-semibold tracking-tight">Quando o salário mínimo mudou?</h2>
+        <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">Quando o salário mínimo mudou?</TituloCompartilhavel>
         <p className="my-3 max-w-prose leading-relaxed text-[var(--tinta-2)]">A série mensal preserva mudanças fora de janeiro, como as de janeiro e maio de 2023. O primeiro registro é o início do recorte; as demais linhas indicam mudanças do valor nominal.</p>
-        <details><summary className="cursor-pointer py-2 font-medium">Ver todos os registros de mudança desde 1995</summary>
+        <DetalhesCompartilhaveis><summary className="cursor-pointer py-2 font-medium">Ver todos os registros de mudança desde 1995</summary>
           <div className={styles.tabelaRolagem} tabIndex={0} role="region" aria-label="Reajustes do salário mínimo">
             <table><caption>Mês de registro na série do Banco Central</caption><thead><tr><th scope="col">Mês</th><th scope="col">Salário mínimo</th></tr></thead>
               <tbody>{[...reajustes].reverse().map((r) => <tr key={r.mes}><th scope="row">{mesPorExtenso(r.mes)}</th><td>{reais(r.nominal)}</td></tr>)}</tbody>
             </table>
           </div>
-        </details>
+        </DetalhesCompartilhaveis>
       </section>
 
       <section id="fontes" className="vidro border-t border-[var(--borda)] py-9" data-lustro="fixo">
-        <h2 className="text-2xl font-semibold tracking-tight">Fontes e como fazemos a conta</h2>
+        <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">Fontes e como fazemos a conta</TituloCompartilhavel>
         <div className="mt-4 max-w-prose space-y-4 leading-relaxed">
           <p>O valor nominal vem da <a href={SERIE}>série 1619 do Banco Central</a>. O <a href={DECRETO}>Decreto nº 12.797/2025</a> fixou R$ 1.621,00 a partir de 1º de janeiro de 2026. A tabela mostra o piso nacional, sem incluir pisos estaduais, de categorias ou descontos.</p>
           <p>O poder de compra é calculado com o <a href={IPCA}>IPCA do IBGE</a>, distribuído também pela série 433 do Banco Central. Multiplicamos o salário de cada mês pela razão entre o índice de preços do mês-base e o índice daquele mês. As taxas mensais são compostas, nunca somadas.</p>
@@ -105,10 +107,10 @@ export default async function SalarioMinimo() {
         </div>
       </section>
       <section className="vidro border-t border-[var(--borda)] pt-9" data-lustro="fixo">
-        <h2 className="text-2xl font-semibold tracking-tight">Dúvidas sobre o salário mínimo</h2>
-        <details className="mt-4"><summary className="cursor-pointer py-3 font-medium">O que é salário mínimo real?</summary><p className="max-w-prose pb-4 leading-relaxed">É o valor nominal corrigido pela inflação para um mesmo mês-base. Ajuda a comparar poder de compra entre épocas; não é outro piso legal nem o salário mínimo necessário calculado pelo DIEESE.</p></details>
-        <details><summary className="cursor-pointer py-3 font-medium">O aumento nominal é igual ao ganho real?</summary><p className="max-w-prose pb-4 leading-relaxed">Não. O aumento nominal compara os valores em reais de cada época. O ganho real desconta a mudança dos preços no período. Use a comparação de datas acima para ver a diferença.</p></details>
-        <details><summary className="cursor-pointer py-3 font-medium">Por que o salário pode subir e comprar menos?</summary><p className="max-w-prose pb-4 leading-relaxed">Se os preços subirem mais do que o salário entre duas datas, o valor nominal aumenta, mas o poder de compra cai. O resultado depende do período e do índice de inflação escolhido.</p></details>
+        <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">Dúvidas sobre o salário mínimo</TituloCompartilhavel>
+        <DetalhesCompartilhaveis className="mt-4"><summary className="cursor-pointer py-3 font-medium">O que é salário mínimo real?</summary><p className="max-w-prose pb-4 leading-relaxed">É o valor nominal corrigido pela inflação para um mesmo mês-base. Ajuda a comparar poder de compra entre épocas; não é outro piso legal nem o salário mínimo necessário calculado pelo DIEESE.</p></DetalhesCompartilhaveis>
+        <DetalhesCompartilhaveis><summary className="cursor-pointer py-3 font-medium">O aumento nominal é igual ao ganho real?</summary><p className="max-w-prose pb-4 leading-relaxed">Não. O aumento nominal compara os valores em reais de cada época. O ganho real desconta a mudança dos preços no período. Use a comparação de datas acima para ver a diferença.</p></DetalhesCompartilhaveis>
+        <DetalhesCompartilhaveis><summary className="cursor-pointer py-3 font-medium">Por que o salário pode subir e comprar menos?</summary><p className="max-w-prose pb-4 leading-relaxed">Se os preços subirem mais do que o salário entre duas datas, o valor nominal aumenta, mas o poder de compra cai. O resultado depende do período e do índice de inflação escolhido.</p></DetalhesCompartilhaveis>
       </section>
     </main>
   );

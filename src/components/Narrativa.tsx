@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { Compartilhar } from "./Compartilhar";
 import { GraficoTempo } from "@/components/GraficoTempo";
 import { Retrato } from "@/components/Retrato";
 import { SERIES_UI_POR_ID } from "@/lib/registroSeries";
@@ -141,9 +142,9 @@ export function Narrativa({ dados, atos }: Props) {
                 </div>
               )}
 
-              <h2 className="mb-3 text-2xl font-semibold tracking-tight md:text-3xl">
+              <div className="titulo-compartilhavel"><h2 className="mb-3 text-2xl font-semibold tracking-tight md:text-3xl">
                 {a.titulo}
-              </h2>
+              </h2><Compartilhar mensagem={a.titulo} ancora={a.id} compacto/></div>
 
               {/* O número em corpo de manchete, antes do texto: quem só passa
                   os olhos leva o dado, não a prosa. */}

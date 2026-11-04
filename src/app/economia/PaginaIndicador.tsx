@@ -1,3 +1,5 @@
+import { DetalhesCompartilhaveis } from "@/components/DetalhesCompartilhaveis";
+import { TituloCompartilhavel } from "@/components/TituloCompartilhavel";
 import Link from "next/link";
 import { jsonLd, URL_SITE } from "@/lib/seo";
 import { catalogoEconomia, PAGINAS_ECONOMIA, rotaEconomia } from "@/lib/catalogoEconomia";
@@ -63,12 +65,12 @@ export function PaginaIndicador({dados:d}:{dados:DadosPaginaEconomia}) {
       <nav aria-label="Nesta página" className="mt-6 flex flex-wrap gap-2"><a href="#historico">Explorar o histórico</a>{d.comparacao.length>0 && <a href="#estados">Comparar estados</a>}{municipios.length>0 && <a href="#municipios">Explorar municípios</a>}<a href="#tabela">Tabela histórica</a><a href="#fontes">Fontes e metodologia</a></nav>
     </header>
     <section id="historico" className="vidro" data-lustro="fixo">
-      <h2 className="font-semibold">{moeda ? "Como o preço da gasolina mudou?" : d.pagina.territorio ? `Como o desemprego evoluiu ${d.pagina.territorio.localizacao}?` : estados ? "Como o desemprego evoluiu em cada estado?" : "Como o desemprego evoluiu no Brasil?"}</h2>
+      <TituloCompartilhavel className="font-semibold">{moeda ? "Como o preço da gasolina mudou?" : d.pagina.territorio ? `Como o desemprego evoluiu ${d.pagina.territorio.localizacao}?` : estados ? "Como o desemprego evoluiu em cada estado?" : "Como o desemprego evoluiu no Brasil?"}</TituloCompartilhavel>
       <p className="mt-3 max-w-prose leading-relaxed text-[var(--tinta-2)]">Escolha o período{d.series.length>1 ? " e o território" : ""}. {moeda ? "Os preços são os pesquisados nos postos, sem descontar a inflação." : "As mudanças são apresentadas em pontos percentuais, sem confundir a taxa com o número de pessoas."}</p>
       <HistoricoIndicador series={d.series.filter((s) => s.pontos.some((p) => p.valor !== null))} principal={d.principal.codigo} trimestral={estados} moeda={moeda} />
     </section>
     {d.comparacao.length>0 && <section id="estados" className="vidro" data-lustro="fixo">
-      <h2 className="font-semibold">{moeda ? "Preço médio da gasolina por estado" : "Taxa de desemprego por estado"}</h2>
+      <TituloCompartilhavel className="font-semibold">{moeda ? "Preço médio da gasolina por estado" : "Taxa de desemprego por estado"}</TituloCompartilhavel>
       <p className="my-3 max-w-prose leading-relaxed">Referência comum: <strong>{referencia}</strong>. Brasil: <strong>{d.brasil === null ? "indisponível" : moeda ? `${reais(d.brasil)}/litro` : `${numero(d.brasil,1)}%`}</strong>. {validos.length} das 27 UFs têm valor nessa referência. A tabela está ordenada do menor para o maior valor; estados sem dado permanecem identificados.</p>
       {estados && <p className="mb-4 max-w-prose text-sm leading-relaxed text-[var(--tinta-2)]">A ordem é descritiva: pequenas diferenças não demonstram diferença estatisticamente significativa. O coeficiente de variação (CV) informa a precisão da estimativa; não é outra taxa de desemprego.</p>}
       <div className={styles.tabelaRolagem} role="region" tabIndex={0} aria-label="Comparação dos estados"><table>
@@ -78,11 +80,11 @@ export function PaginaIndicador({dados:d}:{dados:DadosPaginaEconomia}) {
       </table></div>
     </section>}
     <section id="tabela" className="vidro" data-lustro="fixo">
-      <h2 className="font-semibold">Histórico de {moeda ? "preços da gasolina" : "desocupação"} · {d.territorio}</h2>
-      <TabelaHistorica d={d}/><details className="mt-4"><summary className="cursor-pointer py-2 font-medium">Ver a série completa desde {rotuloPeriodoPublico(d.principal.pontos[0].mes,estados)}</summary><TabelaHistorica d={d} completa /></details>
+      <TituloCompartilhavel className="font-semibold">Histórico de {moeda ? "preços da gasolina" : "desocupação"} · {d.territorio}</TituloCompartilhavel>
+      <TabelaHistorica d={d}/><DetalhesCompartilhaveis className="mt-4"><summary className="cursor-pointer py-2 font-medium">Ver a série completa desde {rotuloPeriodoPublico(d.principal.pontos[0].mes,estados)}</summary><TabelaHistorica d={d} completa /></DetalhesCompartilhaveis>
     </section>
     <section id="fontes" className="vidro" data-lustro="fixo">
-      <h2 className="font-semibold">Fontes e limites da comparação</h2>
+      <TituloCompartilhavel className="font-semibold">Fontes e limites da comparação</TituloCompartilhavel>
       <div className="mt-4 max-w-prose space-y-4 leading-relaxed">
         <p>Fonte dos dados: <a href={d.fonteUrl}>{d.fonte}</a>. Cada número tem território, unidade e referência. Falta de dado não vira zero; datas futuras não são publicadas.</p>
         {moeda ? <>
@@ -100,12 +102,12 @@ export function PaginaIndicador({dados:d}:{dados:DadosPaginaEconomia}) {
       </div>
     </section>
     <section className="vidro" data-lustro="fixo">
-      <h2 className="font-semibold">Dúvidas frequentes</h2>
-      <details className="mt-3"><summary className="cursor-pointer py-3 font-medium">{moeda ? "Esse é o preço da gasolina hoje?" : "Por que a taxa nacional pode diferir da comparação por estado?"}</summary><p className="max-w-prose pb-4 leading-relaxed">{moeda ? "Não. É a média mensal da pesquisa da ANP, na referência indicada. Um posto específico pode praticar outro preço." : "A divulgação nacional mensal usa trimestre móvel. A tabela por UF usa trimestre civil. A comparação só é válida quando a pesquisa, a medida e o período são os mesmos."}</p></details>
-      <details><summary className="cursor-pointer py-3 font-medium">{moeda ? "A média dos estados é o preço médio do Brasil?" : "Cair de 10% para 8% significa queda de 2%?"}</summary><p className="max-w-prose pb-4 leading-relaxed">{moeda ? "Não necessariamente. Usamos o agregado Brasil publicado pela ANP, com sua metodologia, em vez de dar o mesmo peso a cada UF." : "A diferença é de 2 pontos percentuais. A variação relativa seria de 20%, mas não é a medida usada aqui para comparar as taxas."}</p></details>
+      <TituloCompartilhavel className="font-semibold">Dúvidas frequentes</TituloCompartilhavel>
+      <DetalhesCompartilhaveis className="mt-3"><summary className="cursor-pointer py-3 font-medium">{moeda ? "Esse é o preço da gasolina hoje?" : "Por que a taxa nacional pode diferir da comparação por estado?"}</summary><p className="max-w-prose pb-4 leading-relaxed">{moeda ? "Não. É a média mensal da pesquisa da ANP, na referência indicada. Um posto específico pode praticar outro preço." : "A divulgação nacional mensal usa trimestre móvel. A tabela por UF usa trimestre civil. A comparação só é válida quando a pesquisa, a medida e o período são os mesmos."}</p></DetalhesCompartilhaveis>
+      <DetalhesCompartilhaveis><summary className="cursor-pointer py-3 font-medium">{moeda ? "A média dos estados é o preço médio do Brasil?" : "Cair de 10% para 8% significa queda de 2%?"}</summary><p className="max-w-prose pb-4 leading-relaxed">{moeda ? "Não necessariamente. Usamos o agregado Brasil publicado pela ANP, com sua metodologia, em vez de dar o mesmo peso a cada UF." : "A diferença é de 2 pontos percentuais. A variação relativa seria de 20%, mas não é a medida usada aqui para comparar as taxas."}</p></DetalhesCompartilhaveis>
     </section>
-    {municipios.length>0 && <section id="municipios" className="vidro" data-lustro="fixo"><h2 className="font-semibold">Gasolina nos municípios de {uf?.nome ?? d.territorio}</h2><p className="mt-3 max-w-prose leading-relaxed">Médias mensais municipais com histórico. Explore {uf ? "outras cidades da mesma UF" : "as cidades da UF"}.</p><ul className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">{(uf ? municipios.slice(0,9) : municipios).map((p) => <li key={p.slug}><Link href={rotaEconomia(p)}>{p.rotulo}</Link></li>)}</ul>{paginaUf && <p className="mt-5"><Link href={`${rotaEconomia(paginaUf)}#municipios`}>Ver todos os municípios disponíveis na UF</Link></p>}</section>}
-    {locais.some((p) => p.slug !== d.pagina.slug) && <section className="vidro" data-lustro="fixo"><h2 className="font-semibold">Explore {moeda ? "a gasolina" : "o desemprego"} por estado</h2><ul className="mt-4 flex flex-wrap gap-x-6 gap-y-3">{locais.filter((p) => p.slug !== d.pagina.slug).map((p) => <li key={p.slug}><Link href={rotaEconomia(p)}>{p.rotulo}</Link></li>)}</ul></section>}
-    <section className="vidro" data-lustro="fixo"><h2 className="font-semibold">Continue explorando</h2><ul className="mt-4 flex flex-wrap gap-x-6 gap-y-3">{outrosMunicipais.map(p=><li key={p.id}><Link href={rotaMunicipal(p.id,p.municipio)}>{INDICADORES_MUNICIPAIS[p.id].nome} · {p.municipio.nome}</Link></li>)}{[...mesmoEstado,...relacionados].map((p) => <li key={p.slug}><Link href={rotaEconomia(p)}>{p.territorio ? p.titulo : p.rotulo}</Link></li>)}</ul></section>
+    {municipios.length>0 && <section id="municipios" className="vidro" data-lustro="fixo"><TituloCompartilhavel className="font-semibold">Gasolina nos municípios de {uf?.nome ?? d.territorio}</TituloCompartilhavel><p className="mt-3 max-w-prose leading-relaxed">Médias mensais municipais com histórico. Explore {uf ? "outras cidades da mesma UF" : "as cidades da UF"}.</p><ul className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">{(uf ? municipios.slice(0,9) : municipios).map((p) => <li key={p.slug}><Link href={rotaEconomia(p)}>{p.rotulo}</Link></li>)}</ul>{paginaUf && <p className="mt-5"><Link href={`${rotaEconomia(paginaUf)}#municipios`}>Ver todos os municípios disponíveis na UF</Link></p>}</section>}
+    {locais.some((p) => p.slug !== d.pagina.slug) && <section className="vidro" data-lustro="fixo"><TituloCompartilhavel className="font-semibold">Explore {moeda ? "a gasolina" : "o desemprego"} por estado</TituloCompartilhavel><ul className="mt-4 flex flex-wrap gap-x-6 gap-y-3">{locais.filter((p) => p.slug !== d.pagina.slug).map((p) => <li key={p.slug}><Link href={rotaEconomia(p)}>{p.rotulo}</Link></li>)}</ul></section>}
+    <section className="vidro" data-lustro="fixo"><TituloCompartilhavel className="font-semibold">Continue explorando</TituloCompartilhavel><ul className="mt-4 flex flex-wrap gap-x-6 gap-y-3">{outrosMunicipais.map(p=><li key={p.id}><Link href={rotaMunicipal(p.id,p.municipio)}>{INDICADORES_MUNICIPAIS[p.id].nome} · {p.municipio.nome}</Link></li>)}{[...mesmoEstado,...relacionados].map((p) => <li key={p.slug}><Link href={rotaEconomia(p)}>{p.territorio ? p.titulo : p.rotulo}</Link></li>)}</ul></section>
   </main>;
 }

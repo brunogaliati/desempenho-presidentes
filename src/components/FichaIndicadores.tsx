@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEstadoCompartilhavel } from "./RecortesCompartilhaveis";
+import { Compartilhar } from "./Compartilhar";
 
 import { GraficoTempo } from "@/components/GraficoTempo";
 import { Minigrafico } from "@/components/Minigrafico";
@@ -36,7 +37,7 @@ interface Props {
 }
 
 export function FichaIndicadores({ presidente, series }: Props) {
-  const [aberto, setAberto] = useState<string | null>(null);
+  const [aberto, setAberto] = useEstadoCompartilhavel<string | null>(`ficha.${presidente.id}`, null, v => v === null || presidente.indicadores.some(i => i.serieId === v));
   const porId = new Map(presidente.indicadores.map((i) => [i.serieId, i]));
 
   return (
@@ -79,13 +80,14 @@ export function FichaIndicadores({ presidente, series }: Props) {
                 return (
                   <li
                     key={s.id}
+                    id={`indicador-${presidente.id}-${s.id}`}
                     className={`border-b px-1 py-4 ${estaAberto ? "sm:col-span-2" : ""}`}
                     style={{
                       borderColor: estaAberto ? "var(--serie)" : "var(--borda)",
                       background: "transparent",
                     }}
                   >
-                    <p className="text-sm font-medium">{s.rotulo}</p>
+                    <div className="flex items-start justify-between gap-3"><p className="text-sm font-medium">{s.rotulo}</p><Compartilhar mensagem={`${s.rotulo} · ${presidente.nome} · ${presidente.inicio.slice(0,4)}–${presidente.fim.slice(0,4)}`} contexto="" ancora={`indicador-${presidente.id}-${s.id}`} filtros={{[`r.ficha.${presidente.id}`]:s.id}} compacto/></div>
                     <p className="text-xs" style={{ color: "var(--tinta-3)" }}>
                       {s.pergunta}
                     </p>
