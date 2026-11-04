@@ -1,6 +1,19 @@
+.cabecalho:global(.cabecalho-painel.vidro)::before {
+  -webkit-backdrop-filter:blur(16px) saturate(1.15);
+  backdrop-filter:blur(16px) saturate(1.15);
+}
+.cabecalho:global(.cabecalho-painel.vidro)::after { background:none; }
+/* Controles sobre vidro usam superfície simples: filtros aninhados apagam os rótulos. */
+.cabecalho :global(.navegacao-temas .segmentos) {
+  background:light-dark(rgba(255,255,255,.72),rgba(23,35,45,.88));
+  box-shadow:none;
+}
+.cabecalho :global(.navegacao-temas .segmentos)::before,
+.cabecalho :global(.navegacao-temas .segmentos)::after { content:none; }
 .explorar[aria-current="page"] { color:var(--tinta); background:var(--faixa-ativa); font-weight:650; }
 .semMandato :global(.cabecalho-principal) { grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"marca temas acoes"; }
 @media(max-width:760px) {
+  .cabecalho :global(.navegacao-temas :is(button,a)) { min-height:44px; font-size:12px; }
   .semMandato :global(.cabecalho-principal) { grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"marca acoes" "temas temas"; }
   .cabecalho :global(.marca-painel) { width:140px; }
   .cabecalho .explorar { min-height:44px; padding:8px; font-size:11px; gap:5px; }
