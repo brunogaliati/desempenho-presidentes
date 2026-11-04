@@ -351,3 +351,15 @@ atribuídos. A delegação pública continua na DigitalOcean. A troca no registr
 é uma etapa posterior; o domínio deve ser ligado ao Worker por Custom Domain
 após ativação da zona. Não se afirma validação do domínio principal nem deploy
 automático a partir do GitHub enquanto essas etapas não forem configuradas.
+
+
+### Workers Paid e validação da aplicação
+
+O titular ativou o Workers Paid (US$ 5/mês + uso excedente). O Worker foi atualizado
+com `limits.cpu_ms=5000`, abaixo do padrão do plano, para limitar processamento por
+requisição. A validação remota completa passou no endereço workers.dev: cobertura
+das 12.431 URLs municipais, 70 diretórios, 59 páginas e imagens com conferência na
+fonte, 60 panoramas, limites/404, navegação e webhook. A reconsulta sem mudança de
+dados preservou as revisões e datas editoriais. A aprovação se refere à aplicação
+nesse endereço; o domínio principal depende da ativação da delegação e do Custom
+Domain. Não houve novas mudanças no conteúdo dos indicadores nesta etapa.
