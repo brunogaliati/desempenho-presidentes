@@ -1153,7 +1153,7 @@ function SeletorMedida({
   return (
     <div
       ref={raiz}
-      className="relative mt-1"
+      className="relative mt-1 min-w-0 flex-1"
       onKeyDown={(e) => {
         if (e.key === "Escape" && aberto) {
           e.stopPropagation();

@@ -111,6 +111,7 @@ export function SalaDinheiro(props: PropsSala) {
 
   return (
     <section id="orcamento" className="dn-sala" data-aberta={aberto ? "" : undefined} aria-label="De cada R$ 100">
+      <h1 className="titulo-painel dn-titulo">Dinheiro público</h1>
       <ColunaDinheiro {...props} ente={ente} ponto={ponto} base={base} aoAbrir={(id) => {
         setSelecionado(id);
         const f = itemDe(id)?.familia;
@@ -233,7 +234,6 @@ function ColunaDinheiro({
   const gov = sigla ? governoEm(governos, sigla, `${ano}-07-01`) : null;
   return (
     <div className="dn-coluna">
-      <h1 className="titulo-painel">Dinheiro público</h1>
       <div className="mb-3 flex justify-end"><Compartilhar mensagem={"Orçamento de "+ente.nome+" · "+ano} contexto="" ancora="orcamento" compacto/></div>
       <label className={ROTULO} htmlFor="dn-ente" style={{ color: "var(--tinta-3)" }}>Quem gasta</label>
       <span className="dn-seletor-ente">

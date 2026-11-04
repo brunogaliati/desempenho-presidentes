@@ -8,6 +8,7 @@ export default function CarregandoPainel({ aba="economia", embutido=false }: { a
   const conteudo = <section className="esqueleto-painel" data-skeleton={aba} aria-busy="true" aria-label={`Carregando ${nomes[aba]}`}>
     <p role="status" className="sr-only">Carregando {nomes[aba]} com os dados oficiais…</p>
     <div className="esqueleto-sala" aria-hidden="true">
+      {aba==='dinheiro'&&<div className="esqueleto-linha esqueleto-titulo-dinheiro"/>}
       <div className="esqueleto-resumo">
         <div className="esqueleto-linha esqueleto-titulo"/>
         <div className="esqueleto-linha"/>
@@ -25,9 +26,9 @@ export default function CarregandoPainel({ aba="economia", embutido=false }: { a
     </div>
   </section>;
   if(embutido)return conteudo;
-  return <div className="painel-governo min-h-dvh px-3" data-aba={aba} data-visual="governo-v1">
+  return <div className="painel-governo min-h-dvh px-3" data-aba={aba} data-visual="governo-v1" data-carregando-completo="true">
     <div aria-hidden="true" className="fundo-painel"/>
-    <div className="painel-cabecalho" aria-hidden="true"><div className="cabecalho-painel esqueleto-cabecalho"><div className="esqueleto-linha esqueleto-titulo"/><div className="esqueleto-linha"/><div className="esqueleto-linha"/></div></div>
+    <div className="painel-cabecalho" aria-hidden="true"><div className="cabecalho-painel esqueleto-cabecalho"><div className="esqueleto-linha esqueleto-titulo"/><div className="esqueleto-linha"/><div className="esqueleto-linha esqueleto-temas"/><div className="esqueleto-linha esqueleto-mandato"/></div></div>
     <main>{conteudo}</main>
   </div>;
 }

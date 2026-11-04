@@ -4,6 +4,7 @@
 
 .titulo-painel { margin-bottom:8px; font-size:16px; line-height:1.35; font-weight:600; color:var(--tinta); }
 .painel-governo.troca-aba { position:fixed; inset:0; z-index:45; overflow:auto; padding-inline:12px; background:var(--plano); }
+html:has(.troca-aba) { overflow:hidden; scrollbar-gutter:stable; }
 .navegacao-temas a:has([data-troca-pendente]) { background:var(--superficie); color:var(--tinta); }
 .esqueleto-painel { max-width:1680px; margin-inline:auto; }
 .esqueleto-sala { display:grid; grid-template-columns:17rem minmax(0,1fr) 22rem; gap:28px; min-height:calc(100dvh - var(--altura-cabecalho,112px)); padding:24px; }
@@ -21,6 +22,7 @@
 .esqueleto-biomas { display:flex; gap:8px; margin-bottom:24px; }
 .esqueleto-biomas i { flex:1; height:38px; }
 .esqueleto-treemap { display:flex; flex-wrap:wrap; align-content:stretch; gap:5px; min-height:440px; max-height:680px; }
+.esqueleto-titulo-dinheiro { display:none; }
 .esqueleto-cabecalho { display:flex; align-items:center; gap:8%; padding:24px; min-height:76px; }
 .esqueleto-cabecalho > .esqueleto-linha { flex:1; margin:0; height:24px; }
 @keyframes esqueleto-pulso { from { opacity:.45; } to { opacity:.8; } }
@@ -33,6 +35,11 @@
   .esqueleto-mapa svg { max-height:440px; }
   .esqueleto-barra { min-height:340px; }
   .esqueleto-treemap { min-height:360px; }
+}
+@media(max-width:760px) {
+  .painel-governo[data-carregando-completo] { --altura-cabecalho:215px; }
+  .esqueleto-cabecalho { min-height:191px; display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:16px; align-content:space-between; }
+  .esqueleto-cabecalho > .esqueleto-temas,.esqueleto-cabecalho > .esqueleto-mandato { grid-column:1 / -1; height:30px; }
 }
 @media(prefers-reduced-motion:reduce) { .esqueleto-painel *, .esqueleto-painel svg { animation:none; } }
 
@@ -1683,9 +1690,10 @@ body {
 .dn-acao:hover { background: color-mix(in srgb, var(--tinta) 10%, transparent); }
 
 /* O palco */
-.dn-sala { display: grid; grid-template-columns: 216px minmax(0, 1fr) 248px; gap: 20px; padding: 6px 20px 12px; height: max(560px, calc(100svh - var(--altura-cabecalho, 84px) - 14px)); }
+.dn-sala { position:relative; display: grid; grid-template-columns: 216px minmax(0, 1fr) 248px; gap: 20px; padding: 6px 20px 12px; height: max(560px, calc(100svh - var(--altura-cabecalho, 84px) - 14px)); }
 .dn-sala[data-aberta] { grid-template-columns: 216px minmax(0, 1fr) 352px; }
-.dn-coluna { display: flex; flex-direction: column; min-width: 0; padding-top: 4px; }
+.dn-titulo { position:absolute; top:10px; left:20px; }
+.dn-coluna { display: flex; flex-direction: column; min-width: 0; padding-top: 34px; }
 .dn-seletor-ente { position: relative; display: block; margin-top: 5px; }
 .dn-seletor-ente select { appearance: none; width: 100%; background: transparent; border: 0; border-bottom: 1px solid var(--eixo); padding: 3px 18px 5px 0; font-size: 15px; font-weight: 600; color: var(--tinta); cursor: pointer; }
 .dn-seletor-ente select option, .dn-seletor-ente select optgroup { color: var(--tinta); background: var(--superficie); }
@@ -1864,6 +1872,10 @@ button.dn-col:hover > span { background: var(--faixa-a); }
 .dn-links-fonte { display: flex; gap: 14px; margin-top: 8px; font-size: 12.5px; text-decoration: underline; color: var(--tinta-2); }
 @media (max-width: 980px) {
   .dn-sala, .dn-sala[data-aberta] { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .dn-titulo { position:static; order:-2; margin:0; }
+  .dn-coluna { padding-top:4px; }
+  .esqueleto-painel[data-skeleton="dinheiro"] .esqueleto-titulo-dinheiro { display:block; order:-2; width:150px; height:22px; margin:0; }
+  .esqueleto-painel[data-skeleton="dinheiro"] .esqueleto-treemap { order:-1; }
   /* No celular o treemap abre a página: o número e o seletor vêm logo depois. */
   .dn-meio { order: -1; }
   .dn-mapa { height: 440px; flex: none; }
