@@ -674,34 +674,33 @@ body {
   left: 0;
   right: 0;
   z-index: 40;
-  display: flex;
+  display: none;
   justify-content: center;
   padding-inline: 12px;
   pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-6px);
-  transition: opacity 200ms ease-out, transform 200ms ease-out, visibility 0s linear 200ms;
 }
 .nav-terminal[data-visivel] {
-  opacity: 1;
-  visibility: visible;
-  transform: none;
-  transition: opacity 200ms ease-out, transform 200ms ease-out;
+  display: flex;
 }
-.nav-terminal-faixa {
+.nav-terminal-vidro {
+  /* O desfoque fica fora do scroller para não encobrir seus links no WebKit. */
   /* Mais opaco que o cabeçalho: os rótulos são pequenos e a grade passa por trás. */
   --vidro-tinta: light-dark(rgba(255, 255, 255, 0.82), rgba(23, 35, 45, 0.86));
   position: relative;
-  display: flex;
-  gap: 2px;
   max-width: 100%;
   padding: 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
   border: 1px solid var(--borda);
   border-radius: 999px;
   pointer-events: auto;
+}
+.nav-terminal-faixa {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: inherit;
 }
 .nav-terminal-faixa a {
   display: inline-flex;
@@ -729,12 +728,6 @@ body {
 .nav-terminal-faixa a:focus-visible {
   outline: 2px solid var(--ouro-forte, var(--serie));
   outline-offset: 1px;
-}
-@media (prefers-reduced-motion: reduce) {
-  .nav-terminal,
-  .nav-terminal[data-visivel] {
-    transition: none;
-  }
 }
 
 .cabecalho-principal {

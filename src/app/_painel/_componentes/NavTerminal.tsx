@@ -83,7 +83,8 @@ export function NavTerminal({
 
   return (
     <nav className="nav-terminal" data-visivel={visivel || undefined} aria-label={rotulo} aria-hidden={!visivel} inert={!visivel}>
-      <div ref={faixa} className="nav-terminal-faixa vidro">
+      <div className="nav-terminal-vidro vidro">
+      <div ref={faixa} className="nav-terminal-faixa">
         {secoes.map((s) => (
           <a
             key={s.id}
@@ -100,6 +101,7 @@ export function NavTerminal({
             {s.rotulo}
           </a>
         ))}
+      </div>
       </div>
     </nav>
   );
