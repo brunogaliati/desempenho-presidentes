@@ -854,6 +854,7 @@ function Destaque({
 
   return (
     <div className="order-1 animate-[subir_.5s_ease-out_backwards]" data-destaque={l.id}>
+            <h1 className="titulo-painel">Economia</h1>
       <p className="mono text-[11px] font-medium uppercase tracking-[0.18em]" style={{ color: "var(--serie)" }}>
         {uf ? uf.nome : "Brasil"}
       </p>

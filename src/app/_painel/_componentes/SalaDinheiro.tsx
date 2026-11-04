@@ -233,6 +233,7 @@ function ColunaDinheiro({
   const gov = sigla ? governoEm(governos, sigla, `${ano}-07-01`) : null;
   return (
     <div className="dn-coluna">
+      <h1 className="titulo-painel">Dinheiro público</h1>
       <div className="mb-3 flex justify-end"><Compartilhar mensagem={"Orçamento de "+ente.nome+" · "+ano} contexto="" ancora="orcamento" compacto/></div>
       <label className={ROTULO} htmlFor="dn-ente" style={{ color: "var(--tinta-3)" }}>Quem gasta</label>
       <span className="dn-seletor-ente">

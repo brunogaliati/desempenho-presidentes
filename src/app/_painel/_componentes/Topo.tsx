@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Compartilhar } from "@/components/Compartilhar";
 import Link from "next/link";
+import { LinkTema } from "./LinkTema";
 import { destinoPainel } from "@/lib/rotasPainel";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 
@@ -78,7 +79,7 @@ export function Cabecalho({
           <Marca />
         </Link>
         <nav className="navegacao-temas" aria-label="Temas">
-          {publico ? <div className="segmentos vidro inline-flex gap-1 p-1">{ABAS.map(a=>a.indisponivel?<button key={a.id} type="button" disabled className="px-3 py-2">{a.rotulo}</button>:<Link key={a.id} href={destinoPainel({aba:a.id,...recorte})} aria-current={!semTemaAtivo&&aba===a.id?'page':undefined} className="px-3 py-2">{a.rotulo}</Link>)}</div> : <Segmentos opcoes={ABAS} ativo={aba} aoEscolher={aoTrocar} rotulo="Temas" papel="pagina" classeBotao="px-3 py-2" />}
+          {publico ? <div className="segmentos vidro inline-flex gap-1 p-1">{ABAS.map(a=>a.indisponivel?<button key={a.id} type="button" disabled className="px-3 py-2">{a.rotulo}</button>:<LinkTema key={a.id} href={destinoPainel({aba:a.id,...recorte})} aba={a.id as "economia"|"ambiente"|"dinheiro"} atual={!semTemaAtivo&&aba===a.id} rotulo={a.rotulo}/>)}</div> : <Segmentos opcoes={ABAS} ativo={aba} aoEscolher={aoTrocar} rotulo="Temas" papel="pagina" classeBotao="px-3 py-2" />}
         </nav>
         {mandato}
         <div className="cabecalho-acoes">

@@ -555,6 +555,7 @@ export function SalaAmbiente({
           className="contents lg:absolute lg:bottom-6 lg:left-6 lg:top-6 lg:z-10 lg:flex lg:w-[17rem] lg:flex-col lg:gap-3.5"
         >
           <div className="order-1" data-destaque={lente}>
+            <h1 className="titulo-painel">Meio ambiente</h1>
             <p className="mono flex items-baseline gap-2 text-[11px] font-medium uppercase tracking-[0.18em]" style={{ color: "var(--serie)" }}>
               {nomeRecorte}
               {(uf || bioma || regiao) && (

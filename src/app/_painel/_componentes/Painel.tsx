@@ -30,7 +30,7 @@ import { FiltroRefracao, useVidro } from "./Vidro";
 
 interface Props {
   publico?: boolean;
-  introducao?: React.ReactNode;
+  descricao?: string;
   dados: DadosPainel;
   abaInicial: AbaId;
   ufInicial: string | null;
@@ -39,7 +39,7 @@ interface Props {
   retrato: React.ReactNode;
 }
 
-export function Painel({ publico=false, introducao, dados: inteiros, abaInicial, ufInicial, mandatoInicial, retrato }: Props) {
+export function Painel({ publico=false, descricao, dados: inteiros, abaInicial, ufInicial, mandatoInicial, retrato }: Props) {
   const router = useRouter();
   const [aba, setAba] = useState<AbaId>(abaInicial);
   const [sigla, setSiglaDireto] = useState<string | null>(ufInicial);
@@ -117,7 +117,6 @@ export function Painel({ publico=false, introducao, dados: inteiros, abaInicial,
       </div>
 
       <main>
-      {introducao}
       {aba === "economia" && (
         <AbaEconomia dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} aoTrocarAba={trocarAba} />
       )}
@@ -128,6 +127,7 @@ export function Painel({ publico=false, introducao, dados: inteiros, abaInicial,
       {publico && aba === "economia" && <nav aria-label="Indicadores e territórios" className="mx-auto mt-6 flex max-w-6xl flex-wrap gap-5 text-sm"><Link href="/economia">Todos os indicadores</Link><Link href="/economia/salario-minimo">Salário mínimo</Link><Link href="/economia/inflacao">Inflação</Link><Link href="/economia/desemprego">Desemprego</Link><Link href="/economia/gasolina">Gasolina</Link><Link href="/economia/municipios">Indicadores por município</Link></nav>}
       {publico && <nav aria-label="Sobre os dados" className="mx-auto mt-6 flex max-w-6xl flex-wrap gap-5 text-sm"><Link href="/metodologia">Metodologia</Link><Link href="/sobre">Sobre o projeto</Link><Link href="/correcoes">Relatar um erro</Link></nav>}
       <footer className="mx-auto mt-6 max-w-6xl text-[11px] leading-snug" style={{ color: "var(--tinta-3)" }}>
+        {descricao && <p className="mb-3">{descricao} Os períodos e fontes aparecem em cada painel; ausência de informação não significa zero.</p>}
         {aba === "dinheiro" ? (<>Fontes: Tesouro Nacional · Siconfi e Transferegov · transferências especiais.</>) : aba === "ambiente" ? (
           <>
             Fontes: INPE (PRODES, DETER e Programa Queimadas), Ibama (dados abertos da fiscalização) e IBGE (malhas). Cada painel diz a data
