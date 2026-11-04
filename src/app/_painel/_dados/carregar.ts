@@ -20,13 +20,6 @@ import { afinarLeitura, focoDoMandato } from "./mandatoRecorte";
 import { alinharTerritorio, mesesEntre, type LinhaTerritorio } from "./economiaModelo";
 import { carregarEconomiaAmpliada } from "./economiaAmpliada";
 import { carregarIbovespa } from "./ibovespa";
-import {
-  ANOS_EMENDAS,
-  alinhamentoExemplo,
-  emendasAcumuladasExemplo,
-  FEED_EXEMPLO,
-  SEMESTRES,
-} from "./exemplos";
 import fotografia from "./fotografia.json";
 import governos from "./governos.json";
 import { carregarMarcos } from "./marcos";
@@ -49,7 +42,7 @@ import malha from "./ufs.json";
  * - `governos.json`: quem governou cada UF e o país desde 1995, com partido
  *   (`scripts/gerar-governos.mjs`).
  * - Neon: seleção revisada de marcos por mandato, com evidências oficiais.
- * - `exemplos.ts`: o que ainda não tem fonte carregada, sempre marcado.
+ * Apenas fontes públicas entram no payload; abas sem integração ficam indisponíveis.
  */
 
 /**
@@ -87,15 +80,6 @@ const anual = (ano: number, parcial = false): Periodo => ({
 });
 
 type Serie = (number | null)[];
-
-/** Soma posição a posição; `null` só se todos forem nulos. */
-function somar(series: Serie[]): Serie {
-  const n = series[0]?.length ?? 0;
-  return Array.from({ length: n }, (_, i) => {
-    const vs = series.map((s) => s[i]).filter((v): v is number => v !== null);
-    return vs.length ? vs.reduce((a, b) => a + b, 0) : null;
-  });
-}
 
 /**
  * Devolve também o mandato em curso inteiro, que fica no servidor: serve para
@@ -192,20 +176,6 @@ async function carregarPainelSemCache(): Promise<{ painel: Omit<DadosPainel, "go
     ...new Map(ufs.map((u) => [u.regiaoCodigo, { codigo: u.regiaoCodigo, nome: u.regiao }])).values(),
   ].sort((a, b) => a.codigo.localeCompare(b.codigo));
   const ufsDaRegiao = (r: string) => ufs.filter((u) => u.regiaoCodigo === r);
-
-  /** Agrega uma medida "por habitante" somando numeradores e populações. */
-  const porHabitante = (valorUf: (u: UF) => Serie) => {
-    const total = (lista: UF[]): Serie => {
-      const pop = lista.reduce((s, u) => s + (u.populacao ?? 0), 0);
-      return somar(
-        lista.map((u) => valorUf(u).map((v) => (v === null ? null : v * (u.populacao ?? 0)))),
-      ).map((v) => (v === null || pop === 0 ? null : Math.round(v / pop)));
-    };
-    return {
-      brasil: total(ufs),
-      regioes: Object.fromEntries(regioes.map((r) => [r.codigo, total(ufsDaRegiao(r.codigo))])),
-    };
-  };
 
   // --- Economia --------------------------------------------------------------
   //
@@ -394,35 +364,6 @@ async function carregarPainelSemCache(): Promise<{ painel: Omit<DadosPainel, "go
 
   // --- Congresso -------------------------------------------------------------
 
-  const alinhamentoUf = new Map(ufs.map((u) => [u.codigo, alinhamentoExemplo(u.sigla)]));
-  /** Média ponderada pelo número de deputados: cada voto pesa igual. */
-  const mediaPorDeputado = (lista: UF[]): Serie => {
-    const peso = lista.reduce((s, u) => s + u.deputados.length, 0);
-    return SEMESTRES.map((_, i) =>
-      Math.round(
-        lista.reduce((s, u) => s + alinhamentoUf.get(u.codigo)![i] * u.deputados.length, 0) / peso,
-      ),
-    );
-  };
-  const alinhamento: Leitura = {
-    id: "alinhamento",
-    titulo: "Votos com a orientação do governo",
-    descricao: "Parte dos votos da bancada que seguiu a orientação do governo nas votações nominais.",
-    fonte: "Câmara e Senado, votações nominais",
-    exemplo: true,
-    formato: "pct0",
-    escala: "linear",
-    periodos: SEMESTRES.map((s) => {
-      const [ano, sem] = s.split("-");
-      return { codigo: s, rotulo: `${sem}º sem ${ano.slice(2)}`, extenso: `${sem}º semestre de ${ano}` };
-    }),
-    indicePosse: null,
-    indiceRecebido: null,
-    brasil: mediaPorDeputado(ufs),
-    regioes: Object.fromEntries(regioes.map((r) => [r.codigo, mediaPorDeputado(ufsDaRegiao(r.codigo))])),
-    ufs: Object.fromEntries([...alinhamentoUf]),
-  };
-
   const representacao = (lista: UF[]): Serie => {
     const pop = lista.reduce((s, u) => s + (u.populacao ?? 0), 0);
     const dep = lista.reduce((s, u) => s + u.deputados.length, 0);
@@ -442,29 +383,6 @@ async function carregarPainelSemCache(): Promise<{ painel: Omit<DadosPainel, "go
     brasil: representacao(ufs),
     regioes: Object.fromEntries(regioes.map((r) => [r.codigo, representacao(ufsDaRegiao(r.codigo))])),
     ufs: Object.fromEntries(ufs.map((u) => [u.codigo, representacao([u])])),
-  };
-
-  // --- Dinheiro --------------------------------------------------------------
-
-  const emendasUf = (u: UF): Serie =>
-    u.populacao
-      ? emendasAcumuladasExemplo(u.sigla, u.deputados.length + u.senadores.length, u.populacao)
-      : ANOS_EMENDAS.map(() => null);
-  const agregadoEmendas = porHabitante(emendasUf);
-  const emendas: Leitura = {
-    id: "emendas",
-    titulo: "Emendas pagas por habitante",
-    descricao: "Acumulado desde 2023. Só o que foi pago, não o indicado nem o empenhado.",
-    fonte: "Transferegov e Portal da Transparência",
-    exemplo: true,
-    formato: "reais0",
-    escala: "log",
-    periodos: ANOS_EMENDAS.map((a, i) => anual(a, i === ANOS_EMENDAS.length - 1)),
-    indicePosse: null,
-    indiceRecebido: null,
-    brasil: agregadoEmendas.brasil,
-    regioes: agregadoEmendas.regioes,
-    ufs: Object.fromEntries(ufs.map((u) => [u.codigo, emendasUf(u)])),
   };
 
   // --- Meio ambiente -----------------------------------------------------------
@@ -511,8 +429,8 @@ async function carregarPainelSemCache(): Promise<{ painel: Omit<DadosPainel, "go
     regioes,
     leituras: {
       economia: [desocupacao, subutilizacao, inadimplencia, precoGasolina, pibPorHabitante].filter((l): l is Leitura => l !== null).map(afinarLeitura),
-      congresso: [alinhamento, deputadosPorMilhao],
-      dinheiro: [emendas],
+      congresso: [deputadosPorMilhao],
+      dinheiro: [],
       ambiente: ambiente.leituras.map(afinarLeitura),
     },
     economia: {
@@ -550,7 +468,7 @@ async function carregarPainelSemCache(): Promise<{ painel: Omit<DadosPainel, "go
     },
     ambiente: { ...ambiente.dados, fiscalizacao: ambiente.dados.fiscalizacao.map(afinarLeitura) },
     queimadas: { anos: queimadas.anos, satelite: queimadas.satelite },
-    feed: FEED_EXEMPLO,
+    feed: [],
     fontes: {
       coletadoEm: fotografia.coletadoEm,
       camara: fotografia.fontes.camara,
@@ -563,7 +481,7 @@ async function carregarPainelSemCache(): Promise<{ painel: Omit<DadosPainel, "go
   return { painel, presidente };
 }
 
-const carregarPainelDoCache = unstable_cache(carregarPainelSemCache, ["painel-v10-mandatos"], { revalidate: 3600, tags: ["painel-economia"] });
+const carregarPainelDoCache = unstable_cache(carregarPainelSemCache, ["painel-v11-fontes-publicas"], { revalidate: 3600, tags: ["painel-economia"] });
 
 /** Quem governou vem de um arquivo do repositório: fica fora do cache, que é para o banco. */
 export async function carregarPainel(): Promise<{ painel: DadosPainel; presidente: Presidente }> {

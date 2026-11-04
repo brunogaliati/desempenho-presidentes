@@ -64,3 +64,16 @@ test('canônica e compartilhamento apontam para a própria página; JSON-LD não
   assert(!jsonLd(conteudo).includes('<'));
   assert.deepEqual(JSON.parse(jsonLd(conteudo)), conteudo);
 });
+
+
+test('todas as páginas têm capa contextual e o compartilhamento específico preserva a origem', () => {
+  const institucional=metadataPagina('Metodologia','Critérios','/metodologia');
+  assert.equal(institucional.openGraph.images[0].url,'/compartilhar?pagina=%2Fmetodologia&v=20261104');
+  assert.equal(institucional.openGraph.images[0].width,1200);
+  assert.equal(institucional.openGraph.images[0].height,630);
+  const pessoa=metadataPagina('Lula','Mandatos','/presidente/lula');
+  assert.equal(pessoa.twitter.images[0],'/presidente/lula/opengraph-image?v=20261104');
+  const municipal=metadataPagina('População','Dados','/economia/populacao/sao-paulo/campinas','/economia/imagens/populacao/sao-paulo/campinas');
+  assert.equal(municipal.openGraph.images[0].url,'/economia/imagens/populacao/sao-paulo/campinas?v=20261104');
+  assert.equal(municipal.alternates.canonical,'/economia/populacao/sao-paulo/campinas');
+});

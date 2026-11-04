@@ -1,4 +1,6 @@
 import Link from "next/link";
+import LayoutEconomia from "@/app/economia/layout";
+import styles from "@/app/economia/indicador.module.css";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { metadataPagina } from "@/lib/seo";
@@ -94,7 +96,7 @@ function Secao({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-t py-10" style={{ borderColor: "var(--borda)" }}>
+    <section className="vidro mt-5 rounded-[26px] p-6 sm:p-8" data-lustro="fixo">
       <h3 className="text-lg font-semibold">{titulo}</h3>
       <div className="mt-4">{children}</div>
     </section>
@@ -154,19 +156,8 @@ export default async function PaginaPessoa({
   });
 
   return (
-    <div className="mx-auto max-w-4xl px-4 pb-24">
-      <header
-        className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b py-3 text-sm"
-        style={{ borderColor: "var(--borda)" }}
-      >
-        <Link href="/" className="font-semibold tracking-tight hover:underline">
-          desempenhodogoverno.com.br
-        </Link>
-        <nav className="flex gap-4" style={{ color: "var(--tinta-2)" }}>
-          <Link href="/#tabela" className="hover:underline">Tabela</Link>
-          <Link href="/metodologia" className="hover:underline">Metodologia</Link>
-        </nav>
-      </header>
+    <LayoutEconomia><main className={`${styles.pagina} mx-auto max-w-6xl px-2 pb-12 sm:px-4`}>
+      <nav aria-label="Navegação estrutural" className="px-6 pt-6 text-sm"><Link href="/">Início</Link> / <span aria-current="page">{mandatos[0].nome}</span></nav>
 
       <CapaPessoa
         pessoa={{ nome: mandatos[0].nome, partido: mandatos[0].partido }}
@@ -187,8 +178,8 @@ export default async function PaginaPessoa({
         return (
           <section
             key={per.id}
-            className="rounded-lg border p-5"
-            style={{ borderColor: "var(--borda)", background: "var(--superficie)" }}
+            className="vidro mt-5 rounded-[26px] p-6 sm:p-8"
+            data-lustro="fixo"
           >
             <h2 className="text-lg font-semibold">
               Os {per.nMandatos} mandatos seguidos, de {per.inicio.slice(0, 4)} a{" "}
@@ -443,6 +434,6 @@ export default async function PaginaPessoa({
         {rotuloMandato(dados.presidentes, mandatos[0])} e demais mandatos.
         Fontes: Banco Central, IBGE e World Bank.
       </p>
-    </div>
+    </main></LayoutEconomia>
   );
 }

@@ -8,12 +8,15 @@ export function podeIndexar(env: NodeJS.ProcessEnv = process.env): boolean {
 }
 
 export function metadataPagina(titulo: string, descricao: string, caminho: string, imagem?: string): Metadata {
+  const propria = caminho === '/economia/inflacao' || caminho === '/economia/salario-minimo' || /^\/presidente\/[^/]+$/.test(caminho);
+  const capa = imagem ?? (propria ? `${caminho}/opengraph-image` : `/compartilhar?pagina=${encodeURIComponent(caminho.split('?')[0])}`);
+  const imagemFinal = `${capa}${capa.includes('?')?'&':'?'}v=20261104`;
   return {
     title: titulo,
     description: descricao,
     alternates: { canonical: caminho },
-    openGraph: { title: titulo, description: descricao, url: caminho, siteName: NOME_SITE, locale: "pt_BR", type: "website", ...(imagem ? {images:[{url:imagem,width:1200,height:630,alt:titulo}]} : {}) },
-    twitter: { card: "summary_large_image", title: titulo, description: descricao, ...(imagem ? {images:[imagem]} : {}) },
+    openGraph: { title: titulo, description: descricao, url: caminho, siteName: NOME_SITE, locale: "pt_BR", type: "website", images:[{url:imagemFinal,width:1200,height:630,alt:titulo}] },
+    twitter: { card: "summary_large_image", title: titulo, description: descricao, images:[imagemFinal] },
   };
 }
 

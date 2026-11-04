@@ -53,7 +53,7 @@ export function ComparacaoPropriosMandatos({ mandatos, todos }: Props) {
   const zero = ((0 - min) / faixa) * 100;
 
   return (
-    <section className="py-10" ref={ref}>
+    <section className="vidro mt-5 rounded-[26px] p-6 sm:p-8" data-lustro="fixo" ref={ref}>
       <h2 className="text-xl font-semibold">Um mandato contra o outro</h2>
       <p
         className="mt-1.5 max-w-prose text-[15px] leading-relaxed"

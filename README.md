@@ -155,9 +155,13 @@ Worker aprovados; conferência visual em desktop e celular, tema e navegação c
 preservação de UF. A integração no domínio oficial passou com a home definitiva,
 cinco redirects HTTP 308, quatro APIs públicas, 59 páginas/imagens, 60 panoramas,
 12.937 URLs no sitemap e webhook sem alteração indevida das datas. A versão
-publicada do Worker é `7a725677-fb67-47c6-accb-cf44ecda3f51`. O build usa uma página
+do Worker nessa promoção foi `7a725677-fb67-47c6-accb-cf44ecda3f51`. O build usa uma página
 por vez (`cpus: 1`, `staticGenerationMaxConcurrency: 1`): a tentativa concorrente
 encontrou falta de memória no Neon; a geração final terminou sem esses erros.
+
+A revisão posterior unificou as páginas de presidentes, erros e 404, retirou
+dados demonstrativos do carregamento público e padronizou ícones e capas de links.
+Cobertura, verificações e comandos estão em [Identidade pública](docs/IDENTIDADE-PUBLICA.md).
 
 Aplicar `backend/sql/080_publicacao_seo.sql` antes de implantar esta versão.
 A visão `mart.historico_publicavel_municipal` preserva a última janela completa;

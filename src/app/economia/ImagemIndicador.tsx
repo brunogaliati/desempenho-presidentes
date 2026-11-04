@@ -1,5 +1,4 @@
-import { fonteCompartilhamento } from "@/lib/fonteCompartilhamento";
-import { ImageResponse } from "next/og";
+import { imagemCompartilhamento } from "@/components/ImagemCompartilhamento";
 import type { DadosPaginaEconomia } from "@/lib/dadosEconomiaPublica";
 import { rotuloPeriodoPublico } from "@/app/_painel/_dados/economiaModelo";
 import { numero, reais } from "@/lib/formatar";
@@ -16,11 +15,5 @@ export async function imagemMunicipal(d:DadosIndicadorMunicipal) {
 }
 
 async function imagemPublica(titulo:string,valor:string,referencia:string,fonteNome:string) {
-  const fonte = await fonteCompartilhamento("Inter-Regular.ttf");
-  return new ImageResponse(<div style={{display:"flex",flexDirection:"column",justifyContent:"space-between",width:"100%",height:"100%",padding:64,background:"#f8fafd",color:"#263746",fontFamily:"Inter"}}>
-    <div style={{display:"flex",fontSize:36}}>{titulo}</div>
-    <div style={{display:"flex",fontSize:96,color:"#285c84"}}>{valor}</div>
-    <div style={{display:"flex",fontSize:28}}>{referencia}</div>
-    <div style={{display:"flex",fontSize:23,color:"#46586a"}}>{fonteNome} · Desempenho do Governo</div>
-  </div>,{width:1200,height:630,fonts:[{name:"Inter",data:fonte,weight:400,style:"normal"}],headers:{"X-Robots-Tag":"noindex"}});
+  return imagemCompartilhamento({titulo,valor,referencia,fonte:fonteNome});
 }

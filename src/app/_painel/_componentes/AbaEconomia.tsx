@@ -19,8 +19,7 @@ import { TerminalEconomia } from "./TerminalEconomia";
  * todos os números de uma vez, das séries nacionais aos estados e aos governos
  * desde 1995. Tocar num estado ali sobe de volta para a sala com ele aberto.
  *
- * Tudo aqui é dado real. O selo EXEMPLO só aparece na ficha do estado, nos
- * blocos das outras abas.
+ * As medidas usam fontes públicas; blocos sem cobertura não viram números de demonstração.
  */
 
 const quieto = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;

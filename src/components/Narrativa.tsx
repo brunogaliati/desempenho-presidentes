@@ -88,10 +88,10 @@ export function Narrativa({ dados, atos }: Props) {
   const ui = SERIES_UI_POR_ID[ato.serieId];
 
   return (
-    <div className="relative">
+    <div className="vidro relative mt-5 rounded-[26px] p-6 sm:p-8" data-lustro="fixo">
       {/* O gráfico gruda no topo no celular e à direita no desktop. */}
       <div className="sticky top-0 z-10 -mx-4 px-4 pb-4 pt-3 backdrop-blur md:hidden"
-           style={{ background: "color-mix(in srgb, var(--plano) 88%, transparent)" }}>
+           style={{ top: "calc(var(--altura-cabecalho, 0px) + 8px)", background: "color-mix(in srgb, var(--plano) 88%, transparent)" }}>
         <p className="mb-1 text-xs font-medium uppercase tracking-wide"
            style={{ color: "var(--tinta-3)" }}>
           {ui?.rotulo ?? serie?.nome}
@@ -117,7 +117,7 @@ export function Narrativa({ dados, atos }: Props) {
                 refs.current[i] = el;
               }}
               className="flex min-h-[62vh] flex-col justify-center py-10 transition-opacity duration-300 md:min-h-[70vh]"
-              style={{ opacity: i === ativo ? 1 : 0.35 }}
+              style={{ opacity: 1 }}
             >
               {/* Rosto de quem está em foco: o leitor sabe de quem é o número
                   antes de ler qualquer palavra. */}
@@ -180,7 +180,7 @@ export function Narrativa({ dados, atos }: Props) {
         <div className="hidden md:block">
           {/* Ancorado perto do topo, não centralizado na tela: centralizar
               deixava um vazio grande acima da primeira seção. */}
-          <div className="sticky top-12 pt-10">
+          <div className="sticky pt-10" style={{top:"calc(var(--altura-cabecalho, 0px) + 24px)"}}>
             <p className="mb-2 text-xs font-medium uppercase tracking-wide"
                style={{ color: "var(--tinta-3)" }}>
               {ui?.rotulo ?? serie?.nome}

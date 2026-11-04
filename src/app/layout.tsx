@@ -5,12 +5,12 @@ import { MetricasWeb } from "./MetricasWeb";
 import { jsonLd, NOME_SITE, podeIndexar, URL_SITE } from "@/lib/seo";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--fonte-sans",
   subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+  variable: "--fonte-mono",
   subsets: ["latin"],
 });
 
@@ -41,12 +41,9 @@ export const metadata: Metadata = {
     description: DESCRICAO,
   },
   icons: {
-    icon: [
-      {
-        url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇧🇷</text></svg>",
-        type: "image/svg+xml",
-      },
-    ],
+    icon: [{ url: "/icone.svg", type: "image/svg+xml", sizes: "any" }, { url: "/icone-32.png", type: "image/png", sizes: "32x32" }, { url: "/icone-192.png", type: "image/png", sizes: "192x192" }],
+    shortcut: "/favicon.ico",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
@@ -57,7 +54,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${geistSans.className}`}>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd({
           "@context": "https://schema.org",
           "@graph": [

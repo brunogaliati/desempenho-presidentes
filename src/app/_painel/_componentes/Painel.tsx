@@ -10,7 +10,6 @@ import type { AbaId, DadosPainel } from "../_dados/tipos";
 import { AbaDinheiro } from "./AbaDinheiro";
 import { AbaAmbiente } from "./AbaAmbiente";
 import { AbaEconomia } from "./AbaEconomia";
-import { PainelMapa } from "./PainelMapa";
 import { PosseContext } from "./GraficoLinha";
 import { BarraMandato, Cabecalho } from "./Topo";
 import { FiltroRefracao, useVidro } from "./Vidro";
@@ -107,6 +106,7 @@ export function Painel({ publico=false, introducao, dados: inteiros, abaInicial,
     <div
       className="painel-governo min-h-dvh px-3 pb-10"
       data-aba={aba}
+      data-visual="governo-v1"
     >
       <div aria-hidden className="fundo-painel" />
       <FiltroRefracao />
@@ -121,9 +121,6 @@ export function Painel({ publico=false, introducao, dados: inteiros, abaInicial,
       )}
       {aba === "ambiente" && <AbaAmbiente dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} />}
       {aba === "dinheiro" && <AbaDinheiro dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} aoEscolherMandato={setMandatoId} />}
-      {aba === "congresso" && (
-        <PainelMapa dados={atual} aba={aba} sigla={sigla} setSigla={setSigla} aoTrocarAba={trocarAba} />
-      )}
       </main>
 
       {publico && aba === "economia" && <nav aria-label="Indicadores e territórios" className="mx-auto mt-6 flex max-w-6xl flex-wrap gap-5 text-sm"><Link href="/economia">Todos os indicadores</Link><Link href="/economia/salario-minimo">Salário mínimo</Link><Link href="/economia/inflacao">Inflação</Link><Link href="/economia/desemprego">Desemprego</Link><Link href="/economia/gasolina">Gasolina</Link><Link href="/economia/municipios">Indicadores por município</Link></nav>}
@@ -139,7 +136,7 @@ export function Painel({ publico=false, introducao, dados: inteiros, abaInicial,
             Fontes: Banco Central, IBGE (SIDRA, estimativas e malhas), World Bank, Câmara, Senado e INPE.{" "}
             Dados das APIs públicas coletados em{" "}
             {new Date(inteiros.fontes.coletadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}.
-            Votações, decisões, emendas e atualizações do feed são exemplos até as fontes serem carregadas.
+            Cada indicador identifica sua referência e os limites da comparação.
           </>
         )}
       </footer>

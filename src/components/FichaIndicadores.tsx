@@ -79,10 +79,10 @@ export function FichaIndicadores({ presidente, series }: Props) {
                 return (
                   <li
                     key={s.id}
-                    className={`rounded-lg border p-3 ${estaAberto ? "sm:col-span-2" : ""}`}
+                    className={`border-b px-1 py-4 ${estaAberto ? "sm:col-span-2" : ""}`}
                     style={{
                       borderColor: estaAberto ? "var(--serie)" : "var(--borda)",
-                      background: "var(--superficie)",
+                      background: "transparent",
                     }}
                   >
                     <p className="text-sm font-medium">{s.rotulo}</p>
