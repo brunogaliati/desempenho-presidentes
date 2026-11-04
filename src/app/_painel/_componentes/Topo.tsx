@@ -35,10 +35,9 @@ import { RetratoGovernador } from "./RetratoGovernador";
  * marcos ficam no título do trilho e no balão de cada marco.
  */
 
-export const ABAS: { id: AbaId; rotulo: string; indisponivel?: boolean }[] = [
+export const ABAS: { id: Exclude<AbaId, "congresso">; rotulo: string; indisponivel?: boolean }[] = [
   { id: "economia", rotulo: "Economia" },
   { id: "ambiente", rotulo: "Meio ambiente" },
-  { id: "congresso", rotulo: "Congresso", indisponivel: true },
   { id: "dinheiro", rotulo: "Dinheiro" },
 ];
 
@@ -79,7 +78,7 @@ export function Cabecalho({
           <Marca />
         </Link>
         <nav className="navegacao-temas" aria-label="Temas">
-          {publico ? <div className="segmentos vidro inline-flex gap-1 p-1">{ABAS.map(a=>a.indisponivel?<button key={a.id} type="button" disabled className="px-3 py-2">{a.rotulo}</button>:<LinkTema key={a.id} href={destinoPainel({aba:a.id,...recorte})} aba={a.id as "economia"|"ambiente"|"dinheiro"} atual={!semTemaAtivo&&aba===a.id} rotulo={a.rotulo}/>)}</div> : <Segmentos opcoes={ABAS} ativo={aba} aoEscolher={aoTrocar} rotulo="Temas" papel="pagina" classeBotao="px-3 py-2" />}
+          {publico ? <div className="segmentos vidro inline-flex gap-1 p-1">{ABAS.map(a=><LinkTema key={a.id} href={destinoPainel({aba:a.id,...recorte})} aba={a.id} atual={!semTemaAtivo&&aba===a.id} rotulo={a.rotulo}/>)}</div> : <Segmentos opcoes={ABAS} ativo={aba} aoEscolher={aoTrocar} rotulo="Temas" papel="pagina" classeBotao="px-3 py-2" />}
         </nav>
         {mandato}
         <div className="cabecalho-acoes">
