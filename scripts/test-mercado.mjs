@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizarIbovespa, janelaMercado, montarIbovespa } from '../src/app/prototipo/_dados/mercadoModelo.ts';
+import { normalizarIbovespa, janelaMercado, montarIbovespa } from '../src/app/_painel/_dados/mercadoModelo.ts';
 
 test('B3 converte pontos brasileiros, preserva calendário e exclui ausências/futuro', () => {
   const json = { results: [

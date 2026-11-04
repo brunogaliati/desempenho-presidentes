@@ -3,13 +3,13 @@
  *
  *     node scripts/gerar-mundo.mjs
  *
- * Grava `src/app/prototipo/_dados/mundo.json`: os países que podem aparecer em
+ * Grava `src/app/_painel/_dados/mundo.json`: os países que podem aparecer em
  * volta do Brasil (Américas do Sul e Central, Caribe e a costa da África),
  * sem o Brasil, como paths SVG na mesma projeção e no mesmo viewBox de
  * `ufs.json`. Contornos do Natural Earth 1:110m (domínio público). Escala
  * pequena de propósito: no fundo, detalhe de litoral não aparece e só pesaria.
  *
- * Grava também `public/prototipo/terra.webp`: o recorte da mesma caixa no
+ * Grava também `public/painel/terra.webp`: o recorte da mesma caixa no
  * Blue Marble Next Generation da NASA (dezembro de 2004; domínio público,
  * crédito à NASA Earth Observatory), só com a terra. A água sai transparente:
  * o mar da página é uma cor lisa, e o relevo do fundo do oceano, que a imagem
@@ -34,8 +34,8 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SAIDA = join(RAIZ, "src", "app", "prototipo", "_dados", "mundo.json");
-const SAIDA_IMAGEM = join(RAIZ, "public", "prototipo", "terra.webp");
+const SAIDA = join(RAIZ, "src", "app", "_painel", "_dados", "mundo.json");
+const SAIDA_IMAGEM = join(RAIZ, "public", "painel", "terra.webp");
 
 const URL_BR =
   "https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR?formato=application/vnd.geo%2Bjson&qualidade=minima&intrarregiao=UF";
@@ -118,7 +118,7 @@ await sharp(rgba, { raw: { width: info.width, height: info.height, channels: 4 }
 const [x0, y0] = projetar([CAIXA.lonMin, CAIXA.latMax]);
 const [x1, y1] = projetar([CAIXA.lonMax, CAIXA.latMin]);
 const imagem = {
-  href: "/prototipo/terra.webp",
+  href: "/painel/terra.webp",
   fonte: URL_SATELITE,
   x: arred(x0),
   y: arred(y0),

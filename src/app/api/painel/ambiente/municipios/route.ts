@@ -3,15 +3,15 @@ import { NextResponse } from "next/server";
 
 import { sql } from "@/lib/db";
 
-import biomas from "../../../_dados/biomas-municipios.json";
-import queimadas from "../../../_dados/queimadas.json";
+import biomas from "@/app/_painel/_dados/biomas-municipios.json";
+import queimadas from "@/app/_painel/_dados/queimadas.json";
 import {
   janela12,
   montarMunicipios,
   type Janela12,
   type LinhaDesmatamentoMunicipio,
   type LinhaIbamaMunicipio,
-} from "../../../_dados/ambienteMunicipal";
+} from "@/app/_painel/_dados/ambienteMunicipal";
 
 /**
  * O meio ambiente dos 5.570 municípios, para o mapa da aba: desmatamento do
@@ -19,8 +19,7 @@ import {
  * embargos do Ibama em 12 meses,
  * focos do arquivo anual do INPE e o bioma predominante do IBGE.
  *
- * Cada fonte falha sozinha e sai da resposta. Mesma trava do painel: fora de
- * produção, a menos que `PROTOTIPO=1`.
+ * Cada fonte falha sozinha e sai da resposta.
  */
 
 const CLASSES_DESMATAMENTO = ["DESMATAMENTO_CR", "DESMATAMENTO_VEG", "MINERACAO"];
@@ -144,9 +143,6 @@ const montarDoCache = unstable_cache(montar, ["ambiente-municipios-v6"], { reval
 const MES = /^(19|20)\d{2}-(01|08)$/;
 
 export async function GET(pedido: Request) {
-  if (process.env.NODE_ENV === "production" && process.env.PROTOTIPO !== "1") {
-    return new NextResponse(null, { status: 404 });
-  }
   // Sem parâmetros, o mandato em curso. Mês inválido cai nele, em vez de ir para o banco.
   const u = new URL(pedido.url).searchParams;
   const posse = u.get("posse") ?? "";

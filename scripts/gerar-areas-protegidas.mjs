@@ -13,14 +13,14 @@
  * A projeção é a de `gerar-malhas.mjs`, recalculada a partir da malha do país, e o
  * script confere se ela bate com a de `ufs.json`.
  *
- * Grava `public/prototipo/areas-protegidas.json`. Baixa perto de 100 MB.
+ * Grava `public/painel/areas-protegidas.json`. Baixa perto de 100 MB.
  */
 
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { chaveDaArea } from "../src/app/prototipo/_dados/ambienteMunicipal.ts";
+import { chaveDaArea } from "../src/app/_painel/_dados/ambienteMunicipal.ts";
 import { areaDoAnel, simplificarAnel } from "./lib-contornos.mjs";
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -99,7 +99,7 @@ const yMin = -Math.max(...lats);
 const escala = LARGURA / (Math.max(...lons) * k - xMin);
 const projetar = ([lon, lat]) => [(lon * k - xMin) * escala, (-lat - yMin) * escala];
 
-const malha = JSON.parse(await readFile(join(RAIZ, "src", "app", "prototipo", "_dados", "ufs.json"), "utf8"));
+const malha = JSON.parse(await readFile(join(RAIZ, "src", "app", "_painel", "_dados", "ufs.json"), "utf8"));
 const altura = Math.round((-Math.min(...lats) - yMin) * escala);
 if (malha.largura !== LARGURA || malha.altura !== altura) {
   throw new Error(`A projeção não bate com ufs.json: ${malha.largura}×${malha.altura} contra ${LARGURA}×${altura}`);
@@ -159,5 +159,5 @@ const saida = {
   areas: [...areas.values()].sort((a, b) => b.area - a.area).map(({ r, b, n, d }) => ({ r, b, n, d })),
 };
 const texto = `${JSON.stringify(saida)}\n`;
-await writeFile(join(RAIZ, "public", "prototipo", "areas-protegidas.json"), texto);
+await writeFile(join(RAIZ, "public", "painel", "areas-protegidas.json"), texto);
 console.log(`${saida.areas.length} áreas, ${(texto.length / 1024).toFixed(0)} KB`);

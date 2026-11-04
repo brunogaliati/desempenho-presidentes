@@ -76,7 +76,12 @@ for(const path of ['/economia/populacao/sao-paulo/campinas','/economia/emprego-f
 }
 for(const path of ['/','/economia','/metodologia','/sobre','/correcoes','/meio-ambiente','/dinheiro']){
  const r=await fetch(root+path);assert.equal(r.status,200,path);const html=await r.text();assert(html.includes(`rel="canonical" href="https://desempenhodogoverno.com.br${path==='/'?'':path}"`) || html.includes(`rel="canonical" href="https://desempenhodogoverno.com.br${path}"`),path+' canonical');assert(!html.includes('noindex'));assert(!/href="\/prototipo(?:[?"/])/.test(html));
+ if(path==='/'){assert(html.includes('painel-governo'));assert(html.includes('governo-a-governo'));assert.equal([...html.matchAll(/<h1[ >]/g)].length,1);assert(html.includes('href="/economia/municipios"'));assert(!html.includes('/prototipo/'));}
 }
+for(const [origem,destino] of [['/prototipo','/'],['/prototipo-2?aba=queimadas&uf=pa&mandato=lula_1','/meio-ambiente?uf=PA&mandato=lula_1'],['/prototipo?aba=dinheiro&uf=SP','/dinheiro?uf=SP'],['/prototipo/api/dinheiro?tipo=painel','/api/painel/dinheiro?tipo=painel'],['/prototipo/bandeiras/sp.svg','/painel/bandeiras/sp.svg']]){
+ const r=await fetch(root+origem,{redirect:'manual'});assert.equal(r.status,308,origem);assert.equal(new URL(r.headers.get('location'),root).pathname+new URL(r.headers.get('location'),root).search,destino,origem);
+}
+console.log('PASSOU: home com o painel definitivo e links públicos; cinco redirecionamentos legados preservam tema, território e mandato.');
 for(const [corpo,origem,status] of [[{caminho:'//outro.site',descricao:'Descrição do teste suficientemente longa.'},root,400],[{caminho:'/',descricao:'curta'},root,400],[{caminho:'/',descricao:'Descrição do teste suficientemente longa.'},'https://outro.site',403]]){
  const r=await fetch(root+'/api/correcoes',{method:'POST',headers:{'Content-Type':'application/json',Origin:origem},body:JSON.stringify(corpo)});assert.equal(r.status,status);
 }

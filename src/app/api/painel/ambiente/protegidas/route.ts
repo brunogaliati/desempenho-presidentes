@@ -3,14 +3,13 @@ import { NextResponse } from "next/server";
 
 import { sql } from "@/lib/db";
 
-import { montarAreas, type LinhaAreaProtegida } from "../../../_dados/ambienteMunicipal";
+import { montarAreas, type LinhaAreaProtegida } from "@/app/_painel/_dados/ambienteMunicipal";
 
 /**
  * O desmatamento dentro de cada Terra Indígena e Unidade de Conservação, por ano
- * PRODES, para pintar os contornos de `public/prototipo/areas-protegidas.json`.
+ * PRODES, para pintar os contornos de `public/painel/areas-protegidas.json`.
  * Rota à parte: só é pedida quando alguém vê essas áreas no mapa.
  *
- * Mesma trava do painel: fora de produção, a menos que `PROTOTIPO=1`.
  */
 
 async function montar() {
@@ -30,8 +29,5 @@ async function montar() {
 const montarDoCache = unstable_cache(montar, ["ambiente-protegidas-v1"], { revalidate: 3600, tags: ["painel-economia"] });
 
 export async function GET() {
-  if (process.env.NODE_ENV === "production" && process.env.PROTOTIPO !== "1") {
-    return new NextResponse(null, { status: 404 });
-  }
   return NextResponse.json(await montarDoCache());
 }

@@ -63,8 +63,8 @@ export function PainelMapa({ dados, aba, sigla, setSigla, aoTrocarAba }: Props) 
     setMunicipal(null);
     setCarregando(true);
     Promise.all([
-      fetch(`/prototipo/municipios/${uf.codigo}.json`).then((r) => r.json()),
-      fetch(`/prototipo/api/municipios/${uf.codigo}`).then((r) => r.json()),
+      fetch(`/painel/municipios/${uf.codigo}.json`).then((r) => r.json()),
+      fetch(`/api/painel/municipios/${uf.codigo}`).then((r) => r.json()),
     ])
       .then(([formas, numeros]: [{ municipios: FormaMunicipio[] }, { municipios: Municipio[] }]) => {
         const valor: CacheMunicipal = {

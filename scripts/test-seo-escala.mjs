@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { catalogoEconomia, buscarPaginaEconomia, rotaEconomia, RECORTES_PUBLICADOS } from '../src/lib/catalogoEconomia.ts';
-import { prepararSeriePublica, ultimaJanelaPublica, seriePublicavel, ultimaReferenciaPublica, compararPontosPublicos, rotuloPeriodoPublico } from '../src/app/prototipo/_dados/economiaModelo.ts';
+import { prepararSeriePublica, ultimaJanelaPublica, seriePublicavel, ultimaReferenciaPublica, compararPontosPublicos, rotuloPeriodoPublico } from '../src/app/_painel/_dados/economiaModelo.ts';
 
 test('catálogo publica cinco intenções e não cria páginas para filtros ou slugs desconhecidos', () => {
   const paginas=catalogoEconomia([]);

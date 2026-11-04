@@ -7,7 +7,7 @@ import { jsonLd, URL_SITE } from "@/lib/seo";
 import type { Metadata } from "next";
 import { metadataPagina } from "@/lib/seo";
 import retratos from "../../../public/presidentes/fontes.json";
-import governadores from "../../../public/prototipo/governadores/fontes.json";
+import governadores from "../../../public/painel/governadores/fontes.json";
 
 export const metadata: Metadata = metadataPagina("Metodologia · Desempenho do Governo", "Fontes, períodos, unidades e limites dos indicadores nacionais e municipais; critérios de publicação e comparação entre mandatos.", "/metodologia");
 

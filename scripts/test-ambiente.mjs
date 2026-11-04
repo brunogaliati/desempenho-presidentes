@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { afinarLeitura, focoDoMandato, mesDoPeriodo, recebidoNaLista, recebidoNoPainel, recortarAoMandato, recortarLeitura, recortarSerie, ritmoDesdeORecebido, ritmoNoMandato, TERMO_2015 } from '../src/app/prototipo/_dados/mandatoRecorte.ts';
-import { focosDaCopia, gradeDeter, marcosDoMandato, mesesEntre, montarAmbiente, montarProtegidas, periodoProdes, soma12, somarBiomas, ultimoMesCompleto } from '../src/app/prototipo/_dados/ambienteModelo.ts';
-import { cartaoDaSerie, chaveDaArea, corDaLente, montarAreas, montarMunicipios, numerosDaArea, numerosDaLente, somaNaUf, somaNoBioma } from '../src/app/prototipo/_dados/ambienteMunicipal.ts';
+import { afinarLeitura, focoDoMandato, mesDoPeriodo, recebidoNaLista, recebidoNoPainel, recortarAoMandato, recortarLeitura, recortarSerie, ritmoDesdeORecebido, ritmoNoMandato, TERMO_2015 } from '../src/app/_painel/_dados/mandatoRecorte.ts';
+import { focosDaCopia, gradeDeter, marcosDoMandato, mesesEntre, montarAmbiente, montarProtegidas, periodoProdes, soma12, somarBiomas, ultimoMesCompleto } from '../src/app/_painel/_dados/ambienteModelo.ts';
+import { cartaoDaSerie, chaveDaArea, corDaLente, montarAreas, montarMunicipios, numerosDaArea, numerosDaLente, somaNaUf, somaNoBioma } from '../src/app/_painel/_dados/ambienteMunicipal.ts';
 
 const ufs = [
   { codigo: '11', sigla: 'RO', regiaoCodigo: '1' },
@@ -187,7 +187,7 @@ test('áreas protegidas: a conta usa os biomas do último ano, em todos os anos'
 });
 
 test('o seletor tem o desenho de todo bioma que o mapa enquadra, e pequeno', () => {
-  const ler = (nome) => readFileSync(new URL(`../src/app/prototipo/_dados/${nome}`, import.meta.url), 'utf8');
+  const ler = (nome) => readFileSync(new URL(`../src/app/_painel/_dados/${nome}`, import.meta.url), 'utf8');
   const texto = ler('biomas-silhuetas.json');
   const s = JSON.parse(texto);
   const { caixas } = JSON.parse(ler('biomas-municipios.json'));

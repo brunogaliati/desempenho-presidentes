@@ -956,7 +956,7 @@ function PontasDaMedida({
                 {rotulo}
               </span>
               <Image
-                src={`/prototipo/bandeiras/${u.sigla.toLowerCase()}.svg`}
+                src={`/painel/bandeiras/${u.sigla.toLowerCase()}.svg`}
                 alt=""
                 aria-hidden
                 width={21}
@@ -1585,7 +1585,7 @@ function CabecalhoEstado({
     <div className="px-3 pb-2 pt-1" data-ficha={uf.sigla}>
       <div className="flex items-start gap-3">
         <Image
-        src={`/prototipo/bandeiras/${uf.sigla.toLowerCase()}.svg`}
+        src={`/painel/bandeiras/${uf.sigla.toLowerCase()}.svg`}
         alt={`Bandeira ${uf.deNome}`}
         width={36}
         height={24}

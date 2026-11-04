@@ -2,7 +2,7 @@ import "server-only";
 import { dataRevisao } from "./revisoesPublicadas";
 import { cache } from "react";
 import { sql } from "@/lib/db";
-import { montarInflacao } from "@/app/prototipo/_dados/economiaModelo";
+import { montarInflacao } from "@/app/_painel/_dados/economiaModelo";
 
 export const carregarInflacao = cache(async () => {
   const [linhas, atualizacao] = await Promise.all([

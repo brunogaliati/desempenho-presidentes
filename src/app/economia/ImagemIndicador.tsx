@@ -1,7 +1,7 @@
 import { fonteCompartilhamento } from "@/lib/fonteCompartilhamento";
 import { ImageResponse } from "next/og";
 import type { DadosPaginaEconomia } from "@/lib/dadosEconomiaPublica";
-import { rotuloPeriodoPublico } from "@/app/prototipo/_dados/economiaModelo";
+import { rotuloPeriodoPublico } from "@/app/_painel/_dados/economiaModelo";
 import { numero, reais } from "@/lib/formatar";
 import type { DadosIndicadorMunicipal } from "@/lib/dadosIndicadoresMunicipais";
 import { INDICADORES_MUNICIPAIS,rotuloReferenciaMunicipal } from "@/lib/indicadoresMunicipais";

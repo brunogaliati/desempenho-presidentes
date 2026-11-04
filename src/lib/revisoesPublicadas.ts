@@ -52,7 +52,7 @@ export const revisoesPublicadas=unstable_cache(async()=>{
     const partes=p.id==='salario'?['serie:salario_minimo','serie:salario_minimo_real','serie:ipca']:p.id==='inflacao'?['serie:ipca']:p.id==='desemprego'?['serie:desemprego']:p.id==='estados'?['pnad:estados']:['gasolina:agregados',...(p.territorio?.uf?[`gasolina:${p.territorio.codigo}`]:[])];
     registrar(`economia:${p.slug}`,partes.map(k=>fontes.get(k)??''));
   }
-  registrar('site:principal',[...fontes].filter(([k])=>k.startsWith('serie:')).map(([,v])=>v).sort());
+  registrar('site:principal',['painel-publico-v1',...[...fontes].filter(([k])=>k.startsWith('serie:')).map(([,v])=>v).sort()]);
   for(const nome of ['metodologia','sobre','correcoes','economia','meio-ambiente','dinheiro'])registrar(`site:${nome}`,[]);
   await sql`insert into observatorio.revisao_publicacao as r(chave,assinatura)
     select chave,assinatura from jsonb_to_recordset(${JSON.stringify(registros)}::jsonb) as x(chave text,assinatura text)

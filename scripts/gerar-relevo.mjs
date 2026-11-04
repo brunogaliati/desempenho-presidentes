@@ -48,8 +48,8 @@ if (!fonte) {
 }
 
 const [mundo, brasil] = await Promise.all([
-  readFile(join(RAIZ, "src/app/prototipo/_dados/mundo.json"), "utf8").then(JSON.parse),
-  readFile(join(RAIZ, "src/app/prototipo/_dados/ufs.json"), "utf8").then(JSON.parse),
+  readFile(join(RAIZ, "src/app/_painel/_dados/mundo.json"), "utf8").then(JSON.parse),
+  readFile(join(RAIZ, "src/app/_painel/_dados/ufs.json"), "utf8").then(JSON.parse),
 ]);
 assert.equal(brasil.ufs.length, 27);
 const meta = await sharp(fonte).metadata();
@@ -57,7 +57,7 @@ assert.equal(meta.width, meta.height * 2, "O raster deve cobrir o globo em proje
 const pixel = meta.width / 360;
 const img = mundo.imagem;
 const mascara = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${LARGURA}" height="${ALTURA}" viewBox="${img.x} ${img.y} ${img.largura} ${img.altura}" preserveAspectRatio="none"><g fill="white" fill-rule="evenodd" stroke="white" stroke-width="1" stroke-linejoin="round">${[...mundo.paises, ...brasil.ufs].map(({ d }) => `<path d="${d}"/>`).join("")}</g></svg>`);
-const saida = join(RAIZ, "public/prototipo/relevo.webp");
+const saida = join(RAIZ, "public/painel/relevo.webp");
 await sharp(fonte)
   .extract({
     left: Math.round((CAIXA.lonMin + 180) * pixel),
@@ -82,13 +82,13 @@ assert.equal(alfa(-52, -10), 255, "Brasil precisa estar opaco");
 assert.equal(alfa(-70, -20), 255, "Andes precisam estar opacos");
 assert.equal(alfa(-100, -20), 0, "Pacífico precisa estar transparente");
 assert.equal(alfa(-30, -20), 0, "Atlântico precisa estar transparente");
-await writeFile(join(RAIZ, "public/prototipo/relevo-fonte.json"), JSON.stringify({
+await writeFile(join(RAIZ, "public/painel/relevo-fonte.json"), JSON.stringify({
   nome: "Gray Earth with Shaded Relief and Hypsography",
   versao: await readFile(fonte.replace(/\.tif$/i, ".VERSION.txt"), "utf8").then((v) => v.trim()).catch(() => null),
   fonte: URL,
   pagina: "https://www.naturalearthdata.com/downloads/10m-raster-data/10m-gray-earth/",
   licenca: "Dominio publico",
   caixa: CAIXA,
-  imagem: { href: "/prototipo/relevo.webp", larguraPixels: LARGURA, alturaPixels: ALTURA, x: img.x, y: img.y, largura: img.largura, altura: img.altura },
+  imagem: { href: "/painel/relevo.webp", larguraPixels: LARGURA, alturaPixels: ALTURA, x: img.x, y: img.y, largura: img.largura, altura: img.altura },
 }, null, 2) + "\n");
 console.log(`PASSOU: relevo ${info.width}x${info.height}, quatro pontos geográficos conferidos. ${saida}`);

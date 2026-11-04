@@ -210,7 +210,7 @@ body {
  * O mapa é chapado: estados na rampa, divisas na cor do fundo, sem satélite
  * nem mar.
  */
-.painel-prototipo {
+.painel-governo {
   --plano: light-dark(#f8fafd, #0f1820);
   --superficie: light-dark(#ffffff, #17232d);
   --tinta: light-dark(#263746, #e8eef3);
@@ -340,7 +340,7 @@ body {
   color: var(--tinta);
 }
 
-.painel-prototipo {
+.painel-governo {
   --brasil-verde: #2e795b;
   --brasil-amarelo: #d7b45b;
   --brasil-azul: #285c84;
@@ -355,7 +355,7 @@ body {
  * Os halos da bandeira, fixos atrás de tudo: da sala ao fim da página o vidro
  * sempre tem um pouco de cor para desfocar, e não há emenda entre as partes.
  */
-.fundo-prototipo {
+.fundo-painel {
   position: fixed;
   inset: 0;
   z-index: -1;
@@ -373,7 +373,7 @@ body {
  *
  * Economia: a bandeira (verde no alto à esquerda, azul à direita).
  */
-.painel-prototipo[data-aba="economia"] {
+.painel-governo[data-aba="economia"] {
   --paisagem-papel: light-dark(#fff, #0f1820);
   --paisagem-de: light-dark(#e3ece3, #142720);
   --paisagem-ate: light-dark(#dce7eb, #162b3b);
@@ -397,7 +397,7 @@ body {
  * piorou, e o ouro, para o que está escolhido. A tinta da série é um
  * verde-cinza escuro de pouco croma, que não se lê como "melhorou".
  */
-.painel-prototipo[data-aba="ambiente"] {
+.painel-governo[data-aba="ambiente"] {
   --plano: light-dark(#f5f8f3, #0f1712);
   --tinta: light-dark(#26332c, #e8efe9);
   --tinta-2: light-dark(#475850, #c3cec7);
@@ -498,10 +498,10 @@ body {
   --rodape-ate: light-dark(#efe6d4, #2a2418);
 }
 
-.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) {
   background: var(--paisagem-papel);
 }
-.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel {
   position: absolute;
   height: max(100dvh, 720px);
   overflow: hidden;
@@ -510,13 +510,13 @@ body {
     radial-gradient(ellipse 82% 72% at 48% 40%, var(--paisagem-papel) 38%, transparent 100%),
     linear-gradient(145deg, var(--paisagem-de), var(--paisagem-papel) 48%, var(--paisagem-ate));
 }
-.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo::before,
-.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo::after {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel::before,
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel::after {
   content: "";
   position: absolute;
   pointer-events: none;
 }
-.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo::before {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel::before {
   width: 100%;
   height: clamp(260px, 30vw, 440px);
   left: -18%;
@@ -526,7 +526,7 @@ body {
   background: linear-gradient(110deg, var(--paisagem-a-de), var(--paisagem-a-ate));
   box-shadow: 0 14px 0 var(--paisagem-a-fio);
 }
-.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo::after {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel::after {
   width: 70%;
   height: clamp(260px, 28vw, 400px);
   right: -32%;
@@ -536,12 +536,12 @@ body {
   background: linear-gradient(120deg, var(--paisagem-b-de), var(--paisagem-b-ate));
 }
 @media (max-width: 640px) {
-  .painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo::before {
+  .painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel::before {
     width: 135%;
     left: -50%;
     top: -190px;
   }
-  .painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-prototipo::after {
+  .painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel::after {
     width: 100%;
     right: -48%;
     top: -175px;
@@ -549,7 +549,7 @@ body {
 }
 
 /* No meio ambiente a areia sobe: a borda dela cortava a barra de vidro no meio. */
-.painel-prototipo[data-aba="ambiente"] > .fundo-prototipo::after {
+.painel-governo[data-aba="ambiente"] > .fundo-painel::after {
   top: clamp(-340px, -25vw, -190px);
 }
 
@@ -587,7 +587,7 @@ body {
   --vidro-tinta: light-dark(rgba(255, 255, 255, .64), rgba(23, 35, 45, .78));
   --vidro-filtro: blur(2px) saturate(1.15);
 }
-.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > footer {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > footer {
   position: relative;
   padding: 28px 24px;
   border-radius: 24px;
@@ -596,10 +596,10 @@ body {
 @media (max-width: 640px) {
   .terminal-tema::before { left: -235px; }
   .terminal-tema::after { right: -245px; }
-  .painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) > footer { padding: 20px 16px; }
+  .painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > footer { padding: 20px 16px; }
 }
 
-.prototipo-cabecalho {
+.painel-cabecalho {
   background: transparent;
   color: var(--tinta);
   border-color: var(--borda);
@@ -625,12 +625,12 @@ body {
   pointer-events: auto;
 }
 
-.painel-prototipo .sala-tema {
+.painel-governo .sala-tema {
   margin-top: calc(-1 * var(--altura-cabecalho, 112px));
   padding-top: var(--altura-cabecalho, 112px);
 }
 
-.painel-prototipo [id] {
+.painel-governo [id] {
   scroll-margin-top: calc(var(--altura-cabecalho, 112px) + 12px);
 }
 
@@ -747,13 +747,13 @@ body {
   animation: marca-escrita-entrada 640ms 120ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-:root:not([data-theme="dark"]) .painel-prototipo .prototipo-cabecalho .marca-escrita {
+:root:not([data-theme="dark"]) .painel-governo .painel-cabecalho .marca-escrita {
   filter: brightness(0);
   opacity: 0.86;
 }
 
 /* No escuro a escrita fica branca: as cores da arte original brigavam com a paleta. A bandeira fica como é. */
-:root[data-theme="dark"] .painel-prototipo .prototipo-cabecalho .marca-escrita {
+:root[data-theme="dark"] .painel-governo .painel-cabecalho .marca-escrita {
   filter: brightness(0) invert(1);
   opacity: 0.92;
 }
@@ -933,7 +933,7 @@ body {
 .mandato-contagem { grid-area: contagem; color: var(--tinta-3); font-size: 12px; text-align: right; line-height: 1.25; white-space: nowrap; }
 .mandato-contagem strong { color: var(--tinta); font-size: 14px; font-weight: 650; }
 
-.painel-prototipo .segmentos {
+.painel-governo .segmentos {
   --vidro-tinta: light-dark(rgba(255, 255, 255, 0.35), rgba(232, 238, 243, 0.04));
   --vidro-brilho: light-dark(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.2));
   --vidro-reflexo: light-dark(rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.08));
@@ -944,10 +944,10 @@ body {
 
 .segmentos :is(button, a) { min-height: 36px; border-radius: 999px; color: var(--tinta-2); font-size: 13px; font-weight: 500; transition: background-color 160ms ease-out, box-shadow 160ms ease-out; }
 .segmentos :is(button, a):hover { background: color-mix(in srgb, var(--tinta) 7%, transparent); }
-.painel-prototipo .segmentos :is(button, a)[aria-checked="true"],
-.painel-prototipo .segmentos :is(button, a)[aria-current="page"] { background: light-dark(rgba(32, 49, 58, 0.08), rgba(244, 250, 255, 0.12)); color: var(--tinta); font-weight: 600; box-shadow: inset 0 1px 0 var(--vidro-brilho), inset 0 0 0 1px var(--borda), 0 3px 8px var(--vidro-sombra); }
-.painel-prototipo .navegacao-temas :is(button, a):focus-visible,
-.painel-prototipo .segmentos :is(button, a):focus-visible { outline-offset: -2px; }
+.painel-governo .segmentos :is(button, a)[aria-checked="true"],
+.painel-governo .segmentos :is(button, a)[aria-current="page"] { background: light-dark(rgba(32, 49, 58, 0.08), rgba(244, 250, 255, 0.12)); color: var(--tinta); font-weight: 600; box-shadow: inset 0 1px 0 var(--vidro-brilho), inset 0 0 0 1px var(--borda), 0 3px 8px var(--vidro-sombra); }
+.painel-governo .navegacao-temas :is(button, a):focus-visible,
+.painel-governo .segmentos :is(button, a):focus-visible { outline-offset: -2px; }
 
 @media (max-width: 1400px) {
   .marca-painel { width: 190px; }
@@ -963,7 +963,7 @@ body {
 }
 
 @media (max-width: 760px) {
-  .prototipo-cabecalho { padding: 10px 12px; }
+  .painel-cabecalho { padding: 10px 12px; }
   .cabecalho-painel { border-radius: 24px; }
   .cabecalho-principal { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "marca acoes" "temas temas" "mandato mandato"; gap: 10px; padding: 12px; }
   .marca-painel { width: 180px; }
@@ -1257,18 +1257,18 @@ body {
   }
 }
 
-.painel-prototipo .botao-liquido {
+.painel-governo .botao-liquido {
   background: linear-gradient(180deg, color-mix(in srgb, var(--acao) 88%, white), color-mix(in srgb, var(--acao) 94%, transparent));
   color: var(--acao-tinta);
   backdrop-filter: blur(12px);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.25), 0 5px 14px -6px rgba(40, 92, 132, 0.4);
 }
 
-.painel-prototipo .botao-liquido:hover {
+.painel-governo .botao-liquido:hover {
   background: linear-gradient(180deg, color-mix(in srgb, var(--acao) 84%, white), var(--acao));
 }
 
-.painel-prototipo :where(button, a, input, [tabindex]):focus-visible {
+.painel-governo :where(button, a, input, [tabindex]):focus-visible {
   outline: 2px solid var(--foco, var(--acao));
   outline-offset: 3px;
 }
@@ -1333,7 +1333,7 @@ body {
   background: color-mix(in srgb, var(--ouro, var(--serie)) 15%, transparent);
   box-shadow: inset 2px 0 0 var(--ouro-forte, var(--serie));
 }
-.painel-prototipo:is([data-aba="economia"], [data-aba="ambiente"]) .linha-escolhida {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) .linha-escolhida {
   background: var(--faixa-ativa);
   box-shadow: none;
 }
@@ -1602,7 +1602,7 @@ body {
  * conferida contra daltonismo nos dois temas, e nada aqui usa verde ou vermelho:
  * gastar mais não é bom nem ruim por si só. Ouro é o escolhido.
  */
-.painel-prototipo[data-aba="dinheiro"] {
+.painel-governo[data-aba="dinheiro"] {
   --serie: light-dark(#285c84, #8fb7d8);
   --halo-azul: transparent;
   --halo-verde: transparent;

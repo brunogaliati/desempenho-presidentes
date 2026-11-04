@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLayoutEffect, useRef } from "react";
-import { Cabecalho } from "@/app/prototipo/_componentes/Topo";
-import { FiltroRefracao, useVidro } from "@/app/prototipo/_componentes/Vidro";
+import { Cabecalho } from "@/app/_painel/_componentes/Topo";
+import { FiltroRefracao, useVidro } from "@/app/_painel/_componentes/Vidro";
 import { buscarPaginaEconomia, PAGINAS_ECONOMIA, rotaEconomia } from "@/lib/catalogoEconomia";
 import styles from "./indicador.module.css";
 import { idsMunicipais } from "@/lib/indicadoresMunicipais";
@@ -24,10 +24,10 @@ export function EstruturaEconomia({ children }: { children: React.ReactNode }) {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  return <div className={`painel-prototipo min-h-dvh px-3 pb-10 ${styles.estrutura}`} data-aba="economia">
-    <div aria-hidden className="fundo-prototipo" />
+  return <div className={`painel-governo min-h-dvh px-3 pb-10 ${styles.estrutura}`} data-aba="economia">
+    <div aria-hidden className="fundo-painel" />
     <FiltroRefracao />
-    <div ref={cabecalho} className="prototipo-cabecalho">
+    <div ref={cabecalho} className="painel-cabecalho">
       <Cabecalho aba="economia" publico aoTrocar={() => {}} mandato={
         <nav aria-label="Indicadores de economia" className={styles.indicadores}>
           {PAGINAS_ECONOMIA.map((p) => <Link key={p.slug} href={rotaEconomia(p)} aria-current={atual?.id === p.id ? "page" : undefined}>{p.rotulo}</Link>)}

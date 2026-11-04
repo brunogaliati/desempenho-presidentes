@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { sql } from "@/lib/db";
 
-import { carregarDinheiro, carregarEmendas } from "../../_dados/dinheiro";
+import { carregarDinheiro, carregarEmendas } from "@/app/_painel/_dados/dinheiro";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);

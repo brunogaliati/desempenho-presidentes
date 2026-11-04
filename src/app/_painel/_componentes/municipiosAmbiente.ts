@@ -25,7 +25,7 @@ export function useMunicipiosAmbiente(foco: FocoMandato) {
   useEffect(() => {
     let vivo = true;
     if (!cacheFormas) {
-      fetch("/prototipo/municipios-brasil.json")
+      fetch("/painel/municipios-brasil.json")
         .then((r) => r.json())
         .then((malha: { municipios: MunicipioNacional[] }) => {
           cacheFormas = malha.municipios;
@@ -34,7 +34,7 @@ export function useMunicipiosAmbiente(foco: FocoMandato) {
         .catch(() => {});
     }
     if (!cacheDados.has(chave)) {
-      fetch(`/prototipo/api/ambiente/municipios${chave}`)
+      fetch(`/api/painel/ambiente/municipios${chave}`)
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
         .then((d: MunicipiosAmbiente) => {
           cacheDados.set(chave, d);
@@ -75,7 +75,7 @@ export function useAreasProtegidas(ligado: boolean) {
     if (!ligado) return;
     let vivo = true;
     if (!cacheAreas) {
-      fetch("/prototipo/areas-protegidas.json")
+      fetch("/painel/areas-protegidas.json")
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
         .then((j: { areas: Omit<AreaDesenhada, "chave">[] }) => {
           cacheAreas = j.areas.map((a) => ({ ...a, chave: chaveDaArea(a.r, a.b, a.n) }));
@@ -84,7 +84,7 @@ export function useAreasProtegidas(ligado: boolean) {
         .catch(() => {});
     }
     if (!cacheValores) {
-      fetch("/prototipo/api/ambiente/protegidas")
+      fetch("/api/painel/ambiente/protegidas")
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
         .then((v: ValoresDasAreas) => {
           cacheValores = v;

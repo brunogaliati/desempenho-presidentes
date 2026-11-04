@@ -3,7 +3,7 @@
  *
  *     node scripts/coletar-prototipo.mjs
  *
- * Grava `src/app/prototipo/_dados/fotografia.json`. Não toca no banco: a carga
+ * Grava `src/app/_painel/_dados/fotografia.json`. Não toca no banco: a carga
  * definitiva dessas fontes é trabalho do backend, e este arquivo só existe para
  * a tela poder ser discutida com dado real.
  *
@@ -26,7 +26,7 @@ const SAIDA = join(
   "..",
   "src",
   "app",
-  "prototipo",
+  "_painel",
   "_dados",
   "fotografia.json",
 );

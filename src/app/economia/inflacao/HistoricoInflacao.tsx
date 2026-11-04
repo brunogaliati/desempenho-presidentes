@@ -4,7 +4,7 @@ import { useState } from "react";
 import { GraficoTempo } from "@/components/GraficoTempo";
 import { mesPorExtenso, numero } from "@/lib/formatar";
 import { useLargura } from "@/lib/useLargura";
-import { acumuladoPeriodo, type MesInflacao } from "@/app/prototipo/_dados/economiaModelo";
+import { acumuladoPeriodo, type MesInflacao } from "@/app/_painel/_dados/economiaModelo";
 
 const MEDIDAS = { dozeMeses: "Acumulado em 12 meses", mensal: "Variação mensal", ano: "Acumulado no ano" };
 const percentual = (v: number) => `${numero(v)}%`;

@@ -3,8 +3,8 @@
  *
  *     node scripts/coletar-queimadas.mjs
  *
- * Grava `src/app/prototipo/_dados/queimadas.json` (UF por mês, bioma, Brasil) e
- * `public/prototipo/queimadas-municipios.json` (município por ano, carregado só
+ * Grava `src/app/_painel/_dados/queimadas.json` (UF por mês, bioma, Brasil) e
+ * `public/painel/queimadas-municipios.json` (município por ano, carregado só
  * quando o leitor abre a aba de queimadas). Usa os arquivos anuais do
  * satélite de referência (2022 a 2025): é a série que o INPE usa para comparar
  * anos. Os arquivos mensais trazem todos os satélites, contam o mesmo fogo
@@ -34,7 +34,7 @@ const SAIDA = join(
   "..",
   "src",
   "app",
-  "prototipo",
+  "_painel",
   "_dados",
   "queimadas.json",
 );
@@ -46,7 +46,7 @@ const SAIDA_PUBLICA = join(
   dirname(fileURLToPath(import.meta.url)),
   "..",
   "public",
-  "prototipo",
+  "painel",
   "queimadas-municipios.json",
 );
 

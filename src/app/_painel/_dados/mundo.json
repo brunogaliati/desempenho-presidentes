@@ -2,7 +2,7 @@
  "fonte": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_110m_admin_0_countries.geojson",
  "coletadoEm": "2026-10-27T18:10:57.894Z",
  "imagem": {
-  "href": "/prototipo/terra.webp",
+  "href": "/painel/terra.webp",
   "fonte": "https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73909/world.topo.bathy.200412.3x5400x2700.jpg",
   "x": -1429.7,
   "y": -651.1,

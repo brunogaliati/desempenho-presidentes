@@ -3,10 +3,10 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { sql } from "@/lib/db";
 import { catalogoEconomia, type PaginaEconomia } from "@/lib/catalogoEconomia";
-import { prepararSeriePublica, ultimaJanelaPublica, ultimaReferenciaPublica, type SeriePublica } from "@/app/prototipo/_dados/economiaModelo";
+import { prepararSeriePublica, ultimaJanelaPublica, ultimaReferenciaPublica, type SeriePublica } from "@/app/_painel/_dados/economiaModelo";
 import { dataRevisao } from "./revisoesPublicadas";
 
-export type { SeriePublica } from "@/app/prototipo/_dados/economiaModelo";
+export type { SeriePublica } from "@/app/_painel/_dados/economiaModelo";
 interface LinhaPublica { codigo: string; nome: string; mes: string; valor: number | null; cv?: number | null; postos?: number | null; minimo?: number | null; maximo?: number | null; atualizado_em: string }
 const opcoes = { revalidate: 3600, tags: ["painel-economia"] };
 const nacional = unstable_cache(async () => {

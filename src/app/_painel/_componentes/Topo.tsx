@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { destinoPainel } from "@/lib/rotasPainel";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 
 import { numero } from "@/lib/formatar";
@@ -44,11 +45,13 @@ export function Cabecalho({
   aoTrocar,
   mandato,
   publico=false,
+  recorte={},
 }: {
   aba: AbaId;
   aoTrocar: (a: AbaId) => void;
   mandato: React.ReactNode;
   publico?: boolean;
+  recorte?: { uf?: string; mandato?: string };
 }) {
   const [copiado, setCopiado] = useState(false);
   const [escuro, setEscuro] = useState(false);
@@ -69,15 +72,15 @@ export function Cabecalho({
   return (
     <header className="cabecalho-painel vidro">
       <div className="cabecalho-principal">
-        <span className="marca-painel">
+        <Link href="/" className="marca-painel" aria-label="Desempenho do Governo — início">
           <Marca />
-        </span>
+        </Link>
         <nav className="navegacao-temas" aria-label="Temas">
-          {publico ? <div className="segmentos vidro inline-flex gap-1 p-1">{ABAS.map(a=>a.indisponivel?<button key={a.id} type="button" disabled className="px-3 py-2">{a.rotulo}</button>:<Link key={a.id} href={a.id==='economia'?'/economia':a.id==='ambiente'?'/meio-ambiente':'/dinheiro'} aria-current={aba===a.id?'page':undefined} className="px-3 py-2">{a.rotulo}</Link>)}</div> : <Segmentos opcoes={ABAS} ativo={aba} aoEscolher={aoTrocar} rotulo="Temas" papel="pagina" classeBotao="px-3 py-2" />}
+          {publico ? <div className="segmentos vidro inline-flex gap-1 p-1">{ABAS.map(a=>a.indisponivel?<button key={a.id} type="button" disabled className="px-3 py-2">{a.rotulo}</button>:<Link key={a.id} href={destinoPainel({aba:a.id,...recorte})} aria-current={aba===a.id?'page':undefined} className="px-3 py-2">{a.rotulo}</Link>)}</div> : <Segmentos opcoes={ABAS} ativo={aba} aoEscolher={aoTrocar} rotulo="Temas" papel="pagina" classeBotao="px-3 py-2" />}
         </nav>
         {mandato}
         <div className="cabecalho-acoes">
-          <Link href="/" className="acao-cabecalho" aria-label="Comparar governos" title="Comparar governos">
+          <Link href="/#governo-a-governo" className="acao-cabecalho" aria-label="Comparar governos" title="Comparar governos">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
               <path d="M5 19V9m7 10V4m7 15v-7" />
             </svg>

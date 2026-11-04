@@ -22,7 +22,7 @@ import { Bloco, Opcoes, ROTULO } from "./Bloco";
 
 /** O que fica abaixo do treemap: painéis densos que seguem o ente e o ano escolhidos. */
 
-const api = (params: Record<string, string>) => `/prototipo/api/dinheiro?${new URLSearchParams(params)}`;
+const api = (params: Record<string, string>) => `/api/painel/dinheiro?${new URLSearchParams(params)}`;
 
 function useDados<T>(url: string | null): { dados: T | null; erro: boolean } {
   const [estado, setEstado] = useState<{ url: string | null; dados: T | null; erro: boolean }>({ url: null, dados: null, erro: false });

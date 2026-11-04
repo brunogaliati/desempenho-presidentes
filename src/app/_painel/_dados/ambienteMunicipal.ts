@@ -2,7 +2,7 @@
  * O meio ambiente por município, no formato que o mapa da sala desenha.
  *
  * Só funções puras e `import type`, para os testes rodarem com `node --test`.
- * Vai numa rota à parte (`/prototipo/api/ambiente/municipios`), carregada
+ * Vai numa rota à parte (`/api/painel/ambiente/municipios`), carregada
  * quando a aba abre, junto com os contornos dos 5.570 municípios: não pesa a
  * página das outras abas.
  *

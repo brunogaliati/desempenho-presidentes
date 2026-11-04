@@ -8,10 +8,10 @@
  * bioma por município, o de maior área nele. Município de transição fica no
  * bioma que predomina; o desmatamento dele continua somando os dois biomas.
  * A caixa de cada bioma sai dos contornos dos seus municípios em
- * `public/prototipo/municipios-brasil.json`, na mesma projeção do mapa: não
+ * `public/painel/municipios-brasil.json`, na mesma projeção do mapa: não
  * precisa de outra malha.
  *
- * Grava `src/app/prototipo/_dados/biomas-municipios.json`.
+ * Grava `src/app/_painel/_dados/biomas-municipios.json`.
  */
 
 import { readFile, writeFile } from "node:fs/promises";
@@ -50,7 +50,7 @@ for (const linha of linhas) {
   municipios[v[iCodigo]] = id;
 }
 
-const malha = JSON.parse(await readFile(join(RAIZ, "public", "prototipo", "municipios-brasil.json"), "utf8"));
+const malha = JSON.parse(await readFile(join(RAIZ, "public", "painel", "municipios-brasil.json"), "utf8"));
 const caixas = {};
 let semBioma = 0;
 for (const m of malha.municipios) {
@@ -70,7 +70,7 @@ for (const m of malha.municipios) {
 for (const b of Object.keys(caixas)) caixas[b] = caixas[b].map((n) => Math.round(n * 10) / 10);
 
 await writeFile(
-  join(RAIZ, "src", "app", "prototipo", "_dados", "biomas-municipios.json"),
+  join(RAIZ, "src", "app", "_painel", "_dados", "biomas-municipios.json"),
   JSON.stringify({ fonte: URL_IBGE, coletadoEm: new Date().toISOString(), municipios, caixas }) + "\n",
 );
 console.log(`${Object.keys(municipios).length} municípios; ${semBioma} da malha sem bioma; caixas:`, caixas);

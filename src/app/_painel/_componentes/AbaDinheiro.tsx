@@ -17,7 +17,7 @@ import { TerminalDinheiro } from "./TerminalDinheiro";
  * Cor é a família do gasto, nunca verde ou vermelho: gastar mais não é bom nem ruim
  * por si só. A mudança desde a posse aparece em número, sem veredito.
  *
- * Os dados vêm à parte do painel (`/prototipo/api/dinheiro`), com cache no servidor.
+ * Os dados vêm à parte do painel (`/api/painel/dinheiro`), com cache no servidor.
  */
 
 const SECOES = [
@@ -51,7 +51,7 @@ export function AbaDinheiro({
 
   useEffect(() => {
     const controle = new AbortController();
-    fetch("/prototipo/api/dinheiro?tipo=painel", { signal: controle.signal })
+    fetch("/api/painel/dinheiro?tipo=painel", { signal: controle.signal })
       .then((r) => {
         if (!r.ok) throw new Error(String(r.status));
         return r.json() as Promise<PainelDinheiro>;

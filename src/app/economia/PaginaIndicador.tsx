@@ -2,7 +2,7 @@ import Link from "next/link";
 import { jsonLd, URL_SITE } from "@/lib/seo";
 import { catalogoEconomia, PAGINAS_ECONOMIA, rotaEconomia } from "@/lib/catalogoEconomia";
 import type { DadosPaginaEconomia } from "@/lib/dadosEconomiaPublica";
-import { compararPontosPublicos, deslocarMes, rotuloPeriodoPublico } from "@/app/prototipo/_dados/economiaModelo";
+import { compararPontosPublicos, deslocarMes, rotuloPeriodoPublico } from "@/app/_painel/_dados/economiaModelo";
 import { comSinal, numero, reais } from "@/lib/formatar";
 import { HistoricoIndicador } from "./HistoricoIndicador";
 import styles from "./indicador.module.css";

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { GraficoTempo } from "@/components/GraficoTempo";
 import { comSinal, numero, reais } from "@/lib/formatar";
 import { useLargura } from "@/lib/useLargura";
-import { compararPontosPublicos, rotuloPeriodoPublico, ultimaReferenciaPublica, type SeriePublica } from "@/app/prototipo/_dados/economiaModelo";
+import { compararPontosPublicos, rotuloPeriodoPublico, ultimaReferenciaPublica, type SeriePublica } from "@/app/_painel/_dados/economiaModelo";
 
 export function HistoricoIndicador({ series, principal, trimestral, moeda }: { series: SeriePublica[]; principal: string; trimestral: boolean; moeda: boolean }) {
   const [codigo, setCodigo] = useState(principal);

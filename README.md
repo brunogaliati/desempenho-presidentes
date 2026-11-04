@@ -124,7 +124,7 @@ Pesquisa e validação estão registradas na seção 17 do documento SEO na raiz
   `VERCEL_ENV=preview` recebem `noindex` automaticamente, mesmo com `SEO_INDEXING=true`.
 - `GOOGLE_SITE_VERIFICATION` e `BING_SITE_VERIFICATION`: tokens públicos opcionais.
 - `/robots.txt` e `/sitemap.xml`: gerados pelo Next.js; previews não listam URLs.
-  Os protótipos ficam fora do sitemap e preservam `noindex`.
+  URLs antigas de protótipo ficam fora do sitemap e redirecionam com 308.
 - JSON-LD: organização/site; página, breadcrumbs e dataset de cada indicador.
 - `npm run test:seo`: testes das regras de dados, catálogo, publicação, canônicas, indexação e JSON-LD
   usando o runner nativo do Node (Node 24 ou versão com suporte a TypeScript).
@@ -141,6 +141,23 @@ para população, emprego formal, CadÚnico e BPC (quatro famílias e 56 recorte
 Cada município aponta para indicador → UF → município; os endereços antigos são
 preservados. O menu público usa links HTML para `/economia`, `/meio-ambiente` e
 `/dinheiro`, sem depender de páginas de protótipo não indexáveis.
+
+A página inicial `/` usa o painel definitivo com mapa, seleção de mandato,
+estados e comparação entre governos. Os componentes/dados compartilhados ficam
+na pasta privada `src/app/_painel`; as APIs ficam em `/api/painel` e os arquivos
+estáticos em `/painel`. `/prototipo` e `/prototipo-2` são apenas redirecionamentos
+permanentes para `/`, `/meio-ambiente` ou `/dinheiro`, preservando UF e mandato.
+As URLs antigas de APIs e recursos também redirecionam. Os mapas municipais e
+de áreas protegidas não dependem mais da variável `PROTOTIPO` em produção.
+
+Promoção validada em 4/11/2026: 102 testes de dados/SEO/links, lint e build do
+Worker aprovados; conferência visual em desktop e celular, tema e navegação com
+preservação de UF. A integração no domínio oficial passou com a home definitiva,
+cinco redirects HTTP 308, quatro APIs públicas, 59 páginas/imagens, 60 panoramas,
+12.937 URLs no sitemap e webhook sem alteração indevida das datas. A versão
+publicada do Worker é `7a725677-fb67-47c6-accb-cf44ecda3f51`. O build usa uma página
+por vez (`cpus: 1`, `staticGenerationMaxConcurrency: 1`): a tentativa concorrente
+encontrou falta de memória no Neon; a geração final terminou sem esses erros.
 
 Aplicar `backend/sql/080_publicacao_seo.sql` antes de implantar esta versão.
 A visão `mart.historico_publicavel_municipal` preserva a última janela completa;

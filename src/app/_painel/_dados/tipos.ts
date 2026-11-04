@@ -321,7 +321,7 @@ export interface FormaMunicipio {
   centro: [number, number];
 }
 
-/** Município no mapa nacional de queimadas (`public/prototipo/municipios-brasil.json`). */
+/** Município no mapa nacional de queimadas (`public/painel/municipios-brasil.json`). */
 export interface MunicipioNacional {
   codigo: string;
   nome: string;

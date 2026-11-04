@@ -17,7 +17,7 @@ import {
   tirarRepasseDaBase,
   squarify,
   variacaoReal,
-} from '../src/app/prototipo/_dados/dinheiroModelo.ts';
+} from '../src/app/_painel/_dados/dinheiroModelo.ts';
 
 const l = (nivel, conta, valor, funcao = null) => ({ nivel, conta, valor, funcao });
 

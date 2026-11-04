@@ -11,9 +11,9 @@
  * tira os anéis pequenos demais para aparecer.
  *
  * Rodar de novo depois de `gerar-biomas-municipios.mjs`. Lê
- * `public/prototipo/municipios-brasil.json` e
- * `src/app/prototipo/_dados/biomas-municipios.json`, e grava
- * `src/app/prototipo/_dados/biomas-silhuetas.json`.
+ * `public/painel/municipios-brasil.json` e
+ * `src/app/_painel/_dados/biomas-municipios.json`, e grava
+ * `src/app/_painel/_dados/biomas-silhuetas.json`.
  */
 
 import { readFile, writeFile } from "node:fs/promises";
@@ -93,8 +93,8 @@ function caminho(formas) {
     .join("");
 }
 
-const malha = JSON.parse(await readFile(join(RAIZ, "public", "prototipo", "municipios-brasil.json"), "utf8"));
-const biomas = JSON.parse(await readFile(join(RAIZ, "src", "app", "prototipo", "_dados", "biomas-municipios.json"), "utf8"));
+const malha = JSON.parse(await readFile(join(RAIZ, "public", "painel", "municipios-brasil.json"), "utf8"));
+const biomas = JSON.parse(await readFile(join(RAIZ, "src", "app", "_painel", "_dados", "biomas-municipios.json"), "utf8"));
 
 const grupos = {};
 for (const m of malha.municipios) {
@@ -122,7 +122,7 @@ const saida = {
   biomas: Object.fromEntries(IDS.map((b) => [b, caminho(grupos[b])])),
 };
 const texto = `${JSON.stringify(saida)}\n`;
-await writeFile(join(RAIZ, "src", "app", "prototipo", "_dados", "biomas-silhuetas.json"), texto);
+await writeFile(join(RAIZ, "src", "app", "_painel", "_dados", "biomas-silhuetas.json"), texto);
 console.log(`${(texto.length / 1024).toFixed(1)} KB`, saida.viewBox);
 for (const [k, d] of [["brasil", saida.brasil], ...Object.entries(saida.biomas)]) {
   console.log(k, `${d.length} bytes`, `${d.split("M").length - 1} anéis`);

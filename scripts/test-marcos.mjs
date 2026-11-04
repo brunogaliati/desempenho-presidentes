@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { organizarMarcos, fimTimeline } from '../src/app/prototipo/_dados/marcosModelo.ts';
+import { organizarMarcos, fimTimeline } from '../src/app/_painel/_dados/marcosModelo.ts';
 
 test('timeline separa IDs canônicos, preserva ausência e não inventa eventos de outros mandatos', () => {
   const mandatos = [{ id: 'lula_1' }, { id: 'lula_3' }];

@@ -3,7 +3,7 @@
  *
  *     node scripts/tingir-terra.mjs
  *
- * Lê `public/prototipo/terra.webp` (de `gerar-mundo.mjs`) e grava
+ * Lê `public/painel/terra.webp` (de `gerar-mundo.mjs`) e grava
  * `terra-claro.webp` e `terra-escuro.webp`, cada uma com a cadeia de filtros
  * do CSS já calculada pixel a pixel. Com o filtro no CSS, o navegador refazia
  * a conta a cada quadro do zoom, em software e sobre a imagem inteira, que no
@@ -19,7 +19,7 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..");
-const PASTA = join(RAIZ, "public", "prototipo");
+const PASTA = join(RAIZ, "public", "painel");
 
 const TONS = {
   claro: { passos: [["saturate", 0.55], ["brightness", 1.55], ["contrast", 0.6], ["sepia", 0.15]], opacidade: 0.9 },

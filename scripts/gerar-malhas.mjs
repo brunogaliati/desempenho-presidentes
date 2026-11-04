@@ -4,11 +4,11 @@
  *     node scripts/gerar-malhas.mjs
  *
  * Grava:
- * - `src/app/prototipo/_dados/ufs.json`: UFs com path, centro e caixa (para o
+ * - `src/app/_painel/_dados/ufs.json`: UFs com path, centro e caixa (para o
  *   zoom), e os parâmetros da projeção.
- * - `public/prototipo/municipios/<codigo da UF>.json`: municípios da UF, baixados
+ * - `public/painel/municipios/<codigo da UF>.json`: municípios da UF, baixados
  *   pelo navegador só quando o leitor entra no estado.
- * - `public/prototipo/municipios-brasil.json`: os 5.570 municípios do país, com
+ * - `public/painel/municipios-brasil.json`: os 5.570 municípios do país, com
  *   nome e área, para o mapa nacional de queimadas.
  *
  * A área em km² é calculada na esfera a partir das coordenadas (fórmula de
@@ -32,8 +32,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SAIDA_UFS = join(RAIZ, "src", "app", "prototipo", "_dados", "ufs.json");
-const PASTA_MUN = join(RAIZ, "public", "prototipo", "municipios");
+const SAIDA_UFS = join(RAIZ, "src", "app", "_painel", "_dados", "ufs.json");
+const PASTA_MUN = join(RAIZ, "public", "painel", "municipios");
 
 const MALHAS = "https://servicodados.ibge.gov.br/api/v3/malhas";
 const PARAMS = "formato=application/vnd.geo%2Bjson&qualidade=minima";
@@ -42,7 +42,7 @@ const urlUF = (codigo) => `${MALHAS}/estados/${codigo}?${PARAMS}&intrarregiao=mu
 
 const LARGURA = 1000;
 const RAIO_TERRA_KM = 6371.0088;
-const PASTA_PUBLICA = join(RAIZ, "public", "prototipo");
+const PASTA_PUBLICA = join(RAIZ, "public", "painel");
 
 async function baixar(url) {
   for (let tentativa = 1; ; tentativa++) {

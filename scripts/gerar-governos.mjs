@@ -8,7 +8,7 @@
  * gerada por `python -m desempenho.governadores validar`) e o complemento
  * deste diretório (`governos-complemento.json`), que acrescenta as trocas de
  * partido com data e fonte onde a curadoria deixou o partido vazio. Grava
- * `src/app/prototipo/_dados/governos.json`.
+ * `src/app/_painel/_dados/governos.json`.
  *
  * Os trechos usam `[inicio, fim)`, como no backend. Partido `null` é
  * desconhecido, nunca "sem partido": sem filiação é a sigla "SEM", e só entra
@@ -27,7 +27,7 @@ import { fileURLToPath } from "node:url";
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BACKEND = join(RAIZ, "..", "backend", "dados", "governadores");
 const COMPLEMENTO = join(RAIZ, "scripts", "governos-complemento.json");
-const SAIDA = join(RAIZ, "src", "app", "prototipo", "_dados", "governos.json");
+const SAIDA = join(RAIZ, "src", "app", "_painel", "_dados", "governos.json");
 
 const INICIO = "1995-01-01";
 

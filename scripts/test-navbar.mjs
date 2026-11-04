@@ -6,7 +6,7 @@ import { mkdtemp, readFile, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const url = 'http://localhost:3000/prototipo';
+const url = 'http://localhost:3000/';
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function until(fn, label) {
   const deadline = Date.now() + 30000;
@@ -67,13 +67,13 @@ try {
   await until(() => evaluate(`document.readyState === 'complete' && !!document.querySelector('.tema-interruptor')`), 'cabeçalho');
   await delay(3000);
   await capture('navbar-desktop.png');
-  const overlay = await evaluate(`(() => { const h = document.querySelector('.prototipo-cabecalho'), mapa = document.querySelector('.sala-tema'), painel = h.parentElement; return { background: getComputedStyle(h).backgroundColor, position: getComputedStyle(h).position, mapTop: mapa.getBoundingClientRect().top, padding: parseFloat(getComputedStyle(painel).paddingTop), height: h.offsetHeight, mapBehind: !!document.elementFromPoint(8, 6)?.closest('.sala-tema') }; })()`);
+  const overlay = await evaluate(`(() => { const h = document.querySelector('.painel-cabecalho'), mapa = document.querySelector('.sala-tema'), painel = h.parentElement; return { background: getComputedStyle(h).backgroundColor, position: getComputedStyle(h).position, mapTop: mapa.getBoundingClientRect().top, padding: parseFloat(getComputedStyle(painel).paddingTop), height: h.offsetHeight, mapBehind: !!document.elementFromPoint(8, 6)?.closest('.sala-tema') }; })()`);
   assert.equal(overlay.background, 'rgba(0, 0, 0, 0)', 'Sem faixa opaca atrás da navbar');
   assert.equal(overlay.position, 'fixed');
   assert(Math.abs(overlay.mapTop) < 1 && overlay.mapBehind, 'Mapa contínuo sob a navbar');
   assert(Math.abs(overlay.padding - overlay.height) < 1, 'Conteúdo inicial abaixo da navbar');
   assert.equal(await evaluate(`document.querySelector('.cabecalho-painel').textContent.includes('Protótipo')`), false);
-  assert.equal(await evaluate(`document.querySelectorAll('.navegacao-temas button').length`), 4);
+  assert.equal(await evaluate(`document.querySelectorAll('.navegacao-temas :is(a,button)').length`), 4);
   const progress = await evaluate(`(() => { const p = document.querySelector('.mandato-trilho'); return [Number(p.getAttribute('aria-valuenow')), Number(p.getAttribute('aria-valuemax'))]; })()`);
   assert(progress[0] >= 0 && progress[0] <= progress[1]);
   const marcos = await evaluate(`Array.from(document.querySelectorAll('a.mandato-marco')).map(m => ({ url: m.href, label: m.getAttribute('aria-label'), target: m.target }))`);
@@ -89,12 +89,12 @@ try {
   await evaluate(`Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async text => { window.__linkCopiado = text; } } })`);
   await click('button[aria-label="Compartilhar"]');
   await until(() => evaluate(`window.__linkCopiado === location.href && !!document.querySelector('button[aria-label="Link copiado"]')`), 'compartilhamento');
-  assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('.navegacao-temas button')).map(b => [b.dataset.opcao, b.disabled])`), [['economia', false], ['ambiente', false], ['congresso', true], ['dinheiro', false]]);
-  await click('.navegacao-temas [data-opcao="congresso"]');
-  assert.equal(await evaluate(`document.querySelector('.painel-prototipo').dataset.aba`), 'economia');
-  await click('.navegacao-temas [data-opcao="ambiente"]');
+  assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('.navegacao-temas a')).map(b => b.getAttribute('href'))`), ['/', '/meio-ambiente', '/dinheiro']);
+  await click('.navegacao-temas button[disabled]');
+  assert.equal(await evaluate(`document.querySelector('.painel-governo').dataset.aba`), 'economia');
+  await click('.navegacao-temas a[href="/meio-ambiente"]');
   await until(() => evaluate(`!!document.querySelector('[data-aba="ambiente"]')`), 'troca de aba');
-  await click('.navegacao-temas [data-opcao="economia"]');
+  await click('.navegacao-temas a[href="/"]');
   await until(() => evaluate(`!!document.querySelector('.segmentos')`), 'seletores do mapa');
   await click('.segmentos [data-opcao="mudanca"]');
   assert.equal(await evaluate(`document.querySelector('.segmentos [data-opcao="mudanca"]').getAttribute('aria-checked')`), 'true');
@@ -117,7 +117,7 @@ try {
   await delay(3000);
   for (const width of [1440, 1024, 768, 390, 320]) {
     await viewport(width, 900);
-    const layout = await evaluate(`(() => { const h = document.querySelector('.prototipo-cabecalho'); const r = h.getBoundingClientRect(); return { width: innerWidth, header: r.right, height: r.height, measured: parseFloat(h.parentElement.style.getPropertyValue('--altura-cabecalho')), tabs: [...h.querySelectorAll('.navegacao-temas button')].map(b => { const q = b.getBoundingClientRect(); return [q.left, q.right]; }) }; })()`);
+    const layout = await evaluate(`(() => { const h = document.querySelector('.painel-cabecalho'); const r = h.getBoundingClientRect(); return { width: innerWidth, header: r.right, height: r.height, measured: parseFloat(h.parentElement.style.getPropertyValue('--altura-cabecalho')), tabs: [...h.querySelectorAll('.navegacao-temas :is(a,button)')].map(b => { const q = b.getBoundingClientRect(); return [q.left, q.right]; }) }; })()`);
     assert(layout.header <= layout.width && Math.abs(layout.height - layout.measured) < 1, `Altura/largura do cabeçalho em ${width}px`);
     assert(layout.tabs.every(([left, right]) => left >= 0 && right <= layout.width), `Abas cortadas em ${width}px`);
     if (width === 1440) await capture('navbar-desktop.png');

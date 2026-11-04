@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { inadimplenciaNacional, organizarExpectativas, serieComplementar, urlExpectativas } from '../src/app/prototipo/_dados/panoramaModelo.ts';
+import { inadimplenciaNacional, organizarExpectativas, serieComplementar, urlExpectativas } from '../src/app/_painel/_dados/panoramaModelo.ts';
 import { corDaMudanca } from '../src/lib/formatar.ts';
-import { acumulado12, contraAnoAnterior, regularizar, recortar, governosNoPeriodo, criarCsv, organizarPnad, mesesEntre, alinharTerritorio, compararUf, variacaoDesdeReferencia, reguaComparacao } from '../src/app/prototipo/_dados/economiaModelo.ts';
+import { acumulado12, contraAnoAnterior, regularizar, recortar, governosNoPeriodo, criarCsv, organizarPnad, mesesEntre, alinharTerritorio, compararUf, variacaoDesdeReferencia, reguaComparacao } from '../src/app/_painel/_dados/economiaModelo.ts';
 
 const mandatos = [
   { id: 'dilma_2', nomeCurto: 'Dilma', mandato: 2, inicio: '2015-01-01', fim: '2016-08-31' },

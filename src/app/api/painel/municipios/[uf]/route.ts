@@ -2,21 +2,17 @@ import { NextResponse } from "next/server";
 
 import { sql } from "@/lib/db";
 
-import queimadas from "../../../_dados/queimadas.json";
-import type { Municipio } from "../../../_dados/tipos";
+import queimadas from "@/app/_painel/_dados/queimadas.json";
+import type { Municipio } from "@/app/_painel/_dados/tipos";
 
 /**
  * Municípios de uma UF: nome e população do Neon, focos do INPE.
  *
- * O contorno vem de um arquivo estático (`public/prototipo/municipios/`); aqui
+ * O contorno vem de um arquivo estático (`public/painel/municipios/`); aqui
  * só os números, para o painel não carregar 5.570 municípios na abertura.
- * Mesma trava do painel: fora de produção, a menos que `PROTOTIPO=1`.
  */
 
 export async function GET(_: Request, { params }: { params: Promise<{ uf: string }> }) {
-  if (process.env.NODE_ENV === "production" && process.env.PROTOTIPO !== "1") {
-    return new NextResponse(null, { status: 404 });
-  }
 
   const { uf } = await params;
   if (!/^[0-9]{2}$/.test(uf)) return new NextResponse(null, { status: 400 });

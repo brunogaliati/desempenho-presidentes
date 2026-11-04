@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { acumuladoPeriodo, montarInflacao } from '../src/app/prototipo/_dados/economiaModelo.ts';
+import { acumuladoPeriodo, montarInflacao } from '../src/app/_painel/_dados/economiaModelo.ts';
 import { metadataPagina } from '../src/lib/seo.ts';
 import { ROTA_INFLACAO } from '../src/lib/catalogoEconomia.ts';
 

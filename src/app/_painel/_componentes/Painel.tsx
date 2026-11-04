@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { destinoPainel } from "@/lib/rotasPainel";
 
 import { focoDoMandato, recortarAoMandato, TERMO_2015 } from "../_dados/mandatoRecorte";
 import type { AbaId, DadosPainel } from "../_dados/tipos";
@@ -37,6 +40,7 @@ interface Props {
 }
 
 export function Painel({ publico=false, introducao, dados: inteiros, abaInicial, ufInicial, mandatoInicial, retrato }: Props) {
+  const router = useRouter();
   const [aba, setAba] = useState<AbaId>(abaInicial);
   const [sigla, setSiglaDireto] = useState<string | null>(ufInicial);
   const emCurso = inteiros.presidente.id;
@@ -90,6 +94,10 @@ export function Painel({ publico=false, introducao, dados: inteiros, abaInicial,
 
   const trocarAba = (a: AbaId) => {
     if (a !== "economia" && a !== "ambiente" && a !== "dinheiro") return;
+    if (publico) {
+      router.push(destinoPainel({ aba: a, uf: sigla ?? undefined, mandato: mandatoId !== emCurso ? mandatoId : undefined }));
+      return;
+    }
     setAba(a);
     window.scrollTo({ top: 0 });
   };
@@ -97,15 +105,16 @@ export function Painel({ publico=false, introducao, dados: inteiros, abaInicial,
   return (
     <PosseContext.Provider value={dados.foco.posse}>
     <div
-      className="painel-prototipo min-h-dvh px-3 pb-10"
+      className="painel-governo min-h-dvh px-3 pb-10"
       data-aba={aba}
     >
-      <div aria-hidden className="fundo-prototipo" />
+      <div aria-hidden className="fundo-painel" />
       <FiltroRefracao />
-      <div ref={cabecalho} className="prototipo-cabecalho relative -mx-3 mb-3 border-b">
-        <Cabecalho publico={publico} aba={aba} aoTrocar={trocarAba} mandato={<BarraMandato dados={atual} foco={dados.foco} retrato={retrato} sigla={sigla} aba={aba} aoEscolher={setMandatoId} />} />
+      <div ref={cabecalho} className="painel-cabecalho relative -mx-3 mb-3 border-b">
+        <Cabecalho publico={publico} recorte={{uf:sigla??undefined,mandato:mandatoId!==emCurso?mandatoId:undefined}} aba={aba} aoTrocar={trocarAba} mandato={<BarraMandato dados={atual} foco={dados.foco} retrato={retrato} sigla={sigla} aba={aba} aoEscolher={setMandatoId} />} />
       </div>
 
+      <main>
       {introducao}
       {aba === "economia" && (
         <AbaEconomia dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} aoTrocarAba={trocarAba} />
@@ -115,8 +124,10 @@ export function Painel({ publico=false, introducao, dados: inteiros, abaInicial,
       {aba === "congresso" && (
         <PainelMapa dados={atual} aba={aba} sigla={sigla} setSigla={setSigla} aoTrocarAba={trocarAba} />
       )}
+      </main>
 
-      {publico && <nav aria-label="Sobre os dados" className="mx-auto mt-6 flex max-w-6xl flex-wrap gap-5 text-sm"><a href="/metodologia">Metodologia</a><a href="/sobre">Sobre o projeto</a><a href="/correcoes">Relatar um erro</a></nav>}
+      {publico && aba === "economia" && <nav aria-label="Indicadores e territórios" className="mx-auto mt-6 flex max-w-6xl flex-wrap gap-5 text-sm"><Link href="/economia">Todos os indicadores</Link><Link href="/economia/salario-minimo">Salário mínimo</Link><Link href="/economia/inflacao">Inflação</Link><Link href="/economia/desemprego">Desemprego</Link><Link href="/economia/gasolina">Gasolina</Link><Link href="/economia/municipios">Indicadores por município</Link></nav>}
+      {publico && <nav aria-label="Sobre os dados" className="mx-auto mt-6 flex max-w-6xl flex-wrap gap-5 text-sm"><Link href="/metodologia">Metodologia</Link><Link href="/sobre">Sobre o projeto</Link><Link href="/correcoes">Relatar um erro</Link></nav>}
       <footer className="mx-auto mt-6 max-w-6xl text-[11px] leading-snug" style={{ color: "var(--tinta-3)" }}>
         {aba === "dinheiro" ? (<>Fontes: Tesouro Nacional · Siconfi e Transferegov · transferências especiais.</>) : aba === "ambiente" ? (
           <>
