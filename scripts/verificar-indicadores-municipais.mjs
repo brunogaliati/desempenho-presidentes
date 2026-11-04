@@ -4,6 +4,12 @@ import { readFile } from 'node:fs/promises';
 import { neon } from '@neondatabase/serverless';
 import { idsMunicipais,rotaMunicipal } from '../src/lib/indicadoresMunicipais.ts';
 const root=process.env.SEO_PREVIEW_URL??'http://localhost:3000',sql=neon(process.env.DATABASE_URL);
+async function fetch(url,init){
+ const r=await globalThis.fetch(url,{signal:AbortSignal.timeout(60000),...init});
+ if(r.status>=500){const b=await r.clone().text();console.error(JSON.stringify({path:new URL(url).pathname,status:r.status,server:r.headers.get('server'),ray:r.headers.get('cf-ray'),titulo:b.match(/<title[^>]*>(.*?)<\/title>/is)?.[1],erro:b.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<[^>]*>/gi,' ').replace(/\s+/g,' ').split('Cloudflare Ray ID')[0].slice(0,600)}));}
+ return r;
+}
+
 const municipios=JSON.parse(await readFile(new URL('../src/lib/municipiosIndicadores.json',import.meta.url),'utf8'));
 const cobertura=await sql`select indicador,codigo_ibge codigo,to_char(referencia,'YYYY-MM') referencia from mart.historico_publicavel_municipal`;
 const refs=new Map(cobertura.map(r=>[`${r.indicador}:${r.codigo}`,r.referencia]));

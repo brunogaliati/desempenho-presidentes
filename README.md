@@ -326,3 +326,28 @@ O npm audit ainda sinaliza dependências transitivas (incluindo ferramentas de b
 e o PostCSS interno do Next 15); as correções compatíveis foram aplicadas, sem usar
 `audit fix --force`, que propõe downgrade do adaptador e mudança de versão principal.
 Não se declara aprovação integral de segurança a partir desses testes funcionais.
+
+
+### Publicação remota em 4 de novembro de 2026
+
+Worker publicado em `https://desempenho-do-governo.brunop-galiati.workers.dev`.
+Bucket R2 e segredos foram cadastrados na conta autorizada. A validação real
+identificou leituras repetidas durante a geração dos sitemaps: a elegibilidade
+agora é calculada por fonte, com cache persistente do catálogo, e as quatro partes
+são pré-geradas. A versão corrigida publicou 12.937 URLs; a verificação remota
+confirmou todas elas, mas a aprovação completa de produção continua pendente.
+
+O plano Workers Free encerrou requisições com erro 1102 (`exceededCpu`), com
+amostras de 72 ms e 10 ms no log. O limite do Free é 10 ms; o painel oferece
+Workers Paid a US$ 5/mês + uso. Domínio no plano Free e Workers Free/Paid são
+produtos diferentes. Nenhuma atualização paga foi contratada pelo agente.
+O verificador agora registra status e diagnóstico de respostas 5xx, sem mascarar
+falhas por repetição automática.
+
+A zona `desempenhodogoverno.com.br` foi cadastrada no plano gratuito e os dois
+registros A existentes foram importados. Ela permanece pendente de ativação:
+`dayana.ns.cloudflare.com` e `kaiser.ns.cloudflare.com` são os nameservers
+atribuídos. A delegação pública continua na DigitalOcean. A troca no registrador
+é uma etapa posterior; o domínio deve ser ligado ao Worker por Custom Domain
+após ativação da zona. Não se afirma validação do domínio principal nem deploy
+automático a partir do GitHub enquanto essas etapas não forem configuradas.
