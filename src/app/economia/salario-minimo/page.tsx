@@ -54,7 +54,7 @@ export default async function SalarioMinimo() {
         <nav aria-label="Navegação estrutural" className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-[var(--tinta-2)]">
           <Link href="/explorar">Explorar dados</Link><span aria-hidden="true">/</span><span aria-current="page">Salário mínimo</span>
         </nav>
-        <h1 className="mt-10 max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">Salário mínimo: valor, reajuste e poder de compra</h1>
+        <h1 className="mt-10 max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">Salário mínimo e poder de compra</h1>
         <p className="mb-5 mt-5 max-w-prose text-lg leading-relaxed">
           O salário mínimo nacional registrado em <strong>{mesPorExtenso(ultimo.mes)}</strong> é de <strong>{reais(ultimo.nominal)} por mês</strong>.
           {anterior && <> O último reajuste identificado na série, em {mesPorExtenso(reajuste.mes)}, foi de {reais(aumento)} ({numero(percentual)}%), sobre {reais(anterior.nominal)}.</>}

@@ -30,10 +30,10 @@ export function EstruturaEconomia({ children }: { children: React.ReactNode }) {
     <div ref={cabecalho} className="painel-cabecalho">
       <Cabecalho aba="economia" semTemaAtivo explorarAtivo={!institucional} publico aoTrocar={() => {}} mandato={null}/>
     </div>
-    <div className={styles.contexto}>
-      <nav aria-label={institucional ? "Sobre os dados" : "Explorar dados"}>
-        {institucional ? [["/metodologia","Metodologia"],["/sobre","Sobre o projeto"],["/correcoes","Relatar um erro"]].map(([url,nome])=><Link key={url} href={url} aria-current={caminho===url?"page":undefined}>{nome}</Link>) : <><Link href="/explorar">Explorar dados</Link><Link href="/economia/municipios">Encontrar município</Link><Link href="/#governo-a-governo">Comparar governos</Link></>}
-      </nav>
+    <div className={`${styles.contexto} ${!institucional?styles.compartilharPagina:""}`}>
+      {institucional&&<nav aria-label="Sobre os dados">
+        {[["/metodologia","Metodologia"],["/sobre","Sobre o projeto"],["/correcoes","Relatar um erro"]].map(([url,nome])=><Link key={url} href={url} aria-current={caminho===url?"page":undefined}>{nome}</Link>)}
+      </nav>}
       <Compartilhar mensagem="Dados do Desempenho do Governo" compacto/>
     </div>
     {children}

@@ -26,8 +26,8 @@ export function HistoricoInflacao({ historico }: { historico: MesInflacao[] }) {
   return <div ref={ref}>
     <div className={styles.filtros}>
       <SeletorDados rotulo="Mostrar" valor={medida} opcoes={Object.entries(MEDIDAS).map(([valor,rotulo])=>({valor,rotulo}))} aoEscolher={v=>setMedida(v as keyof typeof MEDIDAS)}/>
-      <SeletorPeriodo rotulo="De" valor={desde} referencias={historico.map(r=>r.mes)} aoEscolher={setDesde}/>
-      <SeletorPeriodo rotulo="Até" valor={ate} referencias={historico.map(r=>r.mes)} aoEscolher={setAte}/>
+      <SeletorPeriodo rotulo="De" valor={desde} referencias={historico.filter(r=>r.mensal!==null).map(r=>r.mes)} aoEscolher={setDesde}/>
+      <SeletorPeriodo rotulo="Até" valor={ate} referencias={historico.filter(r=>r.mensal!==null).map(r=>r.mes)} aoEscolher={setAte}/>
     </div>
     {acumulado !== null ? <>
       <p aria-live="polite" className="max-w-prose text-sm leading-relaxed">De {mesPorExtenso(desde)} a {mesPorExtenso(ate)}, o IPCA acumulou <strong>{numero(acumulado)}%</strong>, considerando cada mês do intervalo uma única vez. Esse é o acumulado do intervalo escolhido, não a taxa de cada ponto do gráfico.</p>

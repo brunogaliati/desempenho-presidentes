@@ -42,7 +42,7 @@ export default async function Inflacao() {
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
     <header className="border-b border-[var(--borda)] py-5">
       <nav aria-label="Navegação estrutural" className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-[var(--tinta-2)]"><Link href="/explorar">Explorar dados</Link><span aria-hidden="true">/</span><span aria-current="page">Inflação</span></nav>
-      <h1 className="mt-10 max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">IPCA acumulado: inflação em 12 meses, no ano e mês a mês</h1>
+      <h1 className="mt-10 max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">Inflação: IPCA mensal e acumulado</h1>
       <p className="mb-5 mt-5 max-w-prose text-lg leading-relaxed">Em <strong>{mesPorExtenso(ultimo.mes)}</strong>, último mês disponível, o IPCA variou <strong>{pct(ultimo.mensal)}</strong>.
         {ultimo.dozeMeses !== null ? <> Nos 12 meses encerrados nessa referência, a inflação acumulou <strong>{pct(ultimo.dozeMeses)}</strong>.</> : " O acumulado em 12 meses ainda não tem cobertura completa."}
         {ultimo.ano !== null ? <> De janeiro até esse mês, o acumulado foi de <strong>{pct(ultimo.ano)}</strong>.</> : " O acumulado no ano não tem cobertura completa."}

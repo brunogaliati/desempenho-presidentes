@@ -26,7 +26,7 @@ export function HistoricoIndicador({ series, principal, trimestral, moeda }: { s
   return <div ref={ref}>
     <div className={styles.filtros}>
       {series.length > 1 && <SeletorDados rotulo="Território" valor={codigo} opcoes={series.map(s=>({valor:s.codigo,rotulo:s.nome}))} aoEscolher={codigo=>{const proxima=series.find(s=>s.codigo===codigo)!;setCodigo(codigo);setDesde(padrao(proxima));setAte(ultimaReferenciaPublica(proxima.pontos)!.mes);}}/>}
-      {([['De',desde,setDesde],['Até',ate,setAte]] as const).map(([rotulo,valor,mudar])=><SeletorPeriodo key={rotulo} rotulo={rotulo} valor={valor} referencias={serie.pontos.map(p=>p.mes)} precisao={trimestral?'trimestre':'mes'} aoEscolher={mudar}/>)}
+      {([['De',desde,setDesde],['Até',ate,setAte]] as const).map(([rotulo,valor,mudar])=><SeletorPeriodo key={rotulo} rotulo={rotulo} valor={valor} referencias={serie.pontos.filter(p=>p.valor!==null).map(p=>p.mes)} precisao={trimestral?'trimestre':'mes'} aoEscolher={mudar}/>)}
     </div>
     {comparacao !== null ? <>
       <p aria-live="polite" className="max-w-prose text-sm leading-relaxed"><strong>{serie.nome}</strong>: de {data(desde)} a {data(ate)}, a mudança foi de <strong>{comSinal(comparacao,moeda ? 2 : 1)}{moeda ? "%" : " pontos percentuais"}</strong>. {moeda ? "Comparação dos preços nominais nas duas datas, sem descontar a inflação." : "Diferença entre as taxas nas duas referências, sem atribuição de causa."}</p>

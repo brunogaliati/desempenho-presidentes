@@ -6,7 +6,9 @@
 .gatilho:hover { background:var(--faixa-a); }
 .gatilho:disabled { opacity:.55; cursor:not-allowed; }
 .campo :is(button,input):focus-visible { outline:2px solid var(--foco,var(--serie)); outline-offset:2px; }
-.menu { position:absolute; top:calc(100% + 6px); left:0; z-index:35; width:100%; min-width: min(16rem,100%); padding:6px; border:1px solid var(--borda); border-radius:14px; background:var(--superficie); box-shadow:0 12px 30px color-mix(in srgb,var(--tinta) 14%,transparent); }
+.menu { position:absolute; top:calc(100% + 6px); left:0; z-index:35; width:max(100%, min(16rem,calc(100vw - 64px))); padding:6px; border:1px solid var(--borda); border-radius:14px; background:var(--superficie); box-shadow:0 12px 30px color-mix(in srgb,var(--tinta) 14%,transparent); }
+.menuFim { left:auto; right:0; }
+.menuAcima { top:auto; bottom:calc(100% + 6px); }
 .campo .busca { width:100%; padding:10px; margin-bottom:4px; min-height:44px; border:1px solid var(--borda); border-radius:8px; background:var(--fundo); font-size:14px; }
 .lista { max-height: min(260px,40dvh); overflow:auto; scrollbar-width:thin; scrollbar-color:var(--tinta-3) transparent; }
 .opcao { display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%; padding:10px; min-height:44px; border-radius:8px; text-align:left; font-size:14px; }

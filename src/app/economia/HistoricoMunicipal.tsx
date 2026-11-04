@@ -23,7 +23,7 @@ export function HistoricoMunicipal({id,nome,pontos}:{id:IndicadorMunicipal;nome:
   return <div ref={ref}>
     <div className={styles.filtros}>
       {cfg.medidas.length>1 && <SeletorDados rotulo="Medida" valor={String(medida)} opcoes={cfg.medidas.map((m,i)=>({valor:String(i),rotulo:m}))} aoEscolher={v=>setMedida(Number(v))}/>}
-      {([["De",de,setDe],["Até",ate,setAte]] as const).map(([rotulo,valor,mudar])=><SeletorPeriodo key={rotulo} rotulo={rotulo} valor={valor} referencias={pontos.map(p=>p.referencia)} precisao={cfg.anual?'ano':'mes'} aoEscolher={mudar}/>)}
+      {([["De",de,setDe],["Até",ate,setAte]] as const).map(([rotulo,valor,mudar])=><SeletorPeriodo key={rotulo} rotulo={rotulo} valor={valor} referencias={pontos.filter(p=>[p.valor,...p.extras].some(v=>v!==null)).map(p=>p.referencia)} precisao={cfg.anual?'ano':'mes'} aoEscolher={mudar}/>)}
     </div>
     {valido ? <>
       <p aria-live="polite" className="max-w-prose text-sm leading-relaxed">De {data(de)} a {data(ate)}, a diferença na medida selecionada foi de <strong>{comSinal(b!-a!,0)} {unidade}</strong>{a!>0?` (${comSinal((b!/a!-1)*100,2)}%)`:""}. {medida===3 && id==="emprego-formal"?"Comparamos os saldos dos dois meses, sem somar o intervalo.":"Comparação dos valores nas duas referências."}</p>
