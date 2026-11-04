@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { codificarFiltro, decodificarFiltro, type FiltrosCompartilhados } from '@/lib/compartilhamento';
+import { usePathname } from 'next/navigation';
 
 type Contexto = { registros: Map<string,string|null>; contexto: () => {titulo:string;filtros:FiltrosCompartilhados} };
 const RecorteContexto = createContext<Contexto|null>(null);
@@ -40,6 +41,7 @@ export function useEstadoCompartilhavel<T>(chave:string,inicial:T,validar:(valor
 }
 
 function FocoCompartilhado() {
+  const caminho=usePathname();
   useEffect(()=>{
     let observador:MutationObserver|undefined,timer:ReturnType<typeof setTimeout>|undefined,encerrado=false;
     const parar=()=>{encerrado=true;observador?.disconnect();if(timer)clearTimeout(timer);};
@@ -53,6 +55,6 @@ function FocoCompartilhado() {
     };
     abrir();window.addEventListener('wheel',parar,{passive:true});window.addEventListener('pointerdown',parar,{passive:true});
     return()=>{parar();window.removeEventListener('wheel',parar);window.removeEventListener('pointerdown',parar);};
-  },[]);
+  },[caminho]);
   return null;
 }
