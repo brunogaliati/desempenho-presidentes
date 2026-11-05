@@ -1,6 +1,7 @@
 import type { DadosPainel, FocoMandato, IndicadorMandato, Leitura, MandatoVisual, SerieEconomia } from "./tipos";
 import type { SerieDiaria } from "./mercadoModelo";
 import type { DadosAmbiente } from "./ambienteModelo";
+import { mandatoDoPerfil } from "@/lib/perfisPainel";
 import type { Indicador } from "@/types/dados";
 
 /**
@@ -53,6 +54,24 @@ export function focoDoMandato(mandatos: MandatoVisual[], id: string): FocoMandat
   if (k < 0) return null;
   const m = ordem[k];
   return montarFoco(m.id, m.inicio.slice(0, 7), ordem[k + 1]?.inicio.slice(0, 7) ?? null, Boolean(m.emCurso), m.fim);
+}
+
+/**
+ * O mandato que um endereço mostra. No perfil, um dos daquela pessoa. Com um estado
+ * escolhido, os presidentes de 2015 a 2018 viram um mandato só de governador; sem estado, o contrário.
+ */
+export function mandatoDoEndereco(
+  d: Pick<DadosPainel, "presidente" | "economia">,
+  c: { pessoaId?: string | null; sigla: string | null; pedido: string | null },
+): string {
+  const emCurso = d.presidente.id;
+  const mandatos = d.economia.mandatos;
+  const de2015 = mandatos.filter((m) => m.inicio >= "2015" && m.inicio < "2019").map((m) => m.id);
+  const perfil = c.pessoaId ? mandatoDoPerfil(mandatos, c.pessoaId, c.pedido) : undefined;
+  const id = perfil?.id ?? (c.pedido && focoDoMandato(mandatos, c.pedido) ? c.pedido : emCurso);
+  if (c.sigla && de2015.includes(id)) return TERMO_2015;
+  if (!c.sigla && id === TERMO_2015) return de2015[0] ?? emCurso;
+  return id;
 }
 
 /**

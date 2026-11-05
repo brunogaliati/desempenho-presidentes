@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
+import { HTML_LIMITED_BOT_UA_RE } from "next/dist/shared/lib/router/utils/html-bots.js";
 
 const nextConfig: NextConfig = {
+  // Robôs de prévia que só leem o <head>: a lista do Next e os que ela não tem.
+  htmlLimitedBots: new RegExp(`${HTML_LIMITED_BOT_UA_RE.source}|TelegramBot|Cardyb|Mastodon`, "i"),
   // Permite conferir o build sem sobrescrever os artefatos do servidor local.
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   async redirects() {

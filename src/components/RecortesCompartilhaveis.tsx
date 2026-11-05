@@ -4,12 +4,14 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { codificarFiltro, decodificarFiltro, type FiltrosCompartilhados } from '@/lib/compartilhamento';
 import { usePathname } from 'next/navigation';
 
-type Contexto = { registros: Map<string,string|null>; contexto: () => {titulo:string;filtros:FiltrosCompartilhados} };
+/** O que os aplicativos mostram para um link: quem sabe ler o endereço responde sem esperar o aplicativo. */
+export type CapaDoLink = (link:string)=>{imagem:string|null;titulo:string;descricao:string};
+type Contexto = { registros: Map<string,string|null>; contexto: () => {titulo:string;filtros:FiltrosCompartilhados;capaDoLink?:CapaDoLink} };
 const RecorteContexto = createContext<Contexto|null>(null);
 export const useRecorteCompartilhado = () => useContext(RecorteContexto);
 
-export function RecortesCompartilhaveis({children,titulo='',filtros={}}:{children:React.ReactNode;titulo?:string;filtros?:FiltrosCompartilhados}) {
-  const registros=useRef(new Map<string,string|null>()),atual=useRef({titulo,filtros});atual.current={titulo,filtros};
+export function RecortesCompartilhaveis({children,titulo='',filtros={},capaDoLink}:{children:React.ReactNode;titulo?:string;filtros?:FiltrosCompartilhados;capaDoLink?:CapaDoLink}) {
+  const registros=useRef(new Map<string,string|null>()),atual=useRef({titulo,filtros,capaDoLink});atual.current={titulo,filtros,capaDoLink};
   const contexto=useMemo(()=>({registros:registros.current,contexto:()=>atual.current}),[]);
   return <RecorteContexto.Provider value={contexto}><FocoCompartilhado/>{children}</RecorteContexto.Provider>;
 }
@@ -27,7 +29,14 @@ export function useEstadoCompartilhavel<T>(chave:string,inicial:T,validar:(valor
     // Um componente pode receber suas opções depois de uma consulta assíncrona.
     if(salvo!==undefined){aplicado.current=token;setValor(salvo);}
   },[nome,validar]);
-  useLayoutEffect(()=>{ctx?.registros.set(nome,codificarFiltro(paraLink?paraLink(valor):valor));return()=>{ctx?.registros.delete(nome);};},[ctx,nome,valor,paraLink]);
+  const primeiro=useRef(inicial);
+  useLayoutEffect(()=>{
+    const paraRegistro=(v:T)=>codificarFiltro(paraLink?paraLink(v):v),salvo=paraRegistro(valor);
+    // Igual ao que a página abriria sozinha, o parâmetro só alonga o link. Compara com os dois porque o
+    // inicial pode mudar depois de aberta (o período da régua segue a medida), e quem recebe vê o da abertura.
+    ctx?.registros.set(nome,salvo===paraRegistro(inicial)&&salvo===paraRegistro(primeiro.current)?null:salvo);
+    return()=>{ctx?.registros.delete(nome);};
+  },[ctx,nome,valor,inicial,paraLink]);
   useEffect(()=>{const restaurar=()=>{aplicado.current=null;const raw=new URLSearchParams(location.search).get(nome);if(raw!==null){const salvo=decodificarFiltro<T>(raw,validar);if(salvo!==undefined)setValor(salvo);}};window.addEventListener('popstate',restaurar);return()=>window.removeEventListener('popstate',restaurar);},[nome,validar]);
   const alterar=useCallback<Dispatch<SetStateAction<T>>>(acao=>{
     const proximo=typeof acao==='function'?(acao as (anterior:T)=>T)(ultimoValor.current):acao;

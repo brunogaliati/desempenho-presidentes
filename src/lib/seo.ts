@@ -7,10 +7,15 @@ export function podeIndexar(env: NodeJS.ProcessEnv = process.env): boolean {
   return env.NODE_ENV === "production" && env.VERCEL_ENV !== "preview" && env.SEO_INDEXING !== "false";
 }
 
-export function metadataPagina(titulo: string, descricao: string, caminho: string, imagem?: string): Metadata {
+/** A imagem que uma página anuncia. A prévia do compartilhar precisa chegar na mesma URL. */
+export function imagemDaPagina(caminho: string, imagem?: string): string {
   const propria = caminho === '/economia/inflacao' || caminho === '/economia/salario-minimo' || /^\/presidente\/[^/]+$/.test(caminho);
   const capa = imagem ?? (propria ? `${caminho}/opengraph-image` : `/compartilhar?pagina=${encodeURIComponent(caminho.split('?')[0])}`);
-  const imagemFinal = `${capa}${capa.includes('?')?'&':'?'}v=20261104`;
+  return `${capa}${capa.includes('?')?'&':'?'}v=20261104`;
+}
+
+export function metadataPagina(titulo: string, descricao: string, caminho: string, imagem?: string): Metadata {
+  const imagemFinal = imagemDaPagina(caminho, imagem);
   return {
     title: titulo,
     description: descricao,

@@ -266,8 +266,8 @@ export default async function Metodologia() {
             </li>
           ))}
         </ul>
-        <DetalhesCompartilhaveis>
-          <summary className="cursor-pointer font-medium">Fotografias de governadores</summary>
+        <DetalhesCompartilhaveis variante="acao">
+          <summary>Fotografias de governadores</summary>
           <p className="mt-2">Imagens redimensionadas e exibidas com recorte circular.</p>
           <ul className="mt-2 space-y-2 text-sm">
             {governadores.map((foto) => (

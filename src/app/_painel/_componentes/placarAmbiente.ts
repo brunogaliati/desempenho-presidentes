@@ -3,7 +3,7 @@ import { comSinal, sentido } from "@/lib/formatar";
 import { PISO_POSSE, somaNaUf, somaNoBioma, type Lente, type Municipal, type MunicipiosAmbiente } from "../_dados/ambienteMunicipal";
 import type { DadosPainel, Leitura, SerieEconomia, UF } from "../_dados/tipos";
 import { formatar, recebido, ultimoDado } from "./formatos";
-import { itemDaSerie, type FileiraPlacar, type GrupoPlacar, type ItemPlacar } from "./Placar";
+import { itemDaSerie, type FileiraPlacar, type GrupoPlacar, type ItemPlacar } from "./placarModelo";
 
 /**
  * O placar do meio ambiente: a mesma régua do da economia, cada medida no

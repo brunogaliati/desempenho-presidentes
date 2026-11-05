@@ -234,7 +234,7 @@ function ColunaDinheiro({
   const gov = sigla ? governoEm(governos, sigla, `${ano}-07-01`) : null;
   return (
     <div className="dn-coluna">
-      <div className="mb-3 flex justify-end"><Compartilhar mensagem={"Orçamento de "+ente.nome+" · "+ano} contexto="" ancora="orcamento" compacto/></div>
+      <div className="mb-3 flex justify-end"><Compartilhar mensagem={ponto?`${ente.nome}, orçamento de ${rotuloDoAno(painel,ano)}: ${reais(ponto.t)}. Veja para onde vai cada R$ 100:`:`${ente.nome}, orçamento de ${rotuloDoAno(painel,ano)}. Veja para onde vai cada R$ 100:`} contexto="" ancora="orcamento" compacto/></div>
       <label className={ROTULO} htmlFor="dn-ente" style={{ color: "var(--tinta-3)" }}>Quem gasta</label>
       <span className="dn-seletor-ente">
         <select id="dn-ente" value={sigla ?? "BR"} onChange={(e) => setSigla(e.target.value === "BR" ? null : e.target.value)}>
@@ -563,7 +563,7 @@ function DetalheItem({
           <h3 className="dn-detalhe-nome">{nomeDoItem(id)}</h3>
           <div className="dn-detalhe-familia"><i className={`dn-q dn-f-${item.familia}`} />{NOME_FAMILIA[item.familia]}</div>
         </div>
-        <Compartilhar mensagem={`${nomeDoItem(id)} · ${ente.nome} · ${ano}`} contexto="" ancora="orcamento-detalhe" compacto/>
+        <Compartilhar mensagem={`${ente.nome}, orçamento de ${rotuloDoAno(painel,ano)}: R$ ${deCem(v,ponto.t)} de cada R$ 100 vão para ${nomeDoItem(id)} (${reais(v)}). Veja o resto:`} contexto="" ancora="orcamento-detalhe" compacto/>
         <button type="button" className="dn-fechar" aria-label="Fechar detalhe" onClick={aoFechar}>×</button>
       </div>
       <div className="dn-detalhe-numero">

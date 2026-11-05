@@ -5,6 +5,12 @@ export function mandatoDoPerfil<T extends MandatoPerfil>(mandatos:T[],pessoaId:s
   return proprios.find(m=>m.id===pedido)??proprios[0];
 }
 
+/** O título e a descrição da página de um presidente, com os mandatos dele. */
+export function metaDoPerfil(mandatos:{nome:string}[]):{titulo:string;descricao:string} {
+  const nome=mandatos[0]?.nome??'';
+  return {titulo:`Governo ${nome}: economia e indicadores por mandato`,descricao:`Explore os ${mandatos.length} mandato${mandatos.length>1?'s':''} de ${nome}, com indicadores oficiais, histórico e comparações entre governos.`};
+}
+
 /** Traduz os links já compartilhados, sem assumir igualdade entre IDs de séries. */
 export function migrarLinkPerfil(url:URL,mandatos:MandatoPerfil[],series:{id:string;origem:string}[]):URL|null {
   const pessoa=url.pathname.match(/^\/presidente\/([^/]+)$/)?.[1];

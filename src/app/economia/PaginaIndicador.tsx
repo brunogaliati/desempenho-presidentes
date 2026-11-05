@@ -1,5 +1,7 @@
 import { DetalhesCompartilhaveis } from "@/components/DetalhesCompartilhaveis";
+import { Trilha } from "@/app/economia/Trilha";
 import { TituloCompartilhavel } from "@/components/TituloCompartilhavel";
+import { FraseDaPagina } from "@/components/FraseDaPagina";
 import Link from "next/link";
 import { jsonLd, URL_SITE } from "@/lib/seo";
 import { catalogoEconomia, PAGINAS_ECONOMIA, rotaEconomia } from "@/lib/catalogoEconomia";
@@ -17,6 +19,17 @@ export function resumoIndicador(d: DadosPaginaEconomia): string {
   if (d.pagina.id === "gasolina") return `Em ${referencia}, o preço médio de revenda da gasolina comum ${local} foi de ${reais(d.ultimo.valor)} por litro. É a última média mensal disponível, em valores nominais.`;
   if (d.trimestral) return `No ${referencia}, a taxa de desocupação ${local} foi de ${numero(d.ultimo.valor,1)}%. A comparação entre estados usa esse mesmo trimestre civil da PNAD Contínua.`;
   return `A taxa de desemprego no Brasil foi de ${numero(d.ultimo.valor,1)}% no trimestre móvel encerrado em ${referencia}, último dado disponível da PNAD Contínua. A taxa mede a desocupação entre as pessoas na força de trabalho.`;
+}
+
+/** A frase do compartilhar: o número de agora e o de um ano antes, na mesma medida. */
+function fraseIndicador(d: DadosPaginaEconomia): string {
+  const moeda = d.pagina.id === "gasolina", local = d.pagina.territorio?.localizacao ?? "no Brasil";
+  const texto = (v: number) => moeda ? reais(v) : `${numero(v,1)}%`;
+  const antes = d.principal.pontos.find((p) => p.mes === deslocarMes(d.ultimo.mes,-12))?.valor;
+  const umAnoAntes = antes === null || antes === undefined ? "" : `; um ano antes, ${texto(antes)}`;
+  const quando = rotuloPeriodoPublico(d.ultimo.mes,d.trimestral);
+  if (moeda) return `Gasolina comum ${local}: ${texto(d.ultimo.valor)} por litro em ${quando}${umAnoAntes}. Compare os estados:`;
+  return `Desemprego ${local}: ${texto(d.ultimo.valor)} ${d.trimestral ? `no ${quando}` : `no trimestre encerrado em ${quando}`}${umAnoAntes}. Compare os estados:`;
 }
 
 function TabelaHistorica({d,completa=false}:{d:DadosPaginaEconomia;completa?:boolean}) {
@@ -51,10 +64,10 @@ export function PaginaIndicador({dados:d}:{dados:DadosPaginaEconomia}) {
     {"@type":"WebPage","@id":`${url}#pagina`,url,name:d.pagina.titulo,inLanguage:"pt-BR",dateModified:d.revisadoEm,isPartOf:{"@id":`${URL_SITE}/#site`},mainEntity:{"@id":`${url}#dados`}},
     {"@type":"Dataset","@id":`${url}#dados`,url,name:d.pagina.titulo,description:resumoIndicador(d),inLanguage:"pt-BR",dateModified:d.revisadoEm,creator:{"@id":`${URL_SITE}/#organizacao`},isBasedOn:d.fonteUrl,spatialCoverage:d.pagina.territorio ? {"@type":uf ? "City" : "State",name:d.territorio,identifier:d.pagina.territorio.codigo,containedInPlace:uf ? {"@type":"State",name:uf.nome,identifier:uf.codigo,containedInPlace:{"@type":"Country",name:"Brasil"}} : {"@type":"Country",name:"Brasil"}} : d.territorio,temporalCoverage:`${d.principal.pontos[0].mes}-01/${d.ultimo.mes}-01`,variableMeasured:{"@type":"PropertyValue",name:moeda ? "Preço médio de revenda da gasolina comum" : "Taxa de desocupação",unitText:moeda ? "BRL/litro" : "%"}},
   ]};
-  return <main className={`${styles.pagina} mx-auto max-w-6xl pb-20`}>
+  return <main className={`${styles.pagina} mx-auto max-w-6xl pb-20`}><FraseDaPagina texto={fraseIndicador(d)}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:jsonLd(schema)}} />
     <header>
-      <nav aria-label="Navegação estrutural" className="flex flex-wrap gap-3 text-sm text-[var(--tinta-2)]"><Link href="/explorar">Explorar dados</Link><span aria-hidden="true">/</span>{pai && <><Link href={rotaEconomia(pai)}>{pai.rotulo}</Link><span aria-hidden="true">/</span></>}{paginaUf && <><Link href={rotaEconomia(paginaUf)}>{paginaUf.rotulo}</Link><span aria-hidden="true">/</span></>}<span aria-current="page">{d.pagina.rotulo}{uf ? ` (${uf.sigla})` : ""}</span></nav>
+      <Trilha itens={[{nome:'Explorar dados',href:'/explorar'},...(pai?[{nome:pai.rotulo,href:rotaEconomia(pai)}]:[]),...(paginaUf?[{nome:paginaUf.rotulo,href:rotaEconomia(paginaUf)}]:[]),{nome:`${d.pagina.rotulo}${uf?` (${uf.sigla})`:''}`}]}/>
       <h1 className="mt-10 text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">{d.pagina.titulo}</h1>
       <p className="mb-5 mt-5 max-w-prose text-lg leading-relaxed">{resumoIndicador(d)}</p>
       {d.historicoPreservado && <p role="status" className="my-4 max-w-prose leading-relaxed"><strong>Histórico preservado.</strong> A fonte possui referências até {rotuloPeriodoPublico(d.referenciaFonte,d.trimestral)}. Este recorte mantém a última janela consistente, até {referencia}; ausência não foi convertida em zero.</p>}
@@ -82,7 +95,7 @@ export function PaginaIndicador({dados:d}:{dados:DadosPaginaEconomia}) {
     </section>}
     <section id="tabela" className="vidro" data-lustro="fixo">
       <TituloCompartilhavel className="font-semibold">Histórico de {moeda ? "preços da gasolina" : "desocupação"} · {d.territorio}</TituloCompartilhavel>
-      <TabelaHistorica d={d}/><DetalhesCompartilhaveis className="mt-4"><summary className="cursor-pointer py-2 font-medium">Ver a série completa desde {rotuloPeriodoPublico(d.principal.pontos[0].mes,estados)}</summary><TabelaHistorica d={d} completa /></DetalhesCompartilhaveis>
+      <TabelaHistorica d={d}/><DetalhesCompartilhaveis variante="acao" className="mt-4"><summary>Ver a série completa desde {rotuloPeriodoPublico(d.principal.pontos[0].mes,estados)}</summary><TabelaHistorica d={d} completa /></DetalhesCompartilhaveis>
     </section>
     <section id="fontes" className="vidro" data-lustro="fixo">
       <TituloCompartilhavel className="font-semibold">Fontes e limites da comparação</TituloCompartilhavel>

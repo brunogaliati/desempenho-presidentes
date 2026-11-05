@@ -1,5 +1,7 @@
 import { DetalhesCompartilhaveis } from "@/components/DetalhesCompartilhaveis";
+import { Trilha } from "@/app/economia/Trilha";
 import { TituloCompartilhavel } from "@/components/TituloCompartilhavel";
+import { FraseDaPagina } from "@/components/FraseDaPagina";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { carregarInflacao } from "@/lib/inflacao";
@@ -38,10 +40,10 @@ export default async function Inflacao() {
       },
     ],
   };
-  return <main className={`${styles.pagina} mx-auto max-w-6xl pb-20`}>
+  return <main className={`${styles.pagina} mx-auto max-w-6xl pb-20`}><FraseDaPagina texto={`IPCA de ${pct(ultimo.mensal)} em ${mesPorExtenso(ultimo.mes)}${ultimo.dozeMeses!==null?` e ${pct(ultimo.dozeMeses)} em 12 meses`:""}. Veja quanto os preços mudaram no período que quiser:`}/>
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
     <header className="border-b border-[var(--borda)] py-5">
-      <nav aria-label="Navegação estrutural" className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-[var(--tinta-2)]"><Link href="/explorar">Explorar dados</Link><span aria-hidden="true">/</span><span aria-current="page">Inflação</span></nav>
+      <Trilha itens={[{nome:'Explorar dados',href:'/explorar'},{nome:'Inflação'}]}/>
       <h1 className="mt-10 max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">Inflação: IPCA mensal e acumulado</h1>
       <p className="mb-5 mt-5 max-w-prose text-lg leading-relaxed">Em <strong>{mesPorExtenso(ultimo.mes)}</strong>, último mês disponível, o IPCA variou <strong>{pct(ultimo.mensal)}</strong>.
         {ultimo.dozeMeses !== null ? <> Nos 12 meses encerrados nessa referência, a inflação acumulou <strong>{pct(ultimo.dozeMeses)}</strong>.</> : " O acumulado em 12 meses ainda não tem cobertura completa."}
@@ -66,7 +68,7 @@ export default async function Inflacao() {
           <tbody>{historico.slice(-24).reverse().map((r) => <tr key={r.mes}><th scope="row">{mesPorExtenso(r.mes)}</th><td>{pct(r.mensal)}</td><td>{pct(r.ano)}</td><td>{pct(r.dozeMeses)}</td></tr>)}</tbody>
         </table>
       </div>
-      <DetalhesCompartilhaveis className="mt-5"><summary className="cursor-pointer py-2 font-medium">Ver todos os meses desde {mesPorExtenso(historico[0].mes)}</summary>
+      <DetalhesCompartilhaveis variante="acao" className="mt-5"><summary>Ver todos os meses desde {mesPorExtenso(historico[0].mes)}</summary>
         <div className={styles.tabelaRolagem} tabIndex={0} role="region" aria-label="Histórico mensal completo do IPCA"><table>
           <caption>Série mensal completa do recorte, em porcentagem; indisponível indica falta de cobertura</caption><thead><tr><th scope="col">Referência</th><th scope="col">No mês</th><th scope="col">No ano</th><th scope="col">Em 12 meses</th></tr></thead>
           <tbody>{[...historico].reverse().map((r) => <tr key={r.mes}><th scope="row">{mesPorExtenso(r.mes)}</th><td>{pct(r.mensal)}</td><td>{pct(r.ano)}</td><td>{pct(r.dozeMeses)}</td></tr>)}</tbody>

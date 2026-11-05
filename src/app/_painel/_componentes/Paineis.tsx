@@ -1,6 +1,7 @@
 "use client";
 
 import { comSinal, numero } from "@/lib/formatar";
+import estilosDetalhes from "@/components/Detalhes.module.css";
 
 import { DECISOES_EXEMPLO, TIPOS_EMENDA } from "../_dados/exemplos";
 import type { AbaId, DadosPainel, ItemFeed, Leitura, Municipio, UF } from "../_dados/tipos";
@@ -481,7 +482,7 @@ function FichaCongresso({ dados, uf }: { dados: DadosPainel; uf: UF }) {
           </li>
         ))}
       </ul>
-      <details className="mt-1.5 text-xs">
+      <details className={`${estilosDetalhes.compacto} mt-1.5 text-xs`}>
         <summary className="cursor-pointer" style={{ color: "var(--serie)" }}>
           Ver os {uf.deputados.length} deputados
         </summary>

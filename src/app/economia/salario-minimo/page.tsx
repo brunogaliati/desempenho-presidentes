@@ -1,5 +1,7 @@
 import { DetalhesCompartilhaveis } from "@/components/DetalhesCompartilhaveis";
+import { Trilha } from "@/app/economia/Trilha";
 import { TituloCompartilhavel } from "@/components/TituloCompartilhavel";
+import { FraseDaPagina } from "@/components/FraseDaPagina";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { carregarSalarioMinimo } from "@/lib/salarioMinimo";
@@ -48,12 +50,10 @@ export default async function SalarioMinimo() {
     ],
   };
   return (
-    <main className={`${styles.pagina} mx-auto max-w-6xl pb-20`}>
+    <main className={`${styles.pagina} mx-auto max-w-6xl pb-20`}><FraseDaPagina texto={`Salário mínimo de ${reais(ultimo.nominal)} em ${mesPorExtenso(ultimo.mes)}. Veja os reajustes e o poder de compra desde 1995:`}/>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <header className="border-b border-[var(--borda)] py-5">
-        <nav aria-label="Navegação estrutural" className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-[var(--tinta-2)]">
-          <Link href="/explorar">Explorar dados</Link><span aria-hidden="true">/</span><span aria-current="page">Salário mínimo</span>
-        </nav>
+        <Trilha itens={[{nome:'Explorar dados',href:'/explorar'},{nome:'Salário mínimo'}]}/>
         <h1 className="mt-10 max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-5xl">Salário mínimo e poder de compra</h1>
         <p className="mb-5 mt-5 max-w-prose text-lg leading-relaxed">
           O salário mínimo nacional registrado em <strong>{mesPorExtenso(ultimo.mes)}</strong> é de <strong>{reais(ultimo.nominal)} por mês</strong>.
@@ -87,7 +87,7 @@ export default async function SalarioMinimo() {
       <section id="reajustes" className="vidro border-t border-[var(--borda)] py-9" data-lustro="fixo">
         <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">Quando o salário mínimo mudou?</TituloCompartilhavel>
         <p className="my-3 max-w-prose leading-relaxed text-[var(--tinta-2)]">A série mensal preserva mudanças fora de janeiro, como as de janeiro e maio de 2023. O primeiro registro é o início do recorte; as demais linhas indicam mudanças do valor nominal.</p>
-        <DetalhesCompartilhaveis><summary className="cursor-pointer py-2 font-medium">Ver todos os registros de mudança desde 1995</summary>
+        <DetalhesCompartilhaveis variante="acao"><summary>Ver todos os registros de mudança desde 1995</summary>
           <div className={styles.tabelaRolagem} tabIndex={0} role="region" aria-label="Reajustes do salário mínimo">
             <table><caption>Mês de registro na série do Banco Central</caption><thead><tr><th scope="col">Mês</th><th scope="col">Salário mínimo</th></tr></thead>
               <tbody>{[...reajustes].reverse().map((r) => <tr key={r.mes}><th scope="row">{mesPorExtenso(r.mes)}</th><td>{reais(r.nominal)}</td></tr>)}</tbody>

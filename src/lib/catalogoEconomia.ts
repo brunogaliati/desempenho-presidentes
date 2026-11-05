@@ -62,6 +62,14 @@ const UFS_PUBLICADAS: Omit<RecortePublicado, "indicador">[] = [
   { codigo: "17", nome: "Tocantins", slug: "tocantins", localizacao: "no Tocantins" },
 ];
 
+const LOCAL_UF = new Map(UFS_PUBLICADAS.map((u) => [u.slug, u.localizacao ?? `em ${u.nome}`]));
+/** "na Bahia", "em Goiás", "no estado de São Paulo". */
+export const ufEm = (uf: { slug: string; nome: string }) => LOCAL_UF.get(uf.slug) ?? `em ${uf.nome}`;
+/** "da Bahia", "de Goiás", "do estado de São Paulo". */
+export const ufDe = (uf: { slug: string; nome: string }) => ufEm(uf).replace(/^no /, "do ").replace(/^na /, "da ").replace(/^em /, "de ");
+/** "para a Bahia", "para Goiás", "para o estado de São Paulo". */
+export const ufPara = (uf: { slug: string; nome: string }) => ufEm(uf).replace(/^no /, "para o ").replace(/^na /, "para a ").replace(/^em /, "para ");
+
 /** Expansão aprovada das duas famílias. O carregador ainda exige cobertura real por UF. */
 export const RECORTES_PUBLICADOS: RecortePublicado[] = [
   ...UFS_PUBLICADAS.flatMap((uf) => (["gasolina", "desemprego"] as const).map((indicador) => ({ ...uf, indicador }))),

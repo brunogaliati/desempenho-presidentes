@@ -17,7 +17,7 @@ import type { Benchmark, Direcao, Indicador } from "@/types/dados";
 
 import { criarCsv, governosNoPeriodo, recortar, variacaoDesdeReferencia } from "../_dados/economiaModelo";
 import type { Expectativa } from "../_dados/panoramaModelo";
-import { recebidoNaLista, recebidoNoPainel, ritmoDesdeORecebido, ritmoNoMandato, type Recebido } from "../_dados/mandatoRecorte";
+import { recebidoNaLista, recebidoNoPainel, ritmoDesdeORecebido, type Recebido } from "../_dados/mandatoRecorte";
 import type { DadosPainel, Governos, IndicadorMandato, Leitura, MandatoVisual, SerieEconomia, UF } from "../_dados/tipos";
 import {
   corDoSentido,
@@ -33,9 +33,9 @@ import {
   ultimoDado,
   mandatosNaSerie,
   vereditosPorMandato,
-  emPercentual,
   type Regua,
 } from "./formatos";
+import { fraseDaLeitura, fraseDaSerie, ritmoNaRegua } from "./frases";
 import { Faisca } from "./GraficoLinha";
 import { PilulaVeredito, placarDoMandato, type ItemPlacar } from "./Placar";
 import { Bloco, Opcoes, ROTULO } from "./Bloco";
@@ -202,6 +202,14 @@ export function TerminalEconomia({ dados, atual, foco, setFoco, sigla, leituraFo
   const uf = sigla ? (dados.ufs.find((u) => u.sigla === sigla) ?? null) : null;
   const lEstado = uf ? (leituras.find((l) => l.id === leituraFoco) ?? null) : null;
   const serieDaOrigem = (origem: string) => series.find((x) => x.origem === origem);
+  const fraseDe = (x: SerieEconomia) =>
+    fraseDaSerie(x, {
+      governo: mandatos.find((m) => m.id === dados.foco.id)?.nomeCurto,
+      mudancaNoPlacar: placar.porSerie.get(x.id)?.mudanca,
+      completa: atual.economia.series.find((c) => c.id === x.id),
+      mandatos: atual.economia.mandatos,
+      foco: dados.foco.id,
+    });
   // Escolher uma série nacional tira o gráfico da medida do estado.
   const escolherSerie = (id: string) => {
     setFoco(id);
@@ -240,7 +248,7 @@ export function TerminalEconomia({ dados, atual, foco, setFoco, sigla, leituraFo
             aoEscolherSerie={escolherSerie}
           />
         ) : (
-          <Cotacoes className="col-span-12" series={series} doPlacar={placar.porSerie} ativa={s.id} aoEscolher={escolherSerie} encerrado={!dados.foco.emCurso} />
+          <Cotacoes className="col-span-12" series={series} doPlacar={placar.porSerie} ativa={s.id} aoEscolher={escolherSerie} encerrado={!dados.foco.emCurso} fraseDe={fraseDe} />
         )}
 
         {uf && lEstado ? (
@@ -257,6 +265,7 @@ export function TerminalEconomia({ dados, atual, foco, setFoco, sigla, leituraFo
             item={placar.porSerie.get(s.id)}
             expectativas={dados.economia.complemento.expectativas}
             hoje={hoje}
+            frase={fraseDe(s)}
           />
         )}
         <div className="col-span-12 flex min-w-0 flex-col gap-3 xl:col-span-4">
@@ -327,6 +336,7 @@ export function Cotacoes({
   className,
   detalhe = "o último dado contra o que o governo recebeu na posse · toque para ver o gráfico",
   encerrado = false,
+  fraseDe,
 }: {
   series: SerieEconomia[];
   doPlacar: Map<string, ItemPlacar>;
@@ -336,19 +346,21 @@ export function Cotacoes({
   detalhe?: string;
   /** Um governo que já acabou: o painel fala do fim dele, não de agora. */
   encerrado?: boolean;
+  /** A frase que acompanha o recorte de cada série. */
+  fraseDe?: (s: SerieEconomia) => string;
 }) {
   return (
     <Bloco id="agora" titulo={encerrado ? "Brasil no fim do mandato" : "Brasil agora"} detalhe={detalhe} className={className}>
       <div role="radiogroup" aria-label="Série no gráfico" className="-mx-1 grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-5 2xl:grid-cols-10">
         {series.map((x) => (
-          <Cotacao key={x.id} s={x} item={doPlacar.get(x.id)} ativa={x.id === ativa} aoEscolher={() => aoEscolher(x.id)} />
+          <Cotacao key={x.id} s={x} item={doPlacar.get(x.id)} ativa={x.id === ativa} aoEscolher={() => aoEscolher(x.id)} frase={fraseDe?.(x)} />
         ))}
       </div>
     </Bloco>
   );
 }
 
-function Cotacao({ s, item, ativa, aoEscolher }: { s: SerieEconomia; item: ItemPlacar | undefined; ativa: boolean; aoEscolher: () => void }) {
+function Cotacao({ s, item, ativa, aoEscolher, frase }: { s: SerieEconomia; item: ItemPlacar | undefined; ativa: boolean; aoEscolher: () => void; frase?: string }) {
   const agora = ultimoDado(s)!;
   const antes = recebido(s);
   // Sem item no placar, a mesma conta dele; PIB e renda vêm do placar, que
@@ -394,7 +406,7 @@ function Cotacao({ s, item, ativa, aoEscolher }: { s: SerieEconomia; item: ItemP
         {s.parcial ? ", parcial" : ""}
       </span>
     </button>
-    <div className="compartilhar-metrica"><Compartilhar mensagem={s.rotulo+": "+formatar(agora.valor,s.formato)+" · "+referencia(s,agora.data)} ancora="de-perto" filtros={{"r.serie":s.id,"r.leitura":null,"r.faixa":"mandato","r.historico.tabela":false}} compacto/></div>
+    <div className="compartilhar-metrica"><Compartilhar mensagem={frase??s.rotulo+": "+formatar(agora.valor,s.formato)+" · "+referencia(s,agora.data)} contexto={frase?"":undefined} ancora="de-perto" filtros={{"r.serie":s.id,"r.leitura":undefined,"r.faixa":undefined,"r.historico.tabela":undefined}} compacto/></div>
     </div>
   );
 }
@@ -414,6 +426,7 @@ export function Historico({
   expectativas,
   hoje,
   className,
+  frase,
 }: {
   id: string;
   s: SerieEconomia;
@@ -426,6 +439,8 @@ export function Historico({
   expectativas: Expectativa[];
   hoje: string;
   className: string;
+  /** A frase que acompanha o recorte; sem ela, o nome da série. */
+  frase?: string;
 }) {
   const [tabela, setTabela] = useEstadoCompartilhavel("historico.tabela", false, opcaoCompartilhada([true,false]));
   const inicio = s.cobertura.inicio ?? s.datas[0];
@@ -473,6 +488,8 @@ export function Historico({
       titulo={s.rotulo}
       detalhe={s.fonte}
       className={className}
+      mensagemCompartilhamento={frase}
+      contextoCompartilhamento={frase ? "" : undefined}
       acao={
         <div className="flex flex-wrap items-center gap-2">
           <Opcoes opcoes={opcoes} ativa={f} aoEscolher={setFaixa} rotulo="Período do gráfico" />
@@ -715,18 +732,6 @@ export interface Ritmo {
   leitura: string | null;
   ativa: boolean;
   aoEscolher?: () => void;
-}
-
-/**
- * O ritmo com a régua do placar, para os dois não discordarem: do último dado antes da
- * posse ao último dado do mandato. Taxas em pontos por ano, valores em % ao ano. PIB e
- * renda já são crescimento e não entram: no placar eles vêm do indicador do mandato.
- */
-function ritmoNaRegua(s: SerieEconomia | undefined, posse: string, ate?: string | null) {
-  if (!s || s.formato === "pctsinal1") return null;
-  const pontos = !emPercentual(s.formato);
-  const r = ritmoNoMandato(s.datas, s.valores, posse, { pontos, ate });
-  return r && { ...r, pontos };
 }
 
 /**
@@ -1486,7 +1491,7 @@ function GovernoAGoverno({
       id="governo-a-governo"
       titulo="Governo a governo"
       contextoCompartilhamento=""
-      mensagemCompartilhamento={mandatoFixo?"Agregados econômicos · "+(mandatos.find(m=>m.id===mandatoFixo)?.nomeCurto??"")+" · "+(mandatos.find(m=>m.id===mandatoFixo)?.inicio.slice(0,4)??""):"Agregados econômicos, governo a governo"}
+      mensagemCompartilhamento={mandatoFixo?`A economia no governo ${mandatos.find(m=>m.id===mandatoFixo)?.nomeCurto??""} (${mandatos.find(m=>m.id===mandatoFixo)?.inicio.slice(0,4)??""}) contra os outros: inflação, desemprego, dólar, dívida e mais, com a mesma régua. Compare:`:"A economia governo a governo: inflação, desemprego, dólar, dívida e mais, com a mesma régua. Compare:"}
       detalhe={
         uf
           ? `ritmo por ano · do país, mesmo com ${uf.sigla} escolhido: por estado os dados começam em 2021`
@@ -2313,7 +2318,7 @@ function HistoricoEstado({
     ["Máximo", formatar(maior?.v, l.formato), maior ? l.periodos[maior.i].rotulo : null],
   ];
   return (
-    <Bloco id={id} titulo={`${curto(l)} ${uf.emNome}`} detalhe={l.fonte} className={className}>
+    <Bloco id={id} titulo={`${curto(l)} ${uf.emNome}`} detalhe={l.fonte} className={className} contextoCompartilhamento="" mensagemCompartilhamento={fraseDaLeitura(l, uf, ultimo?.i ?? l.periodos.length - 1, dados.economia.mandatos.find((m) => m.id === dados.foco.id)?.nomeCurto, posicao ? `${posicao.texto} entre ${posicao.total} UFs` : "")}>
       <GraficoEstado l={l} uf={uf} ufs={dados.ufs} governos={dados.governos} hoje={hoje} />
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t pt-3 sm:grid-cols-4" style={{ borderColor: "var(--borda)" }}>
         {numeros.map(([rotulo, valor, quando]) => (

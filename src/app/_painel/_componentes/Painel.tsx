@@ -7,10 +7,15 @@ import { destinoPainel } from "@/lib/rotasPainel";
 import { TEMAS_PAINEL, temaDoCaminho } from "@/lib/temasPainel";
 import { mandatoDoPerfil, migrarLinkPerfil } from "@/lib/perfisPainel";
 import { ContextoPerfil } from "./ContextoPerfil";
+import { ContextoPresidente, TrilhaPerfil } from "./PerfilPresidente";
+import estilosPerfil from "./PerfilPresidente.module.css";
 import { Compartilhar } from "@/components/Compartilhar";
 import { RecortesCompartilhaveis } from "@/components/RecortesCompartilhaveis";
+import { fraseDoPlacar } from "@/lib/fraseCompartilhamento";
+import { placarDaEconomia } from "./Placar";
 
-import { focoDoMandato, recortarAoMandato, TERMO_2015 } from "../_dados/mandatoRecorte";
+import { mandatoDoEndereco, recortarAoMandato, TERMO_2015 } from "../_dados/mandatoRecorte";
+import { capaDoLink } from "./capaRecorte";
 import type { AbaId, DadosPainel } from "../_dados/tipos";
 import { AbaDinheiro } from "./AbaDinheiro";
 import { AbaAmbiente } from "./AbaAmbiente";
@@ -47,12 +52,19 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
   const presidentesDe2015 = mandatos.filter(m=>m.inicio>="2015"&&m.inicio<"2019").map(m=>m.id);
   const pedido=parametros.get('mandato');
   const perfil=pessoaId?mandatoDoPerfil(mandatos,pessoaId,pedido):undefined;
-  let mandatoId=perfil?.id??(pedido&&focoDoMandato(mandatos,pedido)?pedido:emCurso);
-  if(sigla&&presidentesDe2015.includes(mandatoId))mandatoId=TERMO_2015;
-  if(!sigla&&mandatoId===TERMO_2015)mandatoId=presidentesDe2015[0]??emCurso;
+  const mandatoId=mandatoDoEndereco(inteiros,{pessoaId,sigla,pedido});
   const presidenteAntes=useRef<string|null>(null);
   const atual=useMemo(()=>recortarAoMandato(inteiros,emCurso),[inteiros,emCurso]);
   const dados=useMemo(()=>mandatoId===emCurso?atual:recortarAoMandato(inteiros,mandatoId),[inteiros,mandatoId,emCurso,atual]);
+  // A frase do botão do painel: a contagem do placar, pela mesma conta dele. No estado, o placar é outro.
+  const fraseDoPainel=useMemo(()=>{
+    const governo=mandatos.find(m=>m.id===mandatoId)?.nomeCurto;
+    if(aba!=="economia"||sigla||!governo)return null;
+    const itens=placarDaEconomia(dados).grupos.flatMap(g=>g.itens);
+    if(!itens.length)return null;
+    const quantos=(s:string)=>itens.filter(x=>x.sentido===s).length;
+    return fraseDoPlacar({governo,periodo:`${dados.foco.posse.slice(0,4)}–${dados.foco.fim.slice(0,4)}`,bons:quantos("bom"),iguais:quantos("neutro"),ruins:quantos("ruim")});
+  },[aba,sigla,dados,mandatos,mandatoId]);
   const setMandatoId=(id:string)=>{
     const proximo=mandatos.find(m=>m.id===id);
     if(pessoaId&&proximo&&proximo.pessoaId!==pessoaId){navegar(`/presidente/${proximo.pessoaId}?mandato=${encodeURIComponent(id)}`);return;}
@@ -93,7 +105,7 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
   };
 
   return (
-    <RecortesCompartilhaveis titulo={`${sigla ? 'Governo de '+(dados.ufs.find(u=>u.sigla===sigla)?.nome??sigla) : mandatos.find(m=>m.id===mandatoId)?.nomeCurto??'Governo'} · ${dados.foco.posse.slice(0,4)}–${dados.foco.fim.slice(0,4)}`} filtros={{uf:sigla,mandato:mandatoId}}>
+    <RecortesCompartilhaveis capaDoLink={(link)=>capaDoLink(link,inteiros)} titulo={`${sigla ? 'Governo de '+(dados.ufs.find(u=>u.sigla===sigla)?.nome??sigla) : mandatos.find(m=>m.id===mandatoId)?.nomeCurto??'Governo'} · ${dados.foco.posse.slice(0,4)}–${dados.foco.fim.slice(0,4)}`} filtros={{uf:sigla,mandato:mandatoId}}>
     <PosseContext.Provider value={dados.foco.posse}>
     <ContextoPerfil.Provider value={perfil?{pessoaId:perfil.pessoaId,nome:perfil.nomeCurto}:null}>
     <div
@@ -107,9 +119,11 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
         <Cabecalho publico recorte={{uf:sigla??undefined,mandato:mandatoId}} aba={aba} aoTrocar={trocarAba} mandato={<BarraMandato dados={atual} foco={dados.foco} retrato={retrato} sigla={sigla} aba={aba} aoEscolher={setMandatoId} />} />
       </div>
 
-      <div className="mx-auto flex max-w-6xl items-center justify-end gap-4 px-2 py-1 text-xs text-[var(--tinta-2)]">
-        {perfil&&<nav aria-label="Perfil no painel" className="mr-auto"><Link href="/explorar#presidentes">Presidentes</Link> / {perfil.nomeCurto} · {perfil.mandato}º mandato</nav>}
-        <Compartilhar mensagem={perfil?`Economia no governo ${perfil.nomeCurto}`:TEMAS_PAINEL[aba].titulo} compacto/>
+      {/* Antes dos painéis de propósito: ao entrar numa rota, o Next rola até o primeiro elemento dela. Depois deles, o perfil abria no rodapé. */}
+      {children}
+      <div className={`relative z-[2] mx-auto flex items-center justify-end gap-4 py-1 text-xs text-[var(--tinta-2)] ${perfil?`px-3 ${estilosPerfil.barra}`:"max-w-6xl px-2"}`}>
+        {perfil&&<TrilhaPerfil proprios={mandatos.filter(m=>m.pessoaId===perfil.pessoaId).sort((a,b)=>a.inicio.localeCompare(b.inicio))} atual={perfil.id} aoEscolher={setMandatoId}/>}
+        <Compartilhar {...(fraseDoPainel?{contexto:"",mensagem:fraseDoPainel}:{mensagem:perfil?`${aba==="economia"?"Economia":TEMAS_PAINEL[aba].titulo} no governo ${perfil.nomeCurto}`:TEMAS_PAINEL[aba].titulo})} compacto/>
       </div>
       <main>
       {aba === "economia" && (
@@ -118,7 +132,7 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
       {aba === "ambiente" && <AbaAmbiente dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} />}
       {aba === "dinheiro" && <AbaDinheiro dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} aoEscolherMandato={setMandatoId} />}
       </main>
-      {children}
+      {perfil&&<ContextoPresidente nome={perfil.nome}/>}
 
       {aba === "economia" && <nav aria-label="Indicadores e territórios" className="mx-auto mt-6 flex max-w-6xl flex-wrap gap-5 text-sm"><Link href="/explorar">Todos os indicadores</Link><Link href="/economia/salario-minimo">Salário mínimo</Link><Link href="/economia/inflacao">Inflação</Link><Link href="/economia/desemprego">Desemprego</Link><Link href="/economia/gasolina">Gasolina</Link><Link href="/economia/municipios">Indicadores por município</Link></nav>}
       <nav aria-label="Sobre os dados" className="mx-auto mt-6 flex max-w-6xl flex-wrap gap-5 text-sm"><Link href="/metodologia">Metodologia</Link><Link href="/sobre">Sobre o projeto</Link><Link href="/correcoes">Relatar um erro</Link></nav>

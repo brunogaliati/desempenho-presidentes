@@ -115,3 +115,15 @@ test('janela pública conserva histórico de página existente quando o mês rec
  assert(!seriePublicavel(pontos,12));assert.equal(ultimaJanelaPublica(pontos,12).length,12);
  assert.deepEqual(ultimaJanelaPublica(pontos.slice(0,11),12),[]);
 });
+
+test('cada UF recebe a preposição certa nos títulos e textos',async()=>{
+ const {ufEm,ufDe,ufPara}=await import('../src/lib/catalogoEconomia.ts');
+ const uf=(nome,slug)=>({nome,slug});
+ assert.equal(ufEm(uf('Bahia','bahia')),'na Bahia');
+ assert.equal(ufDe(uf('Bahia','bahia')),'da Bahia');
+ assert.equal(ufPara(uf('Bahia','bahia')),'para a Bahia');
+ assert.equal(ufDe(uf('Goiás','goias')),'de Goiás');
+ assert.equal(ufPara(uf('Goiás','goias')),'para Goiás');
+ assert.equal(ufDe(uf('Amapá','amapa')),'do Amapá');
+ assert.equal(ufPara(uf('São Paulo','sao-paulo')),'para o estado de São Paulo');
+});

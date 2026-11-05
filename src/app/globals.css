@@ -49,19 +49,95 @@ html:has(.troca-aba) { overflow:hidden; scrollbar-gutter:stable; }
 .titulo-compartilhavel { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
 .titulo-compartilhavel > h2 { min-width:0; }
 .titulo-compartilhavel > .compartilhar-gatilho { flex-shrink:0; }
-.painel-governo.compartilhar-portal { position:fixed; inset:0; z-index:2000; pointer-events:none; background:transparent; }
-.compartilhar-menu { position:fixed; width:min(340px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); overflow:auto; pointer-events:auto; padding:20px; border-radius:20px; color:var(--tinta); background:light-dark(rgba(248,250,253,.98),rgba(23,35,45,.98)); }
-.compartilhar-topo { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:15px; }
-.compartilhar-topo > button { padding:8px; border-radius:999px; }
-.compartilhar-descricao { margin:12px 0; font-size:12px; line-height:1.5; color:var(--tinta-2); }
-.compartilhar-menu input { width:100%; min-width:0; border:1px solid var(--borda); border-radius:10px; padding:10px; font-size:12px; color:var(--tinta-2); background:var(--superficie); }
-.compartilhar-opcoes,.compartilhar-plataformas { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
-.compartilhar-opcoes button,.compartilhar-plataformas a { display:flex; align-items:center; justify-content:center; min-height:40px; padding:9px; border:1px solid var(--borda); border-radius:12px; font-size:12px; text-decoration:none; }
-.compartilhar-opcoes button:first-child { background:var(--serie); color:var(--plano); }
-.compartilhar-plataformas a:hover,.compartilhar-opcoes button:hover { filter:brightness(.94); }
-.compartilhar-menu :is(a,button,input):focus-visible { outline:2px solid var(--serie); outline-offset:2px; }
-.compartilhar-nota,.compartilhar-status { margin-top:12px; color:var(--tinta-2); font-size:11px; line-height:1.5; }
-.compartilhar-status { min-height:17px; color:var(--tinta); }
+.painel-governo.compartilhar-portal { display:contents; }
+html:has(.compartilhar-dialogo[open]) { overflow:hidden; scrollbar-gutter:stable; }
+.compartilhar-dialogo { width:min(420px,calc(100vw - 24px)); max-width:none; max-height:calc(100dvh - 24px); margin:auto; padding:0; border:0; overflow:visible; background:transparent; color:var(--tinta); }
+/* Só escurece: desfocar a tela inteira fazia o fechar levar segundos sobre as páginas com muito vidro. */
+.compartilhar-dialogo::backdrop { background:rgba(15,24,32,.52); animation:compartilhar-fundo 220ms ease-out backwards; }
+.compartilhar-dialogo[data-saindo]::backdrop { animation:compartilhar-fundo 160ms ease-in reverse forwards; }
+.compartilhar-menu { display:flex; flex-direction:column; max-height:inherit; border-radius:26px; --vidro-tinta:light-dark(#f6f9fc,#17232d); animation:compartilhar-entrada 320ms cubic-bezier(.22,1,.36,1) backwards; }
+.compartilhar-menu::before { -webkit-backdrop-filter:none; backdrop-filter:none; }
+.compartilhar-dialogo[data-saindo] .compartilhar-menu { animation:compartilhar-saida 160ms ease-in forwards; }
+.compartilhar-rolagem { min-height:0; overflow:auto; overscroll-behavior:contain; padding:18px 20px 16px; border-radius:inherit; scrollbar-width:thin; }
+.compartilhar-topo { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.compartilhar-topo h2 { font-size:17px; line-height:1.3; font-weight:600; letter-spacing:-.012em; }
+.compartilhar-topo button { display:grid; place-items:center; flex-shrink:0; width:34px; height:34px; margin:-5px -7px -5px 0; border-radius:999px; color:var(--tinta-2); transition:background-color 150ms,color 150ms; }
+.compartilhar-topo button:hover { background:var(--faixa-ativa); color:var(--tinta); }
+
+.compartilhar-previa figcaption { display:flex; align-items:baseline; justify-content:space-between; gap:12px; min-height:18px; margin-bottom:7px; font-size:12px; line-height:1.4; color:var(--tinta-3); }
+.compartilhar-previa figcaption button { flex-shrink:0; color:var(--serie); font-weight:500; }
+.compartilhar-previa figcaption button:hover { text-decoration:underline; text-underline-offset:2px; }
+/* A bolha toma a cor do destino apontado; é só o matiz, para o texto seguir legível. */
+.compartilhar-bolha { padding:5px; border-radius:19px 7px 19px 19px; background:color-mix(in srgb,var(--marca) 14%,var(--superficie)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--marca) 18%,transparent),0 10px 22px -18px color-mix(in srgb,var(--marca) 70%,transparent); transition:background-color 240ms ease,box-shadow 240ms ease; }
+.compartilhar-cartao { overflow:hidden; border-radius:15px 4px 15px 15px; background:var(--superficie); box-shadow:inset 0 0 0 1px var(--borda); }
+.compartilhar-capa { aspect-ratio:1200/630; overflow:hidden; background:var(--faixa-a); }
+.compartilhar-capa[data-estado="carregando"] { animation:esqueleto-pulso 1.1s ease-in-out infinite alternate; }
+.compartilhar-capa img { display:block; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 280ms ease; }
+.compartilhar-capa[data-estado="pronta"] img { opacity:1; }
+.compartilhar-cartao-texto { display:grid; gap:1px; padding:8px 12px 9px; min-width:0; }
+.compartilhar-cartao-texto > * { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.compartilhar-cartao-texto strong { font-size:13px; line-height:1.35; font-weight:600; }
+.compartilhar-cartao-texto span { font-size:12px; line-height:1.4; color:var(--tinta-2); }
+.compartilhar-cartao-texto small { margin-top:1px; font-size:11px; line-height:1.4; color:var(--tinta-3); }
+.compartilhar-frase { position:relative; display:block; margin-top:5px; border-radius:14px; cursor:text; transition:background-color 150ms,box-shadow 150ms; }
+.compartilhar-frase:hover { background:color-mix(in srgb,var(--superficie) 42%,transparent); }
+.compartilhar-frase:focus-within { background:var(--superficie); box-shadow:inset 0 0 0 1.5px var(--marca); }
+.compartilhar-frase textarea { display:block; width:100%; max-height:7.2em; padding:7px 30px 7px 10px; resize:none; border:0; outline:0; background:transparent; color:var(--tinta); font-size:14px; line-height:1.42; field-sizing:content; transition:opacity 200ms; }
+.compartilhar-frase textarea::placeholder { color:var(--tinta-3); }
+.compartilhar-frase svg { position:absolute; top:10px; right:10px; color:var(--tinta-3); pointer-events:none; }
+.compartilhar-bolha[data-so-link] .compartilhar-frase textarea:not(:focus) { opacity:.56; }
+
+.compartilhar-destinos { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); margin:13px -6px 0; }
+.compartilhar-destino { display:flex; flex-direction:column; align-items:center; gap:5px; min-width:0; padding:4px 0; border-radius:14px; color:var(--tinta-2); font-size:11px; line-height:1.3; text-decoration:none; transition:color 150ms; animation:compartilhar-brota 380ms cubic-bezier(.34,1.56,.64,1) backwards; animation-delay:calc(70ms + var(--i) * 32ms); }
+.compartilhar-destino:hover { color:var(--tinta); }
+.compartilhar-disco { display:grid; place-items:center; width:46px; height:46px; overflow:hidden; border-radius:50%; background:var(--cor); color:var(--cor-tinta); box-shadow:inset 0 1px 0 rgba(255,255,255,.26),0 2px 5px -2px color-mix(in srgb,var(--cor) 62%,transparent); transition:transform 190ms cubic-bezier(.34,1.56,.64,1),box-shadow 190ms ease; }
+.compartilhar-destino:hover .compartilhar-disco,.compartilhar-destino:focus-visible .compartilhar-disco { transform:translateY(-3px) scale(1.05); box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 11px 20px -9px color-mix(in srgb,var(--cor) 80%,transparent); }
+.compartilhar-destino:active .compartilhar-disco { transform:scale(.95); }
+.compartilhar-dica { min-height:17px; margin-top:7px; color:var(--tinta-2); font-size:12px; line-height:1.4; text-align:center; }
+
+.compartilhar-link { display:flex; align-items:center; gap:4px; margin-top:13px; padding:5px 5px 5px 13px; border-radius:15px; background:color-mix(in srgb,var(--superficie) 72%,transparent); box-shadow:inset 0 0 0 1px var(--borda); transition:box-shadow 200ms; }
+.compartilhar-link[data-copiado] { box-shadow:inset 0 0 0 1.5px var(--bom); }
+.compartilhar-url { flex:1; min-width:0; overflow:hidden; white-space:nowrap; color:var(--tinta-3); font-size:12.5px; line-height:1.4; -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent); -webkit-user-select:all; user-select:all; }
+.compartilhar-url strong { color:var(--tinta); font-weight:500; }
+.compartilhar-abrir { display:grid; place-items:center; flex-shrink:0; width:32px; height:32px; border-radius:50%; color:var(--tinta-2); transition:background-color 150ms,color 150ms; }
+.compartilhar-abrir:hover { background:var(--faixa-ativa); color:var(--tinta); }
+.painel-governo .compartilhar-copiar { display:inline-flex; align-items:center; justify-content:center; gap:6px; flex-shrink:0; min-width:108px; min-height:38px; margin-left:2px; padding:0 13px; border-radius:11px; font-size:13px; font-weight:600; white-space:nowrap; }
+.compartilhar-link[data-copiado] .compartilhar-copiar { --acao:var(--placar-bom); animation:compartilhar-confirma 300ms cubic-bezier(.34,1.56,.64,1); }
+.compartilhar-visto path { stroke-dasharray:24; animation:compartilhar-traco 300ms ease-out backwards; }
+.compartilhar-rodape { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-top:9px; color:var(--tinta-3); font-size:12px; line-height:1.4; }
+.compartilhar-rodape p[data-aviso] { color:var(--tinta); }
+.compartilhar-rodape button { flex-shrink:0; color:var(--serie); font-weight:500; }
+.compartilhar-rodape button:hover { text-decoration:underline; text-underline-offset:2px; }
+
+@keyframes compartilhar-fundo { from { opacity:0; } }
+@keyframes compartilhar-entrada { from { opacity:0; transform:translateY(14px) scale(.975); } }
+@keyframes compartilhar-saida { to { opacity:0; transform:translateY(8px) scale(.985); } }
+@keyframes compartilhar-sobe { from { transform:translateY(100%); } }
+@keyframes compartilhar-desce { to { transform:translateY(100%); } }
+@keyframes compartilhar-brota { from { opacity:0; transform:translateY(8px) scale(.82); } }
+@keyframes compartilhar-confirma { 40% { transform:scale(1.05); } }
+@keyframes compartilhar-traco { from { stroke-dashoffset:24; } }
+/* Altura curta: a capa vira miniatura ao lado do texto, para os destinos não saírem da tela. */
+@media(max-height:680px) {
+  .compartilhar-cartao { display:grid; grid-template-columns:104px minmax(0,1fr); }
+  .compartilhar-capa { aspect-ratio:auto; height:100%; min-height:68px; }
+}
+/* Celular: folha presa à base, na largura toda. */
+@media(max-width:640px) {
+  .compartilhar-dialogo { width:100vw; max-height:calc(100dvh - 20px); margin:auto 0 0; }
+  .compartilhar-menu { border-radius:26px 26px 0 0; animation-name:compartilhar-sobe; animation-duration:340ms; }
+  .compartilhar-dialogo[data-saindo] .compartilhar-menu { animation-name:compartilhar-desce; }
+  .compartilhar-rolagem { padding:18px 16px calc(14px + env(safe-area-inset-bottom)); }
+  .compartilhar-destinos { margin-inline:-8px; }
+  .compartilhar-disco { width:44px; height:44px; }
+}
+@media(pointer:coarse) {
+  .compartilhar-topo button { width:44px; height:44px; margin-block:-10px; }
+  .compartilhar-abrir { width:40px; height:40px; }
+  .painel-governo .compartilhar-copiar { min-height:44px; }
+  .compartilhar-frase textarea { font-size:16px; }
+  .compartilhar-previa figcaption button,.compartilhar-rodape button { min-height:24px; }
+}
 [data-compartilhado="true"] { outline:2px solid var(--ouro-forte,var(--serie)); outline-offset:4px; }
 .compartilhar-metrica { position:absolute; right:4px; bottom:3px; opacity:0; }
 .grupo-cotacao:hover .compartilhar-metrica,.grupo-cotacao:focus-within .compartilhar-metrica { opacity:1; }

@@ -1,6 +1,7 @@
 import { imagemCompartilhamento } from "@/components/ImagemCompartilhamento";
 import { UFS_MUNICIPAIS } from "@/lib/catalogoMunicipal";
 import { buscarHubEconomia, tituloHub, resumoHub } from "@/lib/hubsEconomia";
+import { imagemEmCache } from "@/lib/imagemEmCache";
 
 const capas: Record<string, [string,string]> = {
   '/': ['O Brasil em dados,\ngoverno a governo.', 'Indicadores oficiais, séries históricas e comparações entre mandatos e territórios.'],
@@ -14,7 +15,11 @@ const capas: Record<string, [string,string]> = {
 };
 
 export const revalidate = 3600;
-export async function GET(request: Request) {
+export function GET(request: Request) {
+  return imagemEmCache(request, () => gerar(request));
+}
+
+async function gerar(request: Request) {
   const caminho = new URL(request.url).searchParams.get('pagina') ?? '/';
   if (capas[caminho]) return imagemCompartilhamento({ titulo: capas[caminho][0], descricao: capas[caminho][1] });
   const diretorio = caminho.match(/^\/economia\/municipios\/([^/]+)$/);

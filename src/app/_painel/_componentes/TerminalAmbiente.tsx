@@ -19,6 +19,7 @@ import { NavTerminal } from "./NavTerminal";
 import { Numero } from "./PainelEconomia";
 import { PilulaVeredito, type ItemPlacar } from "./Placar";
 import { linhaDaMedida, placarDoBioma, placarDoBrasilInteiro, type LinhaTerritorio, type PlacarAmbiente } from "./placarAmbiente";
+import { fraseDaSerie } from "./frases";
 import { Cotacoes, EsteGoverno, Estados, Fontes, Historico, tintaNaClasse, type Ritmo } from "./TerminalEconomia";
 
 /**
@@ -104,6 +105,14 @@ export function TerminalAmbiente({ dados, atual, foco, setFoco, placar, sigla, b
   const s = todas.find((x) => x.id === foco) ?? series[0];
   if (!s) return null;
   const hoje = dados.hoje.slice(0, 10);
+  const fraseDe = (x: SerieEconomia) =>
+    fraseDaSerie(x, {
+      governo: mandatos.find((m) => m.id === dados.foco.id)?.nomeCurto,
+      mudancaNoPlacar: porId.get(x.id)?.mudanca,
+      completa: atual.ambiente.series.find((c) => c.id === x.id),
+      mandatos: atual.economia.mandatos,
+      foco: dados.foco.id,
+    });
 
   return (
     <section className="terminal-tema relative -mx-3" aria-label="O meio ambiente em detalhe">
@@ -117,6 +126,7 @@ export function TerminalAmbiente({ dados, atual, foco, setFoco, placar, sigla, b
           aoEscolher={setFoco}
           encerrado={!dados.foco.emCurso}
           detalhe="o último dado contra o que o governo recebeu na posse · a fiscalização fica sem cor · toque para ver o gráfico"
+          fraseDe={fraseDe}
         />
 
         <Historico
@@ -130,6 +140,7 @@ export function TerminalAmbiente({ dados, atual, foco, setFoco, placar, sigla, b
           item={porId.get(s.id)}
           expectativas={[]}
           hoje={hoje}
+          frase={fraseDe(s)}
         />
         <EsteGoverno
           className="col-span-12 xl:col-span-4"

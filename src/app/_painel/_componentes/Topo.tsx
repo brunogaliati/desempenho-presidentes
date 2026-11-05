@@ -86,7 +86,7 @@ export function Cabecalho({
         <div className="cabecalho-acoes">
           <Link href="/explorar" className={`acao-cabecalho ${styles.explorar}`} aria-current={explorarAtivo ? "page" : undefined}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
-              <circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4" />
+              <rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>
             </svg>
             <span>Explorar dados</span>
           </Link>

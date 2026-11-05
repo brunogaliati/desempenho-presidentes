@@ -1,0 +1,47 @@
+/*
+ * O expansor do site. Substitui o triângulo nativo do navegador pelo mesmo
+ * chevron dos seletores, que gira ao abrir.
+ *
+ * .detalhes: linha de pergunta, com fio entre as vizinhas.
+ * .acao: pílula que revela uma lista ou tabela longa.
+ * .compacto: nota miúda dentro dos painéis.
+ */
+.detalhes, .acao, .compacto {
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+:is(.detalhes, .acao, .compacto) > summary { list-style:none; cursor:pointer; touch-action:manipulation; }
+:is(.detalhes, .acao, .compacto) > summary::-webkit-details-marker { display:none; }
+:is(.detalhes, .acao, .compacto) > summary::after {
+  content:""; flex:none; background:var(--tinta-2);
+  -webkit-mask:var(--chevron) center/contain no-repeat; mask:var(--chevron) center/contain no-repeat;
+  transition:transform 220ms cubic-bezier(.22,1,.36,1);
+}
+:is(.detalhes, .acao, .compacto)[open] > summary::after { transform:rotate(180deg); }
+:is(.detalhes, .acao) > summary:focus-visible { outline:2px solid var(--serie); outline-offset:2px; }
+
+.detalhes { border-top:1px solid var(--borda); }
+.detalhes:not(:has(+ .detalhes)) { border-bottom:1px solid var(--borda); }
+.detalhes > summary { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:52px; padding:12px 0; font-weight:500; line-height:1.4; border-radius:6px; transition:color 150ms; }
+.detalhes > summary::after { width:18px; height:18px; }
+.detalhes > summary:hover { color:var(--serie); }
+.detalhes > summary:hover::after { background:var(--serie); }
+.detalhes .compartilhar { display:flex; justify-content:flex-end; margin-bottom:12px; }
+
+.acao { position:relative; }
+.acao > summary { display:inline-flex; align-items:center; gap:10px; width:fit-content; max-width:100%; min-height:44px; padding:9px 12px 9px 16px; border:1px solid var(--borda); border-radius:999px; background:var(--superficie); font-size:14px; font-weight:500; line-height:1.35; transition:background-color 150ms; }
+.acao > summary::after { width:16px; height:16px; }
+.acao > summary:hover { background:var(--faixa-a); }
+/* Aberta, a lista pode ser longa: compartilhar fica no alto, ao lado do controle. */
+.acao[open] > summary { max-width:calc(100% - 56px); }
+.acao > .compartilhar { position:absolute; top:0; right:0; }
+
+.compacto > summary { display:inline-flex; align-items:center; gap:3px; width:fit-content; }
+.compacto > summary::after { width:1.15em; height:1.15em; background:currentColor; }
+
+@media (prefers-reduced-motion:no-preference) {
+  :is(.detalhes, .acao)[open] > :not(summary, .compartilhar) { animation:surgir 200ms ease-out backwards; }
+}
+@media (prefers-reduced-motion:reduce) {
+  :is(.detalhes, .acao, .compacto) > summary::after { transition:none; }
+}
+@keyframes surgir { from { opacity:0; transform:translateY(-3px); } }

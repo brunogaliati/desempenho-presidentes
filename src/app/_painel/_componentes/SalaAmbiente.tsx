@@ -569,7 +569,7 @@ export function SalaAmbiente({
                 </button>
               )}
             </p>
-            <div className="flex items-center justify-between gap-2"><h2 className="mt-1 truncate text-[15px] font-semibold">{MEDIDAS[lente].rotulo}</h2><Compartilhar mensagem={MEDIDAS[lente].rotulo+" · "+nomeRecorte} ancora="mapa-ambiente" compacto/></div>
+            <div className="flex items-center justify-between gap-2"><h2 className="mt-1 truncate text-[15px] font-semibold">{MEDIDAS[lente].rotulo}</h2><Compartilhar mensagem={resumo.valor===null?MEDIDAS[lente].rotulo+" · "+nomeRecorte:`${MEDIDAS[lente].rotulo} · ${nomeRecorte}: ${formatar(resumo.valor,resumo.formato)}${dif?`, ${dif.texto} contra ${anoRecebido}`:""}.${resumo.periodo?` ${resumo.periodo[0].toUpperCase()}${resumo.periodo.slice(1).replace("*",", preliminar")}.`:""} Veja no mapa:`} contexto="" ancora="mapa-ambiente" compacto/></div>
             <div className="mt-1.5 flex h-11 items-end gap-3">
               <p className="manchete shrink-0 text-4xl font-bold leading-none xl:text-[2.75rem]">
                 <NumeroRolante texto={resumo.valor === null ? "—" : formatar(resumo.valor, resumo.formato)} />

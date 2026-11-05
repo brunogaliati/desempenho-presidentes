@@ -53,7 +53,7 @@ const ARQUIVO_LOCAL: Record<string, string> = {
   bolsonaro: "bolsonaro",
 };
 
-function caminhoFoto(id: string): string | null {
+export function caminhoFoto(id: string): string | null {
   const arquivo = ARQUIVO_LOCAL[id];
   return arquivo ? `/presidentes/${arquivo}.jpg` : null;
 }

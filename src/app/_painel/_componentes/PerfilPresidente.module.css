@@ -1,0 +1,22 @@
+.trilha { display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; min-width:0; margin-right:auto; font-size:13px; }
+.voltar { display:inline-flex; align-items:center; gap:2px; min-height:40px; margin-left:-4px; padding-right:6px; color:var(--tinta-2); font-weight:500; }
+.voltar:hover { color:var(--tinta); }
+.unico { color:var(--tinta); font-weight:500; }
+.mandatos { display:flex; flex-wrap:wrap; gap:6px; }
+.mandatos a { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:6px 12px; border:1px solid var(--borda); border-radius:999px; background:var(--superficie); color:var(--tinta-2); font-size:12px; white-space:nowrap; transition:background-color 150ms,color 150ms; }
+.mandatos a span { color:var(--tinta-3); font-variant-numeric:tabular-nums; }
+.mandatos a:hover { background:var(--faixa-a); color:var(--tinta); }
+.mandatos a[aria-current="true"] { border-color:color-mix(in srgb,var(--serie) 22%,transparent); background:color-mix(in srgb,var(--serie) 11%,var(--superficie)); color:var(--tinta); font-weight:600; }
+.mandatos a[aria-current="true"] span { color:var(--tinta-2); font-weight:400; }
+:is(.voltar, .mandatos a):focus-visible { outline:2px solid var(--serie); outline-offset:2px; }
+.mandatos a i { font-style:normal; margin-left:-3px; }
+@media (max-width:640px) {
+  .barra { position:relative; }
+  .barra > :global(.compartilhar-gatilho) { position:absolute; top:4px; right:12px; }
+  .trilha { flex:1 1 100%; gap:0 12px; margin-right:0; }
+  .voltar { min-height:48px; }
+  .mandatos { flex:1 1 100%; flex-wrap:nowrap; gap:4px; }
+  .mandatos li { flex:1 1 0; min-width:0; }
+  .mandatos a { justify-content:center; width:100%; min-height:44px; padding:6px 4px; gap:4px; }
+  .mandatos a i { display:none; }
+}

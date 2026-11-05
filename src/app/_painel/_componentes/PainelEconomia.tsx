@@ -1,6 +1,7 @@
 "use client";
 import { Compartilhar } from "@/components/Compartilhar";
 import { usePerfilPainel } from "./ContextoPerfil";
+import estilosDetalhes from "@/components/Detalhes.module.css";
 import { opcaoCompartilhada, inteiroCompartilhado } from "@/lib/compartilhamento";
 import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
@@ -29,6 +30,7 @@ import {
   reaisCurto,
   reguaDeCor,
 } from "./formatos";
+import { fraseDaLeitura, lugarNoPais } from "./frases";
 import { Faisca } from "./GraficoLinha";
 import {
   chavePartido,
@@ -129,16 +131,6 @@ function textoMudanca(l: Leitura, d: number, curto = false): string {
 const sentidoDe = (l: Leitura, d: number): Sentido => sentido(Math.round(d * 10) / 10, l.direcao ?? "neutro");
 
 /** "o maior do país", "3º maior entre 27 UFs", "2º menor entre 27 UFs". */
-function lugarNoPais(l: Leitura, u: UF, periodo: number, ufs: UF[]): string {
-  const c = compararUf(l, u.codigo, periodo, ufs.map((x) => x.codigo));
-  if (!c || c.total < 2) return "";
-  if (c.empatados === c.total) return `mesmo valor nas ${c.total} UFs com dado`;
-  const maior = c.maior <= c.menor;
-  const pos = maior ? c.maior : c.menor;
-  const lado = maior ? "maior" : "menor";
-  return `${pos}º ${lado} entre ${c.total} UFs${c.empatados > 1 ? " (empatado)" : ""}`;
-}
-
 /**
  * Número com a unidade mais leve: "5,4" cheio e "%" menor, "R$" discreto. O
  * olho lê o valor primeiro; a unidade fica para quem procura.
@@ -234,10 +226,13 @@ export function PainelEconomia({
 
 export function SalaDoTema({ dados, tema, sigla, setSigla, aoTrocarAba }: Props) {
   const leituras = tema.leituras;
-  const [id, setId] = useEstadoCompartilhavel("mapa.indicador", leituras[0]?.id, opcaoCompartilhada(leituras.map(l=>l.id)));
+  // A medida que a manchete mostra no passeio não é escolha de ninguém: não vai para o link.
+  const passeio = useRef(false);
+  const [id, setId] = useEstadoCompartilhavel("mapa.indicador", leituras[0]?.id, opcaoCompartilhada(leituras.map(l=>l.id)), (v) => (passeio.current ? leituras[0]?.id : v));
   const leitura = leituras.find((l) => l.id === id) ?? leituras[0];
   const [historico, setHistorico] = useEstadoCompartilhavel("mapa.historico", false, opcaoCompartilhada([true,false]));
-  const [periodoEscolhido, setPeriodo] = useEstadoCompartilhavel("mapa.periodo", leitura.periodos.length - 1, inteiroCompartilhado);
+  // Fora da exploração o período não conta: a data é sempre a última.
+  const [periodoEscolhido, setPeriodo] = useEstadoCompartilhavel("mapa.periodo", leitura.periodos.length - 1, inteiroCompartilhado, (v) => (historico ? v : leitura.periodos.length - 1));
   // Abre em "desde a posse", como o placar; medida sem esse modo cai no primeiro que tiver.
   const [modoEscolhido, setModo] = useEstadoCompartilhavel<Modo>("mapa.modo", "mudanca", opcaoCompartilhada(modosDe(leitura)));
   const modos = modosDe(leitura);
@@ -364,6 +359,7 @@ export function SalaDoTema({ dados, tema, sigla, setSigla, aoTrocarAba }: Props)
   // sem o histórico aberto; pausa com o ponteiro na coluna ou no mapa.
   const ciclo = leituras.filter((l) => modosDe(l).includes(modo));
   const passeando = alternar && uf === null && !historico && painelIndicadores === "brasil" && ciclo.length > 1;
+  passeio.current = passeando;
   const avancar = () => {
     const i = ciclo.findIndex((l) => l.id === leitura.id);
     trocarLeitura(ciclo[(i + 1) % ciclo.length]);
@@ -510,6 +506,7 @@ export function SalaDoTema({ dados, tema, sigla, setSigla, aoTrocarAba }: Props)
             uf={uf}
             ufs={dados.ufs}
             hoje={hoje}
+            governo={dados.economia.mandatos.find((m) => m.id === dados.foco.id)?.nomeCurto}
             leituras={leituras}
             aoTrocarLeitura={(l) => {
               setAlternar(false);
@@ -828,6 +825,7 @@ function Destaque({
   uf,
   ufs,
   hoje,
+  governo,
   leituras,
   aoTrocarLeitura,
 }: {
@@ -836,6 +834,8 @@ function Destaque({
   uf: UF | null;
   ufs: UF[];
   hoje: string;
+  /** Quem governava o período da posse em diante: entra na frase do recorte. */
+  governo?: string;
   /** As medidas por estado que o mapa sabe mostrar, para trocar ali mesmo. */
   leituras: Leitura[];
   aoTrocarLeitura: (l: Leitura) => void;
@@ -860,7 +860,7 @@ function Destaque({
       <p className="mono text-[11px] font-medium uppercase tracking-[0.18em]" style={{ color: "var(--serie)" }}>
         {uf ? uf.nome : "Brasil"}
       </p>
-      <div className="flex items-center justify-between gap-2"><SeletorMedida atual={l} leituras={leituras} uf={uf} aoTrocar={aoTrocarLeitura} /><Compartilhar mensagem={l.titulo+" · "+(uf?.nome??"Brasil")} ancora="mapa-economia" compacto/></div>
+      <div className="flex items-center justify-between gap-2"><SeletorMedida atual={l} leituras={leituras} uf={uf} aoTrocar={aoTrocarLeitura} /><Compartilhar mensagem={fraseDaLeitura(l,uf,periodo,governo,lugar)} contexto="" ancora="mapa-economia" filtros={{"r.mapa.indicador":l.id===leituras[0]?.id?undefined:l.id}} compacto/></div>
       {/* Alturas fixas: a manchete passeia pelas medidas e nada embaixo dela pode pular. */}
       <div className="mt-2 flex h-11 items-end gap-3">
         <p className="manchete shrink-0 text-4xl font-bold leading-none xl:text-[2.75rem]">
@@ -2177,7 +2177,7 @@ function PorPartido({
           />
         ))}
       </svg>
-      <details className="mt-1 text-[10.5px] leading-snug" style={{ color: "var(--tinta-3)" }}>
+      <details className={`${estilosDetalhes.compacto} mt-1 text-[10.5px] leading-snug`} style={{ color: "var(--tinta-3)" }}>
         <summary className="w-fit cursor-pointer py-1 hover:underline">Critérios</summary>
         <p className="mt-1">
           Mediana das UFs por partido do governador. Os destaques consideram partidos com pelo menos duas UFs.
