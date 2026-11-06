@@ -60,7 +60,7 @@ const REGRA = [
   ['/', /\/compartilhar\?pagina=%2F/, 'sem recorte, a capa da página'],
   ['/?mandato=lula_3', /recorte\?mandato=lula_3&d=/, 'botão do painel: o placar'],
   ['/?mandato=lula_3&painel=de-perto', /recorte\?mandato=lula_3&serie=inflacao12m&d=/, 'gráfico sem série no link: a que o painel abre'],
-  ['/?mandato=lula_3&painel=governo-a-governo', /recorte\?mandato=lula_3&d=/, 'outro bloco do mandato: o placar'],
+  ['/?mandato=lula_3&painel=governo-a-governo', /recorte\?tema=economia&mandato=lula_3&secao=governo-a-governo/, 'a tabela comparativa tem capa própria'],
   ['/?mandato=lula_3&painel=mapa-economia', /recorte\?mandato=lula_3&leitura=desocupacao&d=/, 'o mapa: a primeira medida'],
   ['/?mandato=lula_3&painel=mapa-economia&r.mapa.indicador=subutilizacao', /leitura=subutilizacao/, 'o mapa: a medida escolhida'],
   ['/?mandato=lula_3&uf=BA&painel=mapa-economia', /leitura=desocupacao&uf=BA&d=/, 'o mapa com um estado'],
@@ -74,7 +74,8 @@ const REGRA = [
   ['/meio-ambiente', /\/compartilhar\?pagina=%2Fmeio-ambiente/, 'meio ambiente sem recorte'],
   ['/meio-ambiente?mandato=lula_3', /recorte\?tema=ambiente&mandato=lula_3&d=/, 'o placar do meio ambiente'],
   ['/meio-ambiente?mandato=lula_3&painel=de-perto', /tema=ambiente&mandato=lula_3&serie=prodes_amazonia/, 'o gráfico do meio ambiente'],
-  ['/meio-ambiente?mandato=lula_3&painel=mapa-ambiente', /recorte\?tema=ambiente&mandato=lula_3&d=/, 'o mapa do meio ambiente: o placar'],
+  ['/meio-ambiente?mandato=lula_3&painel=desmatamento', /grafico=desmatamento&bioma=amazonia/, 'barras por ano e governo, sem virar placar do mandato'],
+  ['/meio-ambiente?mandato=lula_3&painel=mapa-ambiente', /secao=mapa-ambiente/, 'o mapa não deve virar o placar do governo'],
   ['/dinheiro?mandato=lula_3', /\/compartilhar\?pagina=%2Fdinheiro/, 'dinheiro não tem cartão por mandato'],
   ['/presidente/lula', /\/presidente\/lula\/opengraph-image/, 'o perfil sem recorte'],
   ['/presidente/lula?mandato=lula_1', /recorte\?mandato=lula_1&d=/, 'o perfil num mandato'],
@@ -86,6 +87,68 @@ for (const [link, esperado, porque] of REGRA) {
   assert.match(meta('og:image') ?? '', esperado, `${porque}: ${link} -> ${meta('og:image')}`);
 }
 console.log(`PASSOU: os ${REGRA.length} tipos de link pedem o cartão certo.`);
+
+// O botão das barras leva o bioma e a história inteira, e não o placar de Lula.
+for (const [bioma, nome, inicio] of [
+  ['amazonia', 'Amazônia Legal', '1988'], ['cerrado', 'Cerrado'],
+  ['caatinga', 'Caatinga', '2017'], ['mata_atlantica', 'Mata Atlântica', '2017'],
+  ['pampa', 'Pampa', '2017'], ['pantanal', 'Pantanal', '2017'], ['todos', 'Seis biomas', '2017'],
+]) {
+  const link = `/meio-ambiente?mandato=lula_3&painel=desmatamento&r.desmatamento.bioma=${bioma}`;
+  const { meta } = await cabecalho(link);
+  assert.match(meta('og:title'), /^Desmatamento por ano e por governo: /);
+  assert(meta('og:title').includes(nome));
+  if (inicio) assert(meta('og:title').includes(`(${inicio}–`));
+  assert.doesNotMatch(meta('og:title'), /no governo Lula|melhoraram/);
+  assert.equal(meta('og:url'), new URL(link, base).href.replace(new URL(base).origin, 'https://desempenhodogoverno.com.br'));
+  assert.match(meta('og:image'), new RegExp(`grafico=desmatamento&bioma=${bioma}&d=`));
+  const r = await fetch(base + caminhoDe(meta('og:image')));
+  assert.equal(r.status, 200, bioma);
+  assert.equal(r.headers.get('content-type'), 'image/png');
+  const bytes = Buffer.from(await r.arrayBuffer());
+  assert.equal(bytes.subarray(1, 4).toString(), 'PNG');
+  assert(bytes.length < 300 * 1024);
+}
+console.log('PASSOU: os sete recortes de desmatamento têm título e gráfico próprios, preservando o link.');
+
+// Todos os botões dos terminais devem identificar a seção em vez de cair no placar.
+const SECOES = [
+  ['/', 'governo-a-governo', 'Economia governo a governo'],
+  ['/', 'estados', 'Indicadores econômicos por estado'],
+  ['/', 'emprego-e-credito', 'Emprego com carteira'],
+  ['/', 'bloco-credito-e-inadimplencia', 'Crédito e inadimplência'],
+  ['/', 'bloco-ritmo-no-mandato', 'Ritmo no mandato'],
+  ['/', 'bloco-governadores-por-partido', 'Governadores por partido'],
+  ['/', 'bloco-brasil-e-o-mundo', 'Brasil e o mundo'],
+  ['/', 'bloco-ultimos-dados', 'Últimos dados'],
+  ['/', 'bloco-orcamento-federal-em-2026', 'Orçamento federal'],
+  ['/', 'fontes', 'Fontes dos indicadores econômicos'],
+  ['/meio-ambiente', 'mapa-ambiente', 'Meio ambiente no mapa'],
+  ['/meio-ambiente', 'biomas', 'Indicadores dos biomas'],
+  ['/meio-ambiente', 'temporada', 'Temporada do fogo'],
+  ['/meio-ambiente', 'protegidas', 'Desmatamento em áreas protegidas'],
+  ['/meio-ambiente', 'municipios', 'Onde se desmata e o que o Ibama fez lá'],
+  ['/meio-ambiente', 'estados', 'Meio ambiente por estado'],
+  ['/meio-ambiente', 'fontes', 'Fontes dos indicadores ambientais'],
+  ['/meio-ambiente', 'bloco-ritmo-no-mandato', 'Ritmo ambiental no mandato'],
+  ...[['orcamento', 'Para onde vai cada R$ 100'], ['orcamento-detalhe', 'Orçamento: detalhe da despesa'], ['ano-a-ano', 'Orçamento ano a ano'], ['de-onde-veio', 'De onde veio o dinheiro público'], ['emendas', 'Emendas Pix'], ['todas-as-linhas', 'Todas as linhas do orçamento'], ['fontes-dinheiro', 'Fontes e limites do orçamento']].map(([secao, titulo]) => ['/dinheiro', secao, titulo]),
+];
+for (const [caminho, secao, titulo] of SECOES) {
+  const { meta, canonica } = await cabecalho(`${caminho}?mandato=lula_3&painel=${secao}`);
+  assert(meta('og:title').startsWith(titulo), `${secao}: ${meta('og:title')}`);
+  assert.match(meta('og:image'), new RegExp(`secao=${secao}&d=`));
+  assert.doesNotMatch(canonica, /\?/);
+  const r = await fetch(base + caminhoDe(meta('og:image')));
+  assert.equal(r.status, 200, secao);
+  assert.equal(r.headers.get('content-type'), 'image/png');
+  await r.arrayBuffer();
+}
+for (const link of ['/?mandato=lula_3&uf=SP&painel=bloco-quem-governou-sp', '/dinheiro?mandato=lula_3&uf=BA&r.ano=2024&painel=orcamento']) {
+  const { meta } = await cabecalho(link);
+  assert.match(meta('og:image'), /&uf=(SP|BA)/);
+  if (link.startsWith('/dinheiro')) { assert.match(meta('og:title'), /Bahia · 2024/); assert.match(meta('og:image'), /ano=2024/); }
+}
+console.log(`PASSOU: ${SECOES.length} seções têm capa específica, com território/ano e canônica preservados.`);
 
 // A imagem existe, e o mesmo molde vale para todo governo.
 for (const mandato of ['fhc_1', 'fhc_2', 'lula_1', 'lula_2', 'dilma_1', 'dilma_2', 'temer', 'bolsonaro', 'lula_3']) {
@@ -111,7 +174,7 @@ for (const vez of ['primeiro pedido', 'segundo pedido']) {
 console.log('PASSOU: a imagem não fica presa no navegador.');
 
 // Só ids dos dados chegam ao desenho, e nada do endereço chega às metatags sem codificar.
-for (const q of ['', 'mandato=naoexiste', 'mandato=lula_3&serie=naoexiste', 'mandato=lula_3&leitura=naoexiste', 'mandato=lula_3&leitura=desocupacao&uf=ZZ', 'mandato=lula_3&leitura=desocupacao&periodo=9999', 'mandato=gov-2015', 'mandato=lula_3&d=lixo', 'mandato=lula_3&d=<script>']) {
+for (const q of ['', 'mandato=naoexiste', 'mandato=lula_3&serie=naoexiste', 'mandato=lula_3&leitura=naoexiste', 'mandato=lula_3&leitura=desocupacao&uf=ZZ', 'mandato=lula_3&leitura=desocupacao&periodo=9999', 'mandato=gov-2015', 'mandato=lula_3&d=lixo', 'mandato=lula_3&d=<script>', 'mandato=lula_3&grafico=naoexiste', 'mandato=lula_3&grafico=desmatamento&bioma=naoexiste', 'mandato=lula_3&tema=economia&secao=constructor', 'mandato=lula_3&tema=dinheiro&secao=orcamento&uf=ZZ', 'mandato=lula_3&tema=dinheiro&secao=orcamento&ano=NaN']) {
   const r = await fetch(`${base}/compartilhar/recorte?${q}`);
   assert.equal(r.status, 404, `A imagem precisa recusar: ${q} (${r.status})`);
 }

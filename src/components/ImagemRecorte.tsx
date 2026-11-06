@@ -1,13 +1,14 @@
 import "server-only";
 import type { CSSProperties } from "react";
 
-import type { Cartao, CartaoIndicador, CartaoPlacar } from "@/app/_painel/_componentes/capaRecorte";
+import type { Cartao, CartaoDesmatamento, CartaoIndicador, CartaoPlacar } from "@/app/_painel/_componentes/capaRecorte";
 import malha from "@/app/_painel/_dados/ufs.json";
-import { respostaDaCapa, TINTA, TINTA_2 } from "@/components/ImagemCompartilhamento";
+import { imagemCompartilhamento, respostaDaCapa, TINTA, TINTA_2 } from "@/components/ImagemCompartilhamento";
 import { caminhoFoto } from "@/components/Retrato";
 import { fotoCompartilhamento } from "@/lib/fonteCompartilhamento";
 import { contaDoPlacar } from "@/lib/fraseCompartilhamento";
 import type { Sentido } from "@/lib/formatar";
+import { numero } from "@/lib/formatar";
 
 /**
  * O cartão de um recorte: o número do indicador ou o placar do mandato.
@@ -154,7 +155,35 @@ function Placar({ c, foto }: { c: CartaoPlacar; foto: string | null }) {
   );
 }
 
+function Desmatamento({ c }: { c: CartaoDesmatamento }) {
+  const largura = 1104, altura = 230, esquerda = 70, topo = 30, base = 192;
+  const max = Math.max(...c.pontos.map((p) => p.valor ?? 0), 1) * 1.08;
+  const passo = (largura - esquerda - 12) / c.pontos.length;
+  const y = (v: number) => base - (v / max) * (base - topo);
+  return (
+    <div style={flex({ flex: 1, flexDirection: "column", justifyContent: "center", gap: 10 })}>
+      <div style={flex({ fontSize: 36, fontWeight: 600, letterSpacing: -0.8 })}>Desmatamento por ano e por governo</div>
+      <div style={flex({ fontSize: 23, color: TINTA_2 })}>{`${c.nome} · ${c.periodo} · km² por ano PRODES`}</div>
+      <div style={flex({ position: "relative", width: largura, height: altura, fontSize: 16, color: TINTA_2 })}>
+        <svg width={largura} height={altura} viewBox={`0 0 ${largura} ${altura}`}>
+          {[0, 0.5, 1].map((f) => <line key={f} x1={esquerda} x2={largura} y1={y(max * f)} y2={y(max * f)} stroke="#d9e3e8" />)}
+          {c.pontos.map((p, i) => p.valor !== null && <rect key={i} x={esquerda + passo * i + 1} y={y(p.valor)} width={Math.min(62, passo - 2)} height={base - y(p.valor)} rx={2} fill={p.preliminar ? "none" : FUNDO[p.sentido]} stroke={p.preliminar ? FUNDO[p.sentido] : "none"} strokeWidth={2} strokeDasharray={p.preliminar ? "4 3" : undefined} opacity={p.destaque ? 1 : 0.32} />)}
+        </svg>
+        {[0, 0.5, 1].map((f) => <div key={f} style={flex({ position: "absolute", top: y(max * f) - 9, left: 0, width: esquerda - 10, justifyContent: "flex-end" })}>{numero(max * f, 0)}</div>)}
+        {c.pontos.map((p, i) => (i % Math.max(1, Math.ceil(c.pontos.length / 17)) === 0 || i === c.pontos.length - 1) && <div key={i} style={flex({ position: "absolute", top: base + 8, left: esquerda + passo * (i + 0.5) - 24, width: 48, justifyContent: "center" })}>{p.ano.slice(2) + (p.preliminar ? "*" : "")}</div>)}
+        {c.governos.map((g, i) => <div key={i} style={flex({ position: "absolute", top: 0, left: esquerda + passo * (g.inicio + g.fim + 1) / 2 - 36, width: 72, justifyContent: "center", fontSize: 14 })}>{g.nome}</div>)}
+      </div>
+      <div style={flex({ gap: 24, fontSize: 17, color: TINTA_2 })}>
+        {([['bom', 'Melhor que na posse'], ['ruim', 'Pior que na posse'], ['neutro', 'Sem comparação']] as const).map(([s, texto]) => <div key={s} style={flex({ alignItems: "center", gap: 7 })}><div style={flex({ width: 13, height: 13, background: FUNDO[s], borderRadius: 3 })} />{texto}</div>)}
+        {c.pontos.some((p) => p.preliminar) && <div style={flex({})}>* Preliminar</div>}
+      </div>
+    </div>
+  );
+}
+
 export async function imagemRecorte(c: Cartao) {
+  if (c.tipo === "secao") return imagemCompartilhamento({ titulo: c.nome, referencia: c.legenda, descricao: c.descricao, uf: c.uf?.codigo });
+  if (c.tipo === "desmatamento") return respostaDaCapa(<Desmatamento c={c} />, `Fonte: INPE/PRODES · ${c.nota}`);
   const foto = await fotoDe(c.tipo === "indicador" && c.uf ? undefined : c.governo?.id);
   return c.tipo === "placar"
     ? respostaDaCapa(<Placar c={c} foto={foto} />, "Fontes oficiais de cada indicador no site")

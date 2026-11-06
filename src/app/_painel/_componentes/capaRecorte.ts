@@ -5,12 +5,14 @@ import { imagemDaPagina } from "@/lib/seo";
 import { TEMAS_PAINEL, temaDoCaminho } from "@/lib/temasPainel";
 
 import { recortar } from "../_dados/economiaModelo";
+import { BIOMAS_DESMATAMENTO, desmatamentoHistorico } from "../_dados/desmatamentoHistorico";
 import { doisAnosAntes, focoDoMandato, mandatoDoEndereco, recortarAoMandato } from "../_dados/mandatoRecorte";
 import type { DadosPainel, MandatoVisual, SerieEconomia, UF } from "../_dados/tipos";
-import { formatar, ultimoDado } from "./formatos";
+import { formatar, mandatosNaSerie, ultimoDado } from "./formatos";
 import { lugarNoPais, numerosDaLeitura, numerosDaSerie, quandoNaSerie } from "./frases";
 import { placarDoAmbiente } from "./placarAmbiente";
 import { placarDoMandato, VEREDITO, type ItemPlacar } from "./placarModelo";
+import { secaoCompartilhada, type TemaDeSecao } from "./secoesCompartilhamento";
 
 /**
  * A capa de um link do painel: o cartão que WhatsApp, Telegram, X e Facebook mostram.
@@ -25,6 +27,8 @@ type Tema = "economia" | "ambiente";
 
 export type PedidoDeCapa =
   | { tipo: "placar"; tema: Tema; mandato: string }
+  | { tipo: "desmatamento"; mandato: string; bioma: string }
+  | { tipo: "secao"; tema: TemaDeSecao; mandato: string; secao: string; uf: string | null; ano: number | null }
   /** `serie` nula é a que o painel abre sozinho. */
   | { tipo: "serie"; tema: Tema; mandato: string; serie: string | null }
   /** `leitura` nula é a primeira medida; `periodo` nulo, o último com dado. */
@@ -79,7 +83,23 @@ export interface CartaoPlacar extends Capa {
   grupos: { titulo: string; itens: { rotulo: string; mudanca: string; sentido: Sentido }[] }[];
 }
 
-export type Cartao = CartaoIndicador | CartaoPlacar;
+export interface CartaoDesmatamento extends Capa {
+  tipo: "desmatamento";
+  nome: string;
+  periodo: string;
+  nota: string;
+  pontos: { ano: string; valor: number | null; sentido: Sentido; preliminar: boolean; destaque: boolean }[];
+  governos: { nome: string; inicio: number; fim: number }[];
+}
+
+export interface CartaoSecao extends Capa {
+  tipo: "secao";
+  nome: string;
+  legenda: string;
+  uf: UF | null;
+}
+
+export type Cartao = CartaoIndicador | CartaoPlacar | CartaoDesmatamento | CartaoSecao;
 
 const CONVITE = "Compare os governos.";
 const maiuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
@@ -254,9 +274,43 @@ function cartaoDaLeitura(p: Extract<PedidoDeCapa, { tipo: "leitura" }>, inteiros
 /** O cartão de um pedido, ou `null` se o id não existe ou o governo não tem o dado. */
 export function cartaoDoPedido(p: PedidoDeCapa, inteiros: DadosPainel): Cartao | null {
   if (!focoDoMandato(inteiros.economia.mandatos, p.mandato)) return null;
+  if (p.tipo === "secao") {
+    const uf = p.uf ? inteiros.ufs.find((u) => u.sigla === p.uf) : null;
+    const secao = secaoCompartilhada(p.tema, p.secao, uf?.sigla);
+    if (!secao || uf === undefined || (p.ano !== null && (!Number.isInteger(p.ano) || p.ano < 1990 || p.ano > 2200))) return null;
+    const governo = governoDe(inteiros.economia.mandatos.find((m) => m.id === p.mandato));
+    const legenda = [uf?.nome ?? (p.tema === "dinheiro" ? "União" : "Brasil"), p.ano ?? (governo ? `período selecionado: ${governo.nome} (${governo.anos})` : null)].filter(Boolean).join(" · ");
+    return { tipo: "secao", nome: secao[0], legenda, uf: uf ?? null, titulo: `${secao[0]} · ${legenda}`, descricao: secao[1], imagem: imagemDe({ tema: p.tema, mandato: p.mandato, secao: p.secao, uf: p.uf, ano: p.ano }, inteiros) };
+  }
+  if (p.tipo === "desmatamento") return cartaoDoDesmatamento(p, inteiros);
   if (p.tipo === "placar") return cartaoDoPlacar(p.tema, p.mandato, inteiros);
   if (p.tipo === "serie") return cartaoDaSerie(p, inteiros);
   return cartaoDaLeitura(p, inteiros);
+}
+
+function cartaoDoDesmatamento(p: Extract<PedidoDeCapa, { tipo: "desmatamento" }>, dados: DadosPainel): CartaoDesmatamento | null {
+  if (!BIOMAS_DESMATAMENTO.some((id) => id === p.bioma)) return null;
+  const { s, nome, nota } = desmatamentoHistorico(dados, p.bioma);
+  if (!s || !s.valores.some((v) => v !== null)) return null;
+  const mandatos = dados.economia.mandatos;
+  const trechos = mandatosNaSerie(s, mandatos);
+  const foco = mandatos.find((m) => m.id === p.mandato);
+  const pontos = s.datas.map((d, i) => {
+    const trecho = trechos.find((t) => d >= t.desde && (!t.ate || d < t.ate));
+    return { ano: d.slice(0, 4), valor: s.valores[i], sentido: trecho?.sentido ?? "neutro", preliminar: s.preliminares?.includes(d) ?? false, destaque: Boolean(foco?.emCurso || trecho?.id === p.mandato) };
+  });
+  const governos = trechos.flatMap((t) => {
+    const indices = s.datas.flatMap((d, i) => d >= t.desde && (!t.ate || d < t.ate) ? [i] : []);
+    const m = mandatos.find((m) => m.id === t.id);
+    return indices.length && m ? [{ nome: m.nomeCurto, inicio: indices[0], fim: indices.at(-1)! }] : [];
+  });
+  const periodo = `${pontos[0].ano}–${pontos.at(-1)!.ano}`;
+  return {
+    tipo: "desmatamento", nome, periodo, nota, pontos, governos,
+    titulo: `Desmatamento por ano e por governo: ${nome} (${periodo})`,
+    descricao: `Compare o desmatamento por ano PRODES em ${nome}, de ${pontos[0].ano} a ${pontos.at(-1)!.ano}. Cada governo contra o que recebeu. ${nota} Fonte: INPE/PRODES.`,
+    imagem: imagemDe({ tema: "ambiente", mandato: p.mandato, grafico: "desmatamento", bioma: p.bioma }, dados),
+  };
 }
 
 /**
@@ -266,11 +320,20 @@ export function cartaoDoPedido(p: PedidoDeCapa, inteiros: DadosPainel): Cartao |
 export function pedidoDoLink(caminho: string, q: URLSearchParams, inteiros: DadosPainel): PedidoDeCapa | null {
   const pessoaId = caminho.match(/^\/presidente\/([^/]+)$/)?.[1];
   const tema = temaDoCaminho(caminho);
-  if (tema === "dinheiro" || (!pessoaId && caminho !== TEMAS_PAINEL[tema].caminho)) return null;
+  if (!pessoaId && caminho !== TEMAS_PAINEL[tema].caminho) return null;
   const sigla = pessoaId ? null : (inteiros.ufs.find((u) => u.sigla === q.get("uf")?.toUpperCase())?.sigla ?? null);
   const pedido = q.get("mandato");
   const mandato = mandatoDoEndereco(inteiros, { pessoaId, sigla, pedido });
   const painel = q.get("painel");
+  if (painel && secaoCompartilhada(tema, painel, sigla)) {
+    const ano = tema === "dinheiro" ? Number(q.get("r.ano") ?? NaN) : NaN;
+    return { tipo: "secao", tema, mandato, secao: painel, uf: sigla, ano: Number.isInteger(ano) && ano >= 1990 && ano <= 2200 ? ano : null };
+  }
+  if (tema === "dinheiro") return null;
+  if (tema === "ambiente" && painel === "desmatamento") {
+    const bioma = q.get("r.desmatamento.bioma") ?? "amazonia";
+    return { tipo: "desmatamento", mandato, bioma: BIOMAS_DESMATAMENTO.some((id) => id === bioma) ? bioma : "amazonia" };
+  }
   if (painel === "de-perto") {
     if (tema === "economia" && sigla && q.get("r.leitura") !== "null") return { tipo: "leitura", mandato, leitura: q.get("r.leitura"), uf: sigla, periodo: null };
     return { tipo: "serie", tema, mandato, serie: q.get("r.serie") };
@@ -279,13 +342,20 @@ export function pedidoDoLink(caminho: string, q: URLSearchParams, inteiros: Dado
     const periodo = q.get("r.mapa.historico") === "true" ? Number(q.get("r.mapa.periodo")) : NaN;
     return { tipo: "leitura", mandato, leitura: q.get("r.mapa.indicador"), uf: sigla, periodo: Number.isInteger(periodo) ? periodo : null };
   }
-  return pedido && !sigla ? { tipo: "placar", tema, mandato } : null;
+  // Um bloco sem capa própria não pode fingir ser o placar inteiro de um mandato.
+  return pedido && !sigla && (!painel || painel === "agora") ? { tipo: "placar", tema, mandato } : null;
 }
 
 /** O pedido escrito na URL da imagem; ids não conferidos aqui: `cartaoDoPedido` confere. */
 export function pedidoDaImagem(q: URLSearchParams): PedidoDeCapa | null {
   const mandato = q.get("mandato");
   if (!mandato) return null;
+  if (q.has("secao")) {
+    const tema = q.get("tema");
+    if (tema !== "economia" && tema !== "ambiente" && tema !== "dinheiro") return null;
+    return { tipo: "secao", tema, mandato, secao: q.get("secao")!, uf: q.get("uf"), ano: q.has("ano") ? Number(q.get("ano")) : null };
+  }
+  if (q.has("grafico")) return q.get("grafico") === "desmatamento" ? { tipo: "desmatamento", mandato, bioma: q.get("bioma") ?? "amazonia" } : null;
   const tema: Tema = q.get("tema") === "ambiente" ? "ambiente" : "economia";
   const serie = q.get("serie"), leitura = q.get("leitura");
   if (serie) return { tipo: "serie", tema, mandato, serie };

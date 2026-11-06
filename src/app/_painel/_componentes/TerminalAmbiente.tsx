@@ -12,6 +12,7 @@ import { useLargura } from "@/lib/useLargura";
 import { cartaoDaSerie, RAMPA_DA_LENTE, textoVariacao, type Lente, type MunicipiosAmbiente } from "../_dados/ambienteMunicipal";
 import { ritmoNoMandato } from "../_dados/mandatoRecorte";
 import { criarCsv } from "../_dados/economiaModelo";
+import { BIOMAS_DESMATAMENTO, desmatamentoHistorico, type EscopoDesmatamento } from "../_dados/desmatamentoHistorico";
 import type { DadosPainel, FocoMandato, MandatoVisual, MunicipioNacional, SerieEconomia } from "../_dados/tipos";
 import { Bloco, Opcoes } from "./Bloco";
 import { formatar, mandatosNaSerie, mudanca, recebido, referencia, reguaDeCor, tendencia, titulo, ultimoDado } from "./formatos";
@@ -399,15 +400,6 @@ function Biomas({
 // O desmatamento desde 1988
 // ---------------------------------------------------------------------------
 
-type Escopo = "amazonia" | "cerrado" | "caatinga" | "mata_atlantica" | "pampa" | "pantanal" | "todos";
-
-/**
- * Caatinga, Mata Atlântica, Pampa e Pantanal só têm uma série por ano desde 2017. Antes
- * o INPE publicou quase sempre em blocos de dois anos, e os poucos anos soltos dariam a
- * um governo uma comparação com um ano pela metade.
- */
-const ANUAL_DESDE = "2017-07";
-
 /** Com poucos anos a barra viraria um bloco: ela para aqui, e o ano fica centrado na coluna dele. */
 const BARRA_MAXIMA = 72;
 
@@ -426,33 +418,11 @@ function semDecimal(texto: string): string {
  * preliminar leva só o contorno.
  */
 function BarrasDesmatamento({ dados, mandatos, foco, className }: { dados: DadosPainel; mandatos: MandatoVisual[]; foco: FocoMandato; className: string }) {
-  const [escopo, setEscopo] = useEstadoCompartilhavel<Escopo>("desmatamento.bioma", "amazonia", opcaoCompartilhada(["amazonia","cerrado","caatinga","mata_atlantica","pampa","pantanal","todos"]));
+  const [escopo, setEscopo] = useEstadoCompartilhavel<EscopoDesmatamento>("desmatamento.bioma", "amazonia", opcaoCompartilhada(BIOMAS_DESMATAMENTO));
   const { ref, largura } = useLargura<HTMLDivElement>();
   const [sob, setSob] = useState<number | null>(null);
 
-  const { s, nome, nota } = useMemo(() => {
-    const serie = (id: string) => dados.ambiente.series.find((x) => x.id === id);
-    if (escopo === "amazonia") return { s: serie("prodes_amazonia"), nome: "Amazônia Legal", nota: "Taxa modelada do INPE para a Amazônia Legal, de agosto a julho." };
-    if (escopo === "cerrado") return { s: serie("prodes_cerrado"), nome: "Cerrado", nota: "Área mapeada no bioma; antes de 2013 o PRODES vinha em blocos de dois anos." };
-    if (escopo !== "todos") {
-      const b = dados.ambiente.porBioma.find((x) => x.id === escopo);
-      const i = b?.prodes ? b.prodes.datas.findIndex((d) => d >= ANUAL_DESDE) : -1;
-      return {
-        s: b?.prodes && i >= 0 ? { ...b.prodes, datas: b.prodes.datas.slice(i), valores: b.prodes.valores.slice(i) } : undefined,
-        nome: b?.rotulo ?? "",
-        nota: "Área mapeada no bioma; antes de 2017 o PRODES vinha quase sempre em blocos de dois anos.",
-      };
-    }
-    // Os seis biomas usam os números da leitura do mapa, com a mesma forma de série.
-    const base = serie("prodes_amazonia");
-    const l = dados.leituras.ambiente.find((x) => x.id === "desmatamento");
-    const datas = l?.periodos.map((p) => p.codigo) ?? [];
-    return {
-      s: base && { ...base, id: "desmatamento_todos", rotulo: "Desmatamento, seis biomas", datas, valores: l?.brasil ?? [], referencia: datas.at(-1) ?? null, preliminares: [] },
-      nome: "Seis biomas",
-      nota: "Área mapeada somando os seis biomas, que só têm dado anual desde 2017.",
-    };
-  }, [escopo, dados]);
+  const { s, nome, nota } = useMemo(() => desmatamentoHistorico(dados, escopo), [escopo, dados]);
 
   const trechos = useMemo(() => (s ? mandatosNaSerie(s, mandatos) : []), [s, mandatos]);
   if (!s) return null;
@@ -479,6 +449,7 @@ function BarrasDesmatamento({ dados, mandatos, foco, className }: { dados: Dados
     <Bloco
       id="desmatamento"
       titulo="Desmatamento por ano e por governo"
+      contextoCompartilhamento={`${nome} · ${s.datas[0]?.slice(0, 4)}–${s.datas.at(-1)?.slice(0, 4)}`}
       detalhe="km² por ano PRODES · cada governo contra o que recebeu"
       className={className}
       lustroFixo
@@ -488,7 +459,7 @@ function BarrasDesmatamento({ dados, mandatos, foco, className }: { dados: Dados
           opcoes={[
             { id: "amazonia", rotulo: "Amazônia" },
             { id: "cerrado", rotulo: "Cerrado" },
-            ...dados.ambiente.porBioma.filter((b) => b.prodes && !["amazonia", "cerrado"].includes(b.id)).map((b) => ({ id: b.id as Escopo, rotulo: b.rotulo })),
+            ...dados.ambiente.porBioma.filter((b) => b.prodes && !["amazonia", "cerrado"].includes(b.id)).map((b) => ({ id: b.id as EscopoDesmatamento, rotulo: b.rotulo })),
             { id: "todos", rotulo: "Seis biomas" },
           ]}
           ativa={escopo}
