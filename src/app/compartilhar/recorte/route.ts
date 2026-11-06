@@ -2,6 +2,8 @@ import { cartaoDoPedido, pedidoDaImagem } from "@/app/_painel/_componentes/capaR
 import { carregarPainel } from "@/app/_painel/_dados/carregar";
 import { imagemRecorte } from "@/components/ImagemRecorte";
 import { imagemEmCache } from "@/lib/imagemEmCache";
+import { carregarSecaoVisual } from "@/app/_painel/_dados/carregarSecaoVisual";
+import { imagemDadosSecao } from "@/components/ImagemDadosSecao";
 
 const naoHa = () => new Response(null, { status: 404, headers: { "X-Robots-Tag": "noindex" } });
 
@@ -15,6 +17,7 @@ export function GET(request: Request) {
     if (!pedido) return naoHa();
     const { painel } = await carregarPainel();
     const cartao = cartaoDoPedido(pedido, painel);
+    if(cartao?.tipo==='secao')return imagemDadosSecao(await carregarSecaoVisual(cartao,painel));
     return cartao ? imagemRecorte(cartao) : naoHa();
   });
 }

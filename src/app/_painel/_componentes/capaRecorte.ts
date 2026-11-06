@@ -12,7 +12,7 @@ import { formatar, mandatosNaSerie, ultimoDado } from "./formatos";
 import { lugarNoPais, numerosDaLeitura, numerosDaSerie, quandoNaSerie } from "./frases";
 import { placarDoAmbiente } from "./placarAmbiente";
 import { placarDoMandato, VEREDITO, type ItemPlacar } from "./placarModelo";
-import { secaoCompartilhada, type TemaDeSecao } from "./secoesCompartilhamento";
+import { filtrosDaSecao, secaoCompartilhada, type TemaDeSecao } from "./secoesCompartilhamento";
 
 /**
  * A capa de um link do painel: o cartão que WhatsApp, Telegram, X e Facebook mostram.
@@ -28,7 +28,7 @@ type Tema = "economia" | "ambiente";
 export type PedidoDeCapa =
   | { tipo: "placar"; tema: Tema; mandato: string }
   | { tipo: "desmatamento"; mandato: string; bioma: string }
-  | { tipo: "secao"; tema: TemaDeSecao; mandato: string; secao: string; uf: string | null; ano: number | null }
+  | { tipo: "secao"; tema: TemaDeSecao; mandato: string; secao: string; uf: string | null; ano: number | null; filtros: Record<string,string> }
   /** `serie` nula é a que o painel abre sozinho. */
   | { tipo: "serie"; tema: Tema; mandato: string; serie: string | null }
   /** `leitura` nula é a primeira medida; `periodo` nulo, o último com dado. */
@@ -97,6 +97,7 @@ export interface CartaoSecao extends Capa {
   nome: string;
   legenda: string;
   uf: UF | null;
+  pedido: Extract<PedidoDeCapa, { tipo: "secao" }>;
 }
 
 export type Cartao = CartaoIndicador | CartaoPlacar | CartaoDesmatamento | CartaoSecao;
@@ -280,7 +281,7 @@ export function cartaoDoPedido(p: PedidoDeCapa, inteiros: DadosPainel): Cartao |
     if (!secao || uf === undefined || (p.ano !== null && (!Number.isInteger(p.ano) || p.ano < 1990 || p.ano > 2200))) return null;
     const governo = governoDe(inteiros.economia.mandatos.find((m) => m.id === p.mandato));
     const legenda = [uf?.nome ?? (p.tema === "dinheiro" ? "União" : "Brasil"), p.ano ?? (governo ? `período selecionado: ${governo.nome} (${governo.anos})` : null)].filter(Boolean).join(" · ");
-    return { tipo: "secao", nome: secao[0], legenda, uf: uf ?? null, titulo: `${secao[0]} · ${legenda}`, descricao: secao[1], imagem: imagemDe({ tema: p.tema, mandato: p.mandato, secao: p.secao, uf: p.uf, ano: p.ano }, inteiros) };
+    return { tipo: "secao", nome: secao[0], legenda, uf: uf ?? null, pedido: p, titulo: `${secao[0]} · ${legenda}`, descricao: secao[1], imagem: imagemDe({ tema: p.tema, mandato: p.mandato, secao: p.secao, uf: p.uf, ano: p.ano, ...p.filtros, conteudo: "dados-v1" }, inteiros) };
   }
   if (p.tipo === "desmatamento") return cartaoDoDesmatamento(p, inteiros);
   if (p.tipo === "placar") return cartaoDoPlacar(p.tema, p.mandato, inteiros);
@@ -327,7 +328,7 @@ export function pedidoDoLink(caminho: string, q: URLSearchParams, inteiros: Dado
   const painel = q.get("painel");
   if (painel && secaoCompartilhada(tema, painel, sigla)) {
     const ano = tema === "dinheiro" ? Number(q.get("r.ano") ?? NaN) : NaN;
-    return { tipo: "secao", tema, mandato, secao: painel, uf: sigla, ano: Number.isInteger(ano) && ano >= 1990 && ano <= 2200 ? ano : null };
+    return { tipo: "secao", tema, mandato, secao: painel, uf: sigla, ano: Number.isInteger(ano) && ano >= 1990 && ano <= 2200 ? ano : null, filtros: filtrosDaSecao(q) };
   }
   if (tema === "dinheiro") return null;
   if (tema === "ambiente" && painel === "desmatamento") {
@@ -335,6 +336,7 @@ export function pedidoDoLink(caminho: string, q: URLSearchParams, inteiros: Dado
     return { tipo: "desmatamento", mandato, bioma: BIOMAS_DESMATAMENTO.some((id) => id === bioma) ? bioma : "amazonia" };
   }
   if (painel === "de-perto") {
+    if ((!sigla || q.get('r.leitura')==='null') && (q.get('r.faixa')==='tudo' || q.get('r.historico.tabela')==='true')) return {tipo:'secao',tema,mandato,secao:'historico-serie',uf:sigla,ano:null,filtros:filtrosDaSecao(q)};
     if (tema === "economia" && sigla && q.get("r.leitura") !== "null") return { tipo: "leitura", mandato, leitura: q.get("r.leitura"), uf: sigla, periodo: null };
     return { tipo: "serie", tema, mandato, serie: q.get("r.serie") };
   }
@@ -353,7 +355,7 @@ export function pedidoDaImagem(q: URLSearchParams): PedidoDeCapa | null {
   if (q.has("secao")) {
     const tema = q.get("tema");
     if (tema !== "economia" && tema !== "ambiente" && tema !== "dinheiro") return null;
-    return { tipo: "secao", tema, mandato, secao: q.get("secao")!, uf: q.get("uf"), ano: q.has("ano") ? Number(q.get("ano")) : null };
+    return { tipo: "secao", tema, mandato, secao: q.get("secao")!, uf: q.get("uf"), ano: q.has("ano") ? Number(q.get("ano")) : null, filtros: filtrosDaSecao(q) };
   }
   if (q.has("grafico")) return q.get("grafico") === "desmatamento" ? { tipo: "desmatamento", mandato, bioma: q.get("bioma") ?? "amazonia" } : null;
   const tema: Tema = q.get("tema") === "ambiente" ? "ambiente" : "economia";

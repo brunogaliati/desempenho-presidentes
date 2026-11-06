@@ -9,6 +9,13 @@ export function codificarFiltro(valor: unknown): string | null {
   return typeof valor === 'string' ? valor : JSON.stringify(valor);
 }
 
+/** Ano e período efetivos são parte do recorte mesmo se o estado interno usa null como padrão. */
+export function registroDoFiltro<T>(valor:T,inicial:T,primeiro:T,paraLink?:(valor:T)=>unknown):string|null {
+  const salvo=codificarFiltro(paraLink?paraLink(valor):valor);
+  if(paraLink)return salvo;
+  return salvo===codificarFiltro(inicial)&&salvo===codificarFiltro(primeiro)?null:salvo;
+}
+
 export function decodificarFiltro<T>(valor: string, validar: (valor: unknown) => boolean): T | undefined {
   if (valor.length > 2048) return undefined;
   try { const convertido: unknown = JSON.parse(valor); if (validar(convertido)) return convertido as T; } catch { /* Identificadores de texto não precisam de JSON. */ }

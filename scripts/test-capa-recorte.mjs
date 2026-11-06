@@ -2,6 +2,9 @@
 // node scripts/test-capa-recorte.mjs
 // BASE=http://localhost:3000 também serve para o worker local (opennextjs-cloudflare preview).
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 const base = process.env.BASE ?? 'http://localhost:3000';
 const ROBOS = {
@@ -136,7 +139,8 @@ const SECOES = [
 for (const [caminho, secao, titulo] of SECOES) {
   const { meta, canonica } = await cabecalho(`${caminho}?mandato=lula_3&painel=${secao}`);
   assert(meta('og:title').startsWith(titulo), `${secao}: ${meta('og:title')}`);
-  assert.match(meta('og:image'), new RegExp(`secao=${secao}&d=`));
+  assert.match(meta('og:image'), new RegExp(`secao=${secao}(?:&[^&]+=[^&]*)*&d=`));
+  assert.match(meta('og:image'), /conteudo=dados-v1/);
   assert.doesNotMatch(canonica, /\?/);
   const r = await fetch(base + caminhoDe(meta('og:image')));
   assert.equal(r.status, 200, secao);
@@ -149,6 +153,46 @@ for (const link of ['/?mandato=lula_3&uf=SP&painel=bloco-quem-governou-sp', '/di
   if (link.startsWith('/dinheiro')) { assert.match(meta('og:title'), /Bahia · 2024/); assert.match(meta('og:image'), /ano=2024/); }
 }
 console.log(`PASSOU: ${SECOES.length} seções têm capa específica, com território/ano e canônica preservados.`);
+
+// Mudar um filtro precisa mudar a imagem dos dados, não só o endereço da imagem.
+async function imagemFiltrada(link,nome) {
+ const {meta}=await cabecalho(link),r=await fetch(base+caminhoDe(meta('og:image')));
+ assert.equal(r.status,200,link);const bytes=Buffer.from(await r.arrayBuffer());
+ assert.equal(bytes.subarray(1,4).toString(),'PNG');
+ assert(bytes.length<300*1024,`${nome}: imagem grande demais (${bytes.length})`);
+ if(process.env.CAPAS_DIR){await fs.mkdir(process.env.CAPAS_DIR,{recursive:true});await fs.writeFile(path.join(process.env.CAPAS_DIR,nome+'.png'),bytes);}
+ return createHash('sha256').update(bytes).digest('hex');
+}
+const VARIACOES=[
+ ['credito','/?mandato=lula_3&painel=bloco-credito-e-inadimplencia','r.credito.pessoa=pf','r.credito.pessoa=pj'],
+ ['estados','/?mandato=lula_3&painel=estados','r.estados.modo=posse','r.estados.modo=hoje'],
+ ['ordem','/?mandato=lula_3&painel=estados',`r.estados.ordem=${encodeURIComponent(JSON.stringify({id:'desocupacao',desc:true}))}`,`r.estados.ordem=${encodeURIComponent(JSON.stringify({id:'desocupacao',desc:false}))}`],
+ ['biomas','/meio-ambiente?mandato=lula_3&painel=biomas','r.fiscalizacao.modo=posse','r.fiscalizacao.modo=hoje'],
+ ['protegidas','/meio-ambiente?mandato=lula_3&painel=protegidas','r.protegidas.tipo=ti','r.protegidas.tipo=uc'],
+ ['ano-protegidas','/meio-ambiente?mandato=lula_3&painel=protegidas','r.protegidas.ano=2024','r.protegidas.ano=2025'],
+ ['orcamento','/dinheiro?mandato=lula_3&painel=orcamento','r.ano=2024','r.ano=2025'],
+ ['familia','/dinheiro?mandato=lula_3&painel=orcamento','r.ano=2025','r.ano=2025&r.orcamento.familia=beneficios'],
+ ['emendas','/dinheiro?mandato=lula_3&painel=emendas&r.ano=2025','r.emendas.modo=hab','r.emendas.modo=tot'],
+ ['busca','/dinheiro?mandato=lula_3&painel=emendas&r.ano=2025','','r.emendas.busca=zzzzzzzzzzzz'],
+ ['mapa','/meio-ambiente?mandato=lula_3&painel=mapa-ambiente','r.mapa.modo=total','r.mapa.modo=posse'],
+ ['mapa-recorte','/meio-ambiente?mandato=lula_3&painel=mapa-ambiente','r.mapa.recorte=municipios','r.mapa.recorte=estados'],
+ ['mapa-areas','/meio-ambiente?mandato=lula_3&painel=mapa-ambiente','r.mapa.lente=ti','r.mapa.lente=uc'],
+ ['historico','/?mandato=lula_3&painel=de-perto&r.serie=selic','r.faixa=mandato','r.faixa=tudo'],
+ ['tabela-historica','/?mandato=lula_3&painel=de-perto&r.serie=selic&r.faixa=tudo','r.historico.tabela=false','r.historico.tabela=true'],
+];
+for(const [nome,link,a,b] of VARIACOES){const antes=await imagemFiltrada(link+'&'+a,nome+'-a'),depois=await imagemFiltrada(link+'&'+b,nome+'-b');assert.notEqual(antes,depois,`${nome}: filtro não mudou a imagem`);}
+console.log(`PASSOU: ${VARIACOES.length} variações alteram os pixels da imagem com os filtros selecionados.`);
+
+const emendas=await(await fetch(base+'/api/painel/dinheiro?tipo=emendas&ano=2025')).json();
+const municipioComPlano=emendas.municipios.find(m=>m[3]>0);
+assert(municipioComPlano,'A fonte deve ter um município com planos para validar o detalhe.');
+const planos=await(await fetch(base+'/api/painel/dinheiro?tipo=planos&ano=2025&cnpj='+municipioComPlano[5])).json();
+assert(planos.length>0,'O município selecionado deve retornar os planos anunciados pela fonte.');
+const filtroPlano='r.emendas.detalhe='+encodeURIComponent('cnpj:'+municipioComPlano[5]);
+const listaPlanos=await imagemFiltrada('/dinheiro?mandato=lula_3&painel=emendas&r.ano=2025&'+filtroPlano,'lista-planos');
+const plano=await imagemFiltrada('/dinheiro?mandato=lula_3&painel=emendas&r.ano=2025&'+filtroPlano+'&r.emendas.plano='+planos[0].id,'plano-selecionado');
+assert.notEqual(listaPlanos,plano,'Abrir um plano deve mudar a tabela da imagem.');
+console.log('PASSOU: a lista e o plano específico de emenda têm tabelas próprias.');
 
 // A imagem existe, e o mesmo molde vale para todo governo.
 for (const mandato of ['fhc_1', 'fhc_2', 'lula_1', 'lula_2', 'dilma_1', 'dilma_2', 'temer', 'bolsonaro', 'lula_3']) {

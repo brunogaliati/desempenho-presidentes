@@ -15,6 +15,10 @@ async function arquivoPublico(caminho: string) {
   return readFile(join(process.cwd(), "public", caminho));
 }
 
+export async function jsonCompartilhamento(caminho: 'painel/municipios-brasil.json' | 'painel/areas-protegidas.json') {
+  return JSON.parse(Buffer.from(await arquivoPublico(caminho) as ArrayBuffer).toString('utf8'));
+}
+
 export function fonteCompartilhamento(nome: "Inter-Regular.ttf" | "Inter-SemiBold.ttf") {
   return arquivoPublico(`fontes/${nome}`);
 }

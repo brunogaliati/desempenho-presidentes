@@ -10,6 +10,7 @@ import { criarCsv } from "../_dados/economiaModelo";
 import type { DadosPainel, SerieEconomia } from "../_dados/tipos";
 import { Bloco, Opcoes, ROTULO } from "./Bloco";
 import { formatar, mudanca, pessoas, recebido, referencia, ultimoDado, vereditoDaSerie } from "./formatos";
+import { empregoEm12 } from "./visualizacaoSecao";
 import { GraficoLinha } from "./GraficoLinha";
 import { Numero } from "./PainelEconomia";
 import { PilulaVeredito } from "./Placar";
@@ -196,7 +197,7 @@ export function EmpregoFormal({ id, dados, className }: { id?: string; dados: Da
   const estoque = achar(dados, "caged_estoque");
   if (!saldo) return <Indisponivel encerrado={!dados.foco.emCurso} id={id} titulo="Emprego com carteira" className={className} />;
   const pontos = pontosDe(saldo);
-  const porMes = new Map(pontos.map((p) => [p.d, p.v]));
+
   const ultimo = pontos[pontos.length - 1];
   const desdeAPosse = pontos.filter((p) => p.d >= POSSE).reduce((a, p) => a + p.v, 0);
   const cobreOMandato = pontos[0].d <= POSSE;
@@ -204,15 +205,7 @@ export function EmpregoFormal({ id, dados, className }: { id?: string; dados: Da
   const veredito = cobreOMandato ? sentido(desdeAPosse, "maior_melhor") : "neutro";
 
   // A soma dos 12 meses até cada mês; só onde os 12 existem.
-  const mesAntes = (d: string, n: number) => {
-    const t = new Date(`${d}-15T12:00:00Z`);
-    t.setUTCMonth(t.getUTCMonth() - n);
-    return t.toISOString().slice(0, 7);
-  };
-  const em12 = pontos.flatMap((p) => {
-    const meses = Array.from({ length: 12 }, (_, k) => porMes.get(mesAntes(p.d, k)));
-    return meses.every((v) => v !== undefined) ? [{ d: p.d, v: meses.reduce((a, v) => a + v!, 0) }] : [];
-  });
+  const em12 = empregoEm12(saldo);
   const doze = em12.at(-1)?.d === ultimo.d ? em12.at(-1)!.v : null;
   const grafico = doMandato(em12, POSSE);
 

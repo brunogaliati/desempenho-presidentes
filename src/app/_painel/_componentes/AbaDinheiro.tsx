@@ -1,6 +1,7 @@
 "use client";
 import CarregandoPainel from "./CarregandoPainel";
 import { identificadorCompartilhado } from "@/lib/compartilhamento";
+import { anoDoOrcamento } from "./visualizacaoSecao";
 import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -77,15 +78,7 @@ export function AbaDinheiro({
   }, [painel, sigla, dados.governos, atual.economia.mandatos]);
 
   const foco = dados.foco;
-  const ano: number = useMemo<number>(() => {
-    if (!painel) return 0;
-    // Quem governava em julho fica com o ano, a mesma regra do trilho.
-    const doMandato = painel.anos.filter((a) => foco.posse <= `${a}-07` && (foco.ate === null || `${a}-07` < foco.ate));
-    if (anoPedido !== null && (doMandato.length === 0 || doMandato.includes(anoPedido))) return anoPedido;
-    if (doMandato.length === 0) return painel.anos[0];
-    const fechados = doMandato.filter((a) => a !== painel.parcial?.ano);
-    return fechados.at(-1) ?? doMandato[doMandato.length - 1];
-  }, [painel, anoPedido, foco.posse, foco.ate]);
+  const ano = useMemo(() => painel ? anoDoOrcamento(painel, foco, anoPedido) : 0, [painel, foco, anoPedido]);
 
   const trilhoRef = useRef(grupos);
   trilhoRef.current = grupos;

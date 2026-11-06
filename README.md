@@ -370,3 +370,11 @@ validação, mantendo a verificação normal do certificado e do hostname; o DNS
 sistema não foi alterado. A propagação dos caches de outros resolvedores pode
 terminar depois da publicação. Não se declara indexação no Google, métricas reais
 de Core Web Vitals ou deploy automático pelo GitHub como concluídos nesta etapa.
+
+### Imagens dos recortes compartilhados
+
+As seções dos painéis geram PNGs com tabelas, séries, barras, treemap e mapas dos dados oficiais, pelos filtros validados do link. `visualizacaoSecao.ts` monta a representação; `ImagemDadosSecao.tsx` desenha a imagem. Grade, ritmos, Caged, temporadas e seletores de orçamento reutilizam modelos do painel. As consultas adicionais usam os mesmos carregadores das APIs públicas.
+
+Tabelas extensas mostram as primeiras sete linhas na ordem selecionada e identificam o total; o link abre o componente completo. A URL da imagem inclui somente os filtros da seção e uma versão de conteúdo, para separar os recortes no cache. Ano e período calculados são preservados mesmo quando o estado interno usa `null` como padrão.
+
+Validação: `node --test scripts/test-secoes-visuais.mjs scripts/test-compartilhamento.mjs` e `node scripts/test-capa-recorte.mjs` contra o servidor ou Worker em 3000 (`BASE` muda a origem). A integração compara os PNGs de quinze pares de filtros. `CAPAS_DIR` permite salvar as imagens para inspeção.

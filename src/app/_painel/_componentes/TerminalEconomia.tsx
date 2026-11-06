@@ -10,32 +10,29 @@ import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 
 import { COR_BOM, COR_RUIM, corDoVeredito, GraficoTempo } from "@/components/GraficoTempo";
 import { Retrato } from "@/components/Retrato";
-import { CATEGORIAS, SERIES_UI_POR_ID, type Categoria } from "@/lib/registroSeries";
-import { comSinal, numero, rotuloMandato, sentido, type Sentido } from "@/lib/formatar";
+
+import { comSinal, numero, rotuloMandato, sentido } from "@/lib/formatar";
 import { useLargura } from "@/lib/useLargura";
-import type { Benchmark, Direcao, Indicador } from "@/types/dados";
+import type { Benchmark } from "@/types/dados";
 
 import { criarCsv, governosNoPeriodo, recortar, variacaoDesdeReferencia } from "../_dados/economiaModelo";
 import type { Expectativa } from "../_dados/panoramaModelo";
-import { recebidoNaLista, recebidoNoPainel, ritmoDesdeORecebido, type Recebido } from "../_dados/mandatoRecorte";
+import { recebidoNoPainel } from "../_dados/mandatoRecorte";
 import type { DadosPainel, Governos, IndicadorMandato, Leitura, MandatoVisual, SerieEconomia, UF } from "../_dados/tipos";
 import {
   corDoSentido,
   formatar,
-  LADO_BOM,
   mudanca,
   naReferencia,
   recebido,
   referencia,
   reguaDeCor,
   rotuloDataDaSerie,
-  tendencia,
   ultimoDado,
-  mandatosNaSerie,
   vereditosPorMandato,
   type Regua,
 } from "./formatos";
-import { fraseDaLeitura, fraseDaSerie, ritmoNaRegua } from "./frases";
+import { fraseDaLeitura, fraseDaSerie } from "./frases";
 import { Faisca } from "./GraficoLinha";
 import { PilulaVeredito, placarDoMandato, type ItemPlacar } from "./Placar";
 import { Bloco, Opcoes, ROTULO } from "./Bloco";
@@ -54,6 +51,10 @@ import {
   rotuloPartido,
   semCorDePartido,
 } from "./governos";
+import { ritmosDoPais, ritmosDoEstado, curto, emPontos, type Ritmo } from "./ritmoModelo";
+import { valorDaLeitura } from "./visualizacaoSecao";
+export type { Ritmo } from "./ritmoModelo";
+import { linhasDaGrade, MUNDO, REGIOES, type LinhaGrade } from "./gradeModelo";
 import { larguraTexto } from "./Mapa";
 import { IdentidadePartido, Numero, Pilula } from "./PainelEconomia";
 
@@ -137,14 +138,6 @@ function csvLeitura(l: Leitura, dados: DadosPainel) {
       territorios.map((t) => [p.codigo, t.nivel, t.codigo, t.nome, l.titulo, t.valores[i] ?? null, l.fonteUrl ?? l.fonte, l.coletadoEm ?? null]),
     ),
   );
-}
-
-/** O nível de um indicador com a unidade dele: "R$ 1.540", "US$ 7.622", "13,6%". */
-function nivelDe(v: number, unidade: string, simbolo?: string): string {
-  if (simbolo === "R$") return `R$ ${numero(v, v >= 100 ? 0 : 2)}`;
-  if (unidade.startsWith("US$")) return `US$ ${numero(v, 0)}`;
-  if (unidade.includes("%")) return `${numero(v, 1)}%`;
-  return numero(v, 1);
 }
 
 /** "+3,2% ao ano", "−0,9 pontos por ano": o % cola no número. */
@@ -710,130 +703,7 @@ function esperaDoMercado(s: SerieEconomia, lista: Expectativa[], hoje: string) {
 // Este governo: o ritmo no mandato contra o de antes
 // ---------------------------------------------------------------------------
 
-const ordemSerie = (id: string) => SERIES_UI_POR_ID[id]?.ordem ?? 99;
-const POSSE_ATUAL = "2023-01";
-
-/** Nome, barra, no mandato, referência: as mesmas colunas em todas as linhas, para o zero ficar num fio só. */
 const COLUNAS_RITMO = "grid grid-cols-[8.4rem_minmax(0,1fr)_4.9rem_2.8rem] items-center gap-x-2";
-
-/** Uma linha do ritmo: a média por ano no mandato e a referência tracejada. */
-export interface Ritmo {
-  id: string;
-  rotulo: string;
-  /** O grupo da linha, quando não é a unidade: todos dividem a mesma escala. */
-  grupo?: string;
-  v: number;
-  /** No país, o ritmo nos 24 meses antes da posse; num estado, o do Brasil na mesma medida. */
-  referencia: number | null;
-  /** Pontos por ano; senão, % ao ano. */
-  pontos: boolean;
-  sentido: Sentido;
-  /** A leitura por escrito, para o balão. */
-  leitura: string | null;
-  ativa: boolean;
-  aoEscolher?: () => void;
-}
-
-/**
- * Parte do recebido, como o placar: pela série, onde há, e sem ela (ou em PIB e renda,
- * que já são crescimento) pelo último dado do governo anterior. Medida que começa neste
- * governo fica no indicador dele. A cor de cada barra é o veredito do placar, não o sinal
- * do ritmo: a Selic sem lado bom fica em cinza.
- */
-function ritmosDoPais(
-  indicadores: Indicador[],
-  series: SerieEconomia[],
-  recebidoDe: (serieId: string) => Recebido | null,
-  vereditos: Map<string, Sentido>,
-  ativa: string | null,
-  aoEscolher: (origem: string) => void,
-  temSerie: (origem: string) => boolean,
-): Ritmo[] {
-  return indicadores
-    .filter((i) => SERIES_UI_POR_ID[i.serieId] && i.serieId !== "salario_minimo")
-    .sort((a, b) => ordemSerie(a.serieId) - ordemSerie(b.serieId))
-    .flatMap((i) => {
-      const ui = SERIES_UI_POR_ID[i.serieId];
-      const s = series.find((x) => x.origem === i.serieId);
-      const r = s ? ritmoNaRegua(s, s.posse ?? POSSE_ATUAL) : null;
-      const doIndicador = r ? null : ritmoDesdeORecebido(recebidoDe(i.serieId), i);
-      const v = r?.v ?? doIndicador?.v ?? i.variacaoAnualizada;
-      if (v === null) return [];
-      // Os 24 meses antes da posse já não tocam o mandato: o indicador serve.
-      const referencia = r ? r.referencia : i.tendenciaPrevia;
-      return [
-        {
-          id: i.serieId,
-          rotulo: ui.rotulo,
-          v,
-          referencia,
-          pontos: r?.pontos ?? doIndicador?.pontos ?? i.unidadeAnualizada === "p.p./ano",
-          sentido: vereditos.get(i.serieId) ?? (ui.semDirecao ? "neutro" : sentido(v, i.direcao)),
-          leitura: referencia !== null ? tendencia(v, referencia) : null,
-          ativa: i.serieId === ativa,
-          aoEscolher: temSerie(i.serieId) ? () => aoEscolher(i.serieId) : undefined,
-        },
-      ];
-    });
-}
-
-/** Quantos períodos a medida tem por ano: trimestre, mês ou ano. */
-function periodosPorAno(l: Leitura): number {
-  const c = l.periodos[0]?.codigo ?? "";
-  return /^\d{6}$/.test(c) ? 4 : /^\d{4}-\d{2}$/.test(c) ? 12 : 1;
-}
-
-/** De `a` para `b` por ano: taxas em pontos divididos pelos anos; preços e valores em % composto. */
-function porAno(a: number, b: number, anos: number, pontos: boolean): number | null {
-  if (anos <= 0) return null;
-  if (pontos) return (b - a) / anos;
-  return a > 0 ? ((b / a) ** (1 / anos) - 1) * 100 : null;
-}
-
-/**
- * O ritmo com os números do estado, do que o governo recebeu (fim de 2022) ao
- * último dado. A referência é o Brasil na mesma medida, e não o "antes da
- * posse": as séries por UF começam em 2021, e esse trecho mediria a volta da
- * pandemia, não o rumo que o estado já levava.
- */
-function ritmosDoEstado(leituras: Leitura[], uf: UF, ativa: string | null, aoEscolher: (id: string) => void): Ritmo[] {
-  return leituras.flatMap((l): Ritmo[] => {
-    const r = l.indiceRecebido;
-    const p = l.periodos.length - 1;
-    if (r === null || p <= r) return [];
-    const pontos = emPontos(l);
-    const anos = (p - r) / periodosPorAno(l);
-    const ritmo = (s: (number | null)[] | undefined) => {
-      const a = s?.[r];
-      const b = s?.[p];
-      return a == null || b == null ? null : porAno(a, b, anos, pontos);
-    };
-    const v = ritmo(l.ufs[uf.codigo]);
-    if (v === null) return [];
-    const brasil = ritmo(l.brasil);
-    const pts = (x: number) => `${comSinal(x, 1)}${pontos ? " pts" : "%"} por ano`;
-    return [
-      {
-        id: l.id,
-        rotulo: curto(l),
-        v,
-        referencia: brasil,
-        pontos,
-        sentido: sentido(Math.round(v * 10) / 10, l.direcao ?? "neutro"),
-        leitura: brasil === null ? null : `${uf.sigla} ${pts(v)}; Brasil ${pts(brasil)}`,
-        ativa: l.id === ativa,
-        aoEscolher: () => aoEscolher(l.id),
-      },
-    ];
-  });
-}
-
-/**
- * O ritmo por ano de cada indicador no mandato, desenhado como as barras por
- * partido da sala: barra grossa saindo de um zero comum, ponta arredondada, o
- * valor à direita. A referência é o traço tracejado, como a linha do Brasil lá
- * em cima.
- */
 export function EsteGoverno({
   ritmos,
   detalhe,
@@ -1027,234 +897,6 @@ function QuemGovernou({ governos, uf, hoje, className }: { governos: Governos; u
 // ---------------------------------------------------------------------------
 // Governo a governo
 // ---------------------------------------------------------------------------
-
-/** O que a grade compara, na ordem da narrativa do site. O mínimo nominal fica fora (ver `registroSeries`). */
-const LINHAS_GRADE = [
-  "salario_minimo_real",
-  "ipca",
-  "selic",
-  "juros_real",
-  "cambio",
-  "desemprego",
-  "massa_renda_real",
-  "pib_volume",
-  "pib_per_capita",
-  "divida_bruta_pib",
-  "divida_liquida_pib",
-  "pobreza",
-  "gini",
-];
-
-/** O World Bank mede igual para todos os países: é o que permite pôr o Brasil contra o mundo em cada mandato. */
-const MUNDO: { id: string; rotulo: string; direcao: Direcao }[] = [
-  { id: "NY.GDP.MKTP.KD.ZG", rotulo: "Crescimento do PIB", direcao: "maior_melhor" },
-  { id: "FP.CPI.TOTL.ZG", rotulo: "Inflação", direcao: "menor_melhor" },
-  { id: "SL.UEM.TOTL.ZS", rotulo: "Desemprego (OIT)", direcao: "menor_melhor" },
-];
-const REGIOES: [string, string][] = [
-  ["BRA", "Brasil"],
-  ["LCN", "América Latina e Caribe"],
-  ["MIC", "Países de renda média"],
-  ["WLD", "Mundo"],
-];
-
-interface Celula {
-  /** O que mudou desde a posse, no idioma da medida: "−1,2 pts", "+12,5%". */
-  texto: string | null;
-  sentido: Sentido;
-  /** A comparação por escrito, para o balão. */
-  leitura: string | null;
-  /** O ritmo por ano, que vai no balão com a posição entre os governos. */
-  ritmo: number | null;
-  parcial: boolean;
-  detalhe: React.ReactNode;
-}
-interface LinhaGrade {
-  id: string;
-  grupo: string;
-  rotulo: string;
-  /** O que a célula mede: "pts", "%", "% no mandato". */
-  unidade: string;
-  /** A unidade do ritmo do balão: "% ao ano", "pontos por ano". */
-  unidadeRitmo: string;
-  direcao: Direcao;
-  /** A série do banco, quando há uma série nacional para abrir no gráfico. */
-  origem?: string;
-  celulas: Celula[];
-  /** A posição de cada mandato no ritmo (0 é o melhor) e quantos têm o dado. */
-  posicao: (number | null)[];
-  n: number;
-}
-
-/**
- * A posição de cada mandato entre os que têm o dado, do melhor (0) ao pior.
- * Vai só no balão: a cor da grade é a régua do placar, não o ranking.
- */
-function posicoes(valores: (number | null)[], direcao: Direcao): (number | null)[] {
-  if (direcao === "neutro") return valores.map(() => null);
-  const ordem = valores
-    .map((v, i) => ({ v, i }))
-    .filter((x): x is { v: number; i: number } => x.v !== null)
-    .sort((a, b) => (direcao === "maior_melhor" ? b.v - a.v : a.v - b.v));
-  const saida: (number | null)[] = valores.map(() => null);
-  ordem.forEach((x, k) => (saida[x.i] = k));
-  return saida;
-}
-
-type TrechoSerie = ReturnType<typeof mandatosNaSerie>[number];
-
-/**
- * Uma célula com a régua do placar e do gráfico: o último dado do mandato
- * contra o que ele recebeu na posse.
- *
- * - Mandato em curso: o número do placar, igual em toda a aba.
- * - Com série nacional: a mesma conta que pinta o gráfico (`mandatosNaSerie`).
- *   PIB e renda já são variação: a célula diz quanto cresceram no mandato e a
- *   cor é a do gráfico, a média contra o zero.
- * - Sem série (pobreza, Gini, dívida líquida, PIB per capita): o primeiro e o
- *   último dado do mandato no banco, como o placar faz com eles.
- */
-function celulaDaRegua(
-  i: IndicadorMandato | null,
-  s: SerieEconomia | undefined,
-  t: TrechoSerie | undefined,
-  item: ItemPlacar | undefined,
-  direcao: Direcao,
-  recebeu: Recebido | null,
-): Pick<Celula, "texto" | "sentido" | "leitura"> {
-  const vazia = { texto: null, sentido: "neutro" as const, leitura: null };
-  if (item) return { texto: item.mudanca, sentido: item.sentido, leitura: item.leitura };
-  const pelosNiveis = (pts: boolean) => {
-    // O recebido, como no placar; quem não tem governo anterior com o dado parte do primeiro dele.
-    const de = recebeu?.valor ?? i?.valorInicial ?? null;
-    if (!i || de === null || i.valorFinal === null || i.cobertura === "indisponivel" || de === 0) return null;
-    const v = Math.round((pts ? i.valorFinal - de : (i.valorFinal / de - 1) * 100) * 10) / 10;
-    return { v, texto: v === 0 ? "igual" : `${comSinal(v, 1)}${pts ? " pts" : "%"}` };
-  };
-  if (s) {
-    if (!t) return vazia;
-    if (s.formato === "pctsinal1") {
-      const n = pelosNiveis(false);
-      return n ? { texto: n.texto, sentido: t.sentido, leitura: `${n.v >= 0 ? "Cresceu" : "Encolheu"} ${numero(Math.abs(n.v), 1)}% no mandato.` } : vazia;
-    }
-    const d = mudanca(s, t.recebeu, t.ultimo);
-    return {
-      texto: d?.texto ?? null,
-      sentido: direcao === "neutro" ? "neutro" : t.sentido,
-      leitura: `Recebeu ${formatar(t.recebeu, s.formato)}; ${t.emCurso ? "está em" : "terminou em"} ${formatar(t.ultimo, s.formato)}.`,
-    };
-  }
-  if (!i || !["nivel_pct", "nivel_moeda", "indice"].includes(i.tipo)) return vazia;
-  const n = pelosNiveis(i.tipo === "nivel_pct");
-  return n ? { texto: n.texto, sentido: sentido(n.v, direcao), leitura: null } : vazia;
-}
-
-/** As linhas da grade: as séries do banco e, no fim, o Brasil contra o mundo. */
-function linhasDaGrade(
-  ordem: MandatoVisual[],
-  porMandato: Record<string, IndicadorMandato[]>,
-  benchmark: Record<string, Benchmark[]>,
-  origens: Set<string>,
-  series: SerieEconomia[],
-  doPlacar: Map<string, ItemPlacar>,
-): LinhaGrade[] {
-  const comPosicao = (ln: Omit<LinhaGrade, "posicao" | "n">): LinhaGrade => {
-    const ritmos = ln.celulas.map((c) => c.ritmo);
-    return { ...ln, posicao: posicoes(ritmos, ln.direcao), n: ln.celulas.filter((c) => c.texto !== null).length };
-  };
-  const daSerie = LINHAS_GRADE.flatMap((id): LinhaGrade[] => {
-    const ui = SERIES_UI_POR_ID[id];
-    const inds = ordem.map((m) => porMandato[m.id]?.find((i) => i.serieId === id) ?? null);
-    // A unidade vem de um mandato com o dado: os sem dado não a têm.
-    const exemplo = inds.find((i) => i?.unidadeAnualizada) ?? inds.find((i) => i !== null);
-    if (!ui || !exemplo || inds.every((i) => i?.variacaoAnualizada == null)) return [];
-    const direcao = LADO_BOM[id] ?? (ui.semDirecao ? "neutro" : exemplo.direcao);
-    const s = series.find((x) => x.origem === id);
-    const trechos = new Map((s ? mandatosNaSerie(s, ordem) : []).map((t) => [t.id, t] as const));
-    const crescimento = s ? s.formato === "pctsinal1" : exemplo.tipo === "indice" || id === "pib_per_capita";
-    const emPts = s ? !crescimento && s.formato !== "reais0" && s.formato !== "reais2" : exemplo.tipo === "nivel_pct";
-    const nivelVisivel = exemplo.tipo === "nivel_pct" || exemplo.tipo === "nivel_moeda";
-    return [
-      comPosicao({
-        id,
-        grupo: CATEGORIAS[ui.categoria as Categoria],
-        rotulo: ui.rotulo,
-        unidade: crescimento ? "% no mandato" : emPts ? "pts" : "%",
-        unidadeRitmo: (s && !crescimento ? emPts : exemplo.unidadeAnualizada === "p.p./ano") ? "pontos por ano" : "% ao ano",
-        direcao,
-        origem: origens.has(id) ? id : undefined,
-        celulas: inds.map((i, k) => ({
-          ...celulaDaRegua(i, s, trechos.get(ordem[k].id), ordem[k].emCurso ? doPlacar.get(id) : undefined, direcao, recebidoNaLista(inds, k)),
-          // A régua do ritmo é uma só na linha: sem base nesse governo fica sem número, e não
-          // entra na posição com outra unidade.
-          ritmo:
-            s && !crescimento
-              ? ((t) => (t ? (ritmoNaRegua(s, t.desde, t.ate)?.v ?? null) : null))(trechos.get(ordem[k].id))
-              : i
-                ? (ritmoDesdeORecebido(recebidoNaLista(inds, k), i)?.v ?? i.variacaoAnualizada)
-                : null,
-          parcial: i?.cobertura === "parcial",
-          detalhe: i ? (
-            <>
-              {!s && nivelVisivel && (recebidoNaLista(inds, k)?.valor ?? i.valorInicial) !== null && i.valorFinal !== null && (
-                <span className="block">
-                  De {nivelDe(recebidoNaLista(inds, k)?.valor ?? i.valorInicial!, i.unidade, ui.simbolo)} a {nivelDe(i.valorFinal, i.unidade, ui.simbolo)}
-                </span>
-              )}
-              {i.cobertura === "parcial" && i.fracaoMandatoCoberta !== null && (
-                <span className="block">Dado cobre {Math.round(i.fracaoMandatoCoberta * 100)}% do mandato</span>
-              )}
-              {i.cobertura === "indisponivel" && <span className="block">{i.ressalva ?? "Sem dado nesta série para o mandato"}</span>}
-            </>
-          ) : (
-            "Sem dado nesta série para o mandato"
-          ),
-        })),
-      }),
-    ];
-  });
-  // Contra o mundo não há "o que recebeu": verde é o Brasil melhor que a
-  // média mundial no mandato, vermelho, pior.
-  const doMundo = MUNDO.map((ind) =>
-    comPosicao({
-      id: ind.id,
-      grupo: "Contra o mundo (World Bank)",
-      rotulo: `${ind.rotulo}: Brasil − mundo`,
-      unidade: "pts",
-      unidadeRitmo: "pontos, média anual",
-      direcao: ind.direcao,
-      celulas: ordem.map((m) => {
-        const b = benchmark[m.id]?.filter((x) => x.indicadorWb === ind.id) ?? [];
-        const media = (r: string) => b.find((x) => x.regiao === r)?.mediaPeriodo ?? null;
-        const brasil = media("BRA");
-        const mundo = media("WLD");
-        const anos = b[0]?.nAnos ?? 0;
-        const v = brasil !== null && mundo !== null ? Math.round((brasil - mundo) * 10) / 10 : null;
-        return {
-          texto: v === null ? null : v === 0 ? "igual" : `${comSinal(v, 1)} pts`,
-          sentido: v === null ? "neutro" : sentido(v, ind.direcao),
-          leitura: v === null ? null : `${v === 0 ? "Igual à" : sentido(v, ind.direcao) === "bom" ? "Melhor que a" : "Pior que a"} média mundial no mandato.`,
-          ritmo: v,
-          parcial: m.emCurso,
-          detalhe: (
-            <>
-              {REGIOES.map(([r, nome]) => (
-                <span key={r} className="flex justify-between gap-3">
-                  <span>{nome}</span>
-                  <span className="tabular font-semibold">{media(r) === null ? "—" : `${numero(media(r), 1)}%`}</span>
-                </span>
-              ))}
-              <span className="mt-1 block">
-                Média de {anos} {anos === 1 ? "ano" : "anos"}
-              </span>
-            </>
-          ),
-        };
-      }),
-    }),
-  );
-  return [...daSerie, ...doMundo];
-}
 
 /** A largura da coluna dos rótulos; a faixa que acende o mandato começa depois dela. */
 const ROTULOS = "15.5rem";
@@ -1639,14 +1281,6 @@ function LegendaRegua() {
 // Estados
 // ---------------------------------------------------------------------------
 
-const CURTO: Record<string, string> = {
-  "Subutilização da força de trabalho": "Subutilização",
-  "Inadimplência das famílias": "Inadimplência",
-  "PIB por habitante": "PIB por hab.",
-};
-const curto = (l: Leitura) => l.tituloCurto ?? CURTO[l.titulo] ?? l.titulo;
-const emPontos = (l: Leitura) => l.formato.startsWith("pct") || l.formato === "pp1";
-
 /** O número em cima de cada classe da rampa: claro nas escuras, escuro nas claras (`--mapa-N-texto`, `--desmate-N-texto`). */
 export const tintaNaClasse = (c: number | null, rampa = "mapa") => (c === null ? "var(--tinta-3)" : `var(--${rampa}-${c + 1}-texto)`);
 
@@ -1705,9 +1339,7 @@ export function Estados({
   // Desde a posse: o último dado contra o da posse, em pontos para taxas e
   // em % para reais, arredondado como aparece.
   const delta = (l: Leitura, s: (number | null)[] | undefined) => {
-    if (l.indiceRecebido === null || l.periodos.length < 2) return null;
-    const d = variacaoDesdeReferencia(s, l.indiceRecebido, ultimo(l), emPontos(l));
-    return d === null ? null : Math.round(d * 10) / 10;
+    return valorDaLeitura(l,s,'posse');
   };
   // O número que a célula mostra no modo escolhido; a ordem segue ele.
   const numeroDe = (l: Leitura, s: (number | null)[] | undefined) => (posse ? delta(l, s) : (s?.[ultimo(l)] ?? null));

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import { codificarFiltro, decodificarFiltro, type FiltrosCompartilhados } from '@/lib/compartilhamento';
+import { codificarFiltro, decodificarFiltro, registroDoFiltro, type FiltrosCompartilhados } from '@/lib/compartilhamento';
 import { usePathname } from 'next/navigation';
 
 /** O que os aplicativos mostram para um link: quem sabe ler o endereço responde sem esperar o aplicativo. */
@@ -31,10 +31,9 @@ export function useEstadoCompartilhavel<T>(chave:string,inicial:T,validar:(valor
   },[nome,validar]);
   const primeiro=useRef(inicial);
   useLayoutEffect(()=>{
-    const paraRegistro=(v:T)=>codificarFiltro(paraLink?paraLink(v):v),salvo=paraRegistro(valor);
     // Igual ao que a página abriria sozinha, o parâmetro só alonga o link. Compara com os dois porque o
     // inicial pode mudar depois de aberta (o período da régua segue a medida), e quem recebe vê o da abertura.
-    ctx?.registros.set(nome,salvo===paraRegistro(inicial)&&salvo===paraRegistro(primeiro.current)?null:salvo);
+    ctx?.registros.set(nome,registroDoFiltro(valor,inicial,primeiro.current,paraLink));
     return()=>{ctx?.registros.delete(nome);};
   },[ctx,nome,valor,inicial,paraLink]);
   useEffect(()=>{const restaurar=()=>{aplicado.current=null;const raw=new URLSearchParams(location.search).get(nome);if(raw!==null){const salvo=decodificarFiltro<T>(raw,validar);if(salvo!==undefined)setValor(salvo);}};window.addEventListener('popstate',restaurar);return()=>window.removeEventListener('popstate',restaurar);},[nome,validar]);

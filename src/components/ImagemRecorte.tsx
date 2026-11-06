@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 
 import type { Cartao, CartaoDesmatamento, CartaoIndicador, CartaoPlacar } from "@/app/_painel/_componentes/capaRecorte";
 import malha from "@/app/_painel/_dados/ufs.json";
-import { imagemCompartilhamento, respostaDaCapa, TINTA, TINTA_2 } from "@/components/ImagemCompartilhamento";
+import { respostaDaCapa, TINTA, TINTA_2 } from "@/components/ImagemCompartilhamento";
 import { caminhoFoto } from "@/components/Retrato";
 import { fotoCompartilhamento } from "@/lib/fonteCompartilhamento";
 import { contaDoPlacar } from "@/lib/fraseCompartilhamento";
@@ -181,8 +181,7 @@ function Desmatamento({ c }: { c: CartaoDesmatamento }) {
   );
 }
 
-export async function imagemRecorte(c: Cartao) {
-  if (c.tipo === "secao") return imagemCompartilhamento({ titulo: c.nome, referencia: c.legenda, descricao: c.descricao, uf: c.uf?.codigo });
+export async function imagemRecorte(c: Exclude<Cartao,{tipo:'secao'}>) {
   if (c.tipo === "desmatamento") return respostaDaCapa(<Desmatamento c={c} />, `Fonte: INPE/PRODES · ${c.nota}`);
   const foto = await fotoDe(c.tipo === "indicador" && c.uf ? undefined : c.governo?.id);
   return c.tipo === "placar"

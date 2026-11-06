@@ -10,18 +10,19 @@ import { comSinal, numero, rotuloMandato, sentido, type Sentido } from "@/lib/fo
 import { useLargura } from "@/lib/useLargura";
 
 import { cartaoDaSerie, RAMPA_DA_LENTE, textoVariacao, type Lente, type MunicipiosAmbiente } from "../_dados/ambienteMunicipal";
-import { ritmoNoMandato } from "../_dados/mandatoRecorte";
+import { ritmosDoAmbiente } from "./ritmoModelo";
 import { criarCsv } from "../_dados/economiaModelo";
 import { BIOMAS_DESMATAMENTO, desmatamentoHistorico, type EscopoDesmatamento } from "../_dados/desmatamentoHistorico";
 import type { DadosPainel, FocoMandato, MandatoVisual, MunicipioNacional, SerieEconomia } from "../_dados/tipos";
 import { Bloco, Opcoes } from "./Bloco";
-import { formatar, mandatosNaSerie, mudanca, recebido, referencia, reguaDeCor, tendencia, titulo, ultimoDado } from "./formatos";
+import { formatar, mandatosNaSerie, mudanca, recebido, referencia, reguaDeCor, titulo, ultimoDado } from "./formatos";
+import { temporadas } from "./visualizacaoSecao";
 import { NavTerminal } from "./NavTerminal";
 import { Numero } from "./PainelEconomia";
 import { PilulaVeredito, type ItemPlacar } from "./Placar";
 import { linhaDaMedida, placarDoBioma, placarDoBrasilInteiro, type LinhaTerritorio, type PlacarAmbiente } from "./placarAmbiente";
 import { fraseDaSerie } from "./frases";
-import { Cotacoes, EsteGoverno, Estados, Fontes, Historico, tintaNaClasse, type Ritmo } from "./TerminalEconomia";
+import { Cotacoes, EsteGoverno, Estados, Fontes, Historico, tintaNaClasse } from "./TerminalEconomia";
 
 /**
  * O meio ambiente em detalhe: o mesmo vidro e a mesma régua do terminal da
@@ -177,46 +178,6 @@ export function TerminalAmbiente({ dados, atual, foco, setFoco, placar, sigla, b
 // ---------------------------------------------------------------------------
 
 /** Cada cartão do "Brasil agora" no painel do ritmo: agrupado por tema, o nome pode ser curto. */
-const RITMO_DA_SERIE: Record<string, { grupo: string; rotulo: string }> = {
-  prodes_amazonia: { grupo: "Desmatamento", rotulo: "Amazônia" },
-  prodes_cerrado: { grupo: "Desmatamento", rotulo: "Cerrado" },
-  prodes_outros: { grupo: "Desmatamento", rotulo: "Outros biomas" },
-  alertas_amazonia_12m: { grupo: "Alertas", rotulo: "Amazônia" },
-  alertas_cerrado_12m: { grupo: "Alertas", rotulo: "Cerrado" },
-  focos_12m: { grupo: "Fogo", rotulo: "Focos" },
-  cicatriz_12m: { grupo: "Fogo", rotulo: "Área queimada" },
-  autos_12m: { grupo: "Fiscalização", rotulo: "Autos" },
-  multas_12m: { grupo: "Fiscalização", rotulo: "Multas" },
-  embargos_12m: { grupo: "Fiscalização", rotulo: "Embargos" },
-};
-
-/**
- * As mesmas séries do "Brasil agora", no painel do ritmo da economia: a seleção é uma
- * só. A cor é o veredito do placar, não o sinal do ritmo, para nunca discordar dele.
- */
-function ritmosDoAmbiente(series: SerieEconomia[], porId: Map<string, ItemPlacar>, foco: string, aoEscolher: (id: string) => void): Ritmo[] {
-  const cartao = cartaoDaSerie(foco);
-  return series.flatMap((s) => {
-    const ui = RITMO_DA_SERIE[s.id];
-    const r = ui ? ritmoNoMandato(s.datas, s.valores, s.posse) : null;
-    if (!ui || !r) return [];
-    return [
-      {
-        id: s.id,
-        grupo: ui.grupo,
-        rotulo: ui.rotulo,
-        v: r.v,
-        referencia: r.referencia,
-        pontos: false,
-        sentido: porId.get(s.id)?.sentido ?? "neutro",
-        leitura: r.referencia === null ? null : tendencia(r.v, r.referencia),
-        ativa: s.id === cartao,
-        aoEscolher: () => aoEscolher(s.id),
-      },
-    ];
-  });
-}
-
 /** As colunas da tabela, na ordem dos grupos do placar da sala. */
 const COLUNAS_BIOMA: { lente: Lente; rotulo: string; quando: string }[] = [
   { lente: "desmatamento", rotulo: "Desmatamento", quando: "ano PRODES" },
@@ -646,32 +607,7 @@ function TemporadaFogo({
   const { ref, largura } = useLargura<HTMLDivElement>();
   const [mesSob, setMesSob] = useState<number | null>(null);
 
-  const anos = useMemo(() => {
-    const porAno = new Map<number, (number | null)[]>();
-    meses.forEach((m, i) => {
-      const a = Number(m.slice(0, 4));
-      const lista = porAno.get(a) ?? Array.from({ length: 12 }, () => null);
-      lista[Number(m.slice(5, 7)) - 1] = valores[i];
-      porAno.set(a, lista);
-    });
-    // O acumulado só anda enquanto há mês; o ano incompleto para onde o dado para.
-    return [...porAno.entries()]
-      .map(([ano, lista]) => {
-        let soma = 0;
-        let parou = false;
-        const acumulado = lista.map((v) => {
-          if (v === null || parou) {
-            parou = true;
-            return null;
-          }
-          soma += v;
-          return soma;
-        });
-        return { ano, acumulado };
-      })
-      // 1998 começa em junho: acumulado desde janeiro não existe.
-      .filter((x) => x.acumulado[0] !== null);
-  }, [meses, valores]);
+  const anos = useMemo(() => temporadas(meses, valores), [meses, valores]);
 
   const atual = anos.at(-1);
   const deRecebido = anos.find((x) => x.ano === anoRecebido);

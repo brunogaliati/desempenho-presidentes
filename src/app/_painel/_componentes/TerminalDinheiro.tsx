@@ -20,6 +20,7 @@ import {
   type GrupoDeAnos,
   type PainelDinheiro,
 } from "../_dados/dinheiroModelo";
+import { listasDasEmendas } from "./visualizacaoSecao";
 import { Bloco, Opcoes, ROTULO } from "./Bloco";
 
 /** O que fica abaixo do treemap: painéis densos que seguem o ente e o ano escolhidos. */
@@ -174,7 +175,6 @@ function ReceitaDoAno({ r }: { r: PainelDinheiro["receita"][string] }) {
 // --- Emendas Pix ----------------------------------------------------------------
 
 type Filtro = { rotulo: string; cnpj?: string; parlamentar?: string };
-const semAcento = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 function Emendas({ painel, sigla, ano }: { painel: PainelDinheiro; sigla: string | null; ano: number }) {
   const anoEmendas = Math.max(2020, ano);
@@ -188,25 +188,7 @@ function Emendas({ painel, sigla, ano }: { painel: PainelDinheiro; sigla: string
   const escopoAnterior=useRef(anoEmendas+"|"+sigla);
   useEffect(()=>{const escopo=anoEmendas+"|"+sigla;if(escopoAnterior.current!==escopo){escopoAnterior.current=escopo;setFiltroId(null);}},[anoEmendas,sigla,setFiltroId]);
 
-  const listas = useMemo(() => {
-    if (!dados) return null;
-    const alvo = semAcento(busca.trim());
-    const casa = (s: string) => !alvo || semAcento(s).includes(alvo);
-    const municipios = dados.municipios
-      .filter((m) => (!sigla || m[1] === sigla) && casa(`${m[0]} ${m[1]}`))
-      .map((m) => ({ nome: m[0], uf: m[1], v: m[2], hab: m[2] / m[4], cnpj: m[5] }))
-      .sort((a, b) => (modo === "hab" ? b.hab - a.hab : b.v - a.v));
-    const porNome = new Map<string, { nome: string; v: number; q: number }>();
-    for (const p of dados.parlamentares) {
-      if (sigla && p[1] !== sigla) continue;
-      if (!casa(p[0])) continue;
-      const a = porNome.get(p[0]) ?? { nome: p[0], v: 0, q: 0 };
-      a.v += p[2];
-      a.q += p[3];
-      porNome.set(p[0], a);
-    }
-    return { municipios, parlamentares: [...porNome.values()].sort((a, b) => b.v - a.v) };
-  }, [dados, busca, modo, sigla]);
+  const listas = useMemo(() => dados ? listasDasEmendas(dados, busca, modo, sigla) : null, [dados, busca, modo, sigla]);
 
   const cabecalho = dados ? (sigla ? (dados.porUf[sigla] ?? { v: 0, q: 0 }) : dados.total) : null;
   const uniao = painel.entes.BR.anos[String(ano)];

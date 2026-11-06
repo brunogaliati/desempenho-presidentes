@@ -3,6 +3,7 @@ import { idCompartilhavel } from "@/lib/compartilhamento";
 /** Só títulos editoriais conhecidos podem entrar na capa; nunca texto livre da URL. */
 const SECOES = {
   economia: {
+    'historico-serie': ['Histórico do indicador', 'Série histórica com o período e a visualização selecionados.'],
     'governo-a-governo': ['Economia governo a governo', 'Inflação, desemprego, dólar, dívida e outros indicadores na mesma régua. Abra a tabela com os filtros compartilhados.'],
     'estados': ['Indicadores econômicos por estado', 'Compare os estados, as referências e a variação desde a posse na tabela.'],
     'emprego-e-credito': ['Emprego com carteira', 'Saldo, admissões e desligamentos do emprego formal, com fonte e referência no painel.'],
@@ -14,6 +15,7 @@ const SECOES = {
     'fontes': ['Fontes dos indicadores econômicos', 'Consulte as fontes, referências e arquivos para download dos indicadores do painel.'],
   },
   ambiente: {
+    'historico-serie': ['Histórico do indicador ambiental', 'Série histórica com o período e a visualização selecionados.'],
     'mapa-ambiente': ['Meio ambiente no mapa', 'Explore desmatamento, fogo, áreas protegidas e fiscalização. O link abre o mapa com os filtros compartilhados.'],
     'biomas': ['Indicadores dos biomas', 'Compare desmatamento, fogo e áreas protegidas nos biomas, respeitando as referências de cada fonte.'],
     'temporada': ['Temporada do fogo', 'Compare os focos de calor acumulados por mês com as temporadas anteriores, segundo o INPE.'],
@@ -35,6 +37,25 @@ const SECOES = {
 } satisfies Record<string, Record<string, readonly [string, string]>>;
 
 export type TemaDeSecao = keyof typeof SECOES;
+
+const FILTROS = ['serie','leitura','faixa','historico.tabela','comparar','partido','bioma','municipio','estados.modo','estados.ordem','fiscalizacao.modo','credito.pessoa','protegidas.tipo','protegidas.ano','mapa.lente','mapa.modo','mapa.recorte','mapa.anos','mapa.regiao','mapa.area','ano','orcamento.item','orcamento.familia','emendas.busca','emendas.modo','emendas.detalhe','emendas.pagina','emendas.plano'];
+export function filtrosDaSecao(q: URLSearchParams): Record<string, string> {
+  const secao=q.get('painel')??q.get('secao');
+  const grupos:Record<string,string[]>={
+    'governo-a-governo':['comparar'],estados:['estados.modo','estados.ordem'],biomas:['fiscalizacao.modo','bioma'],protegidas:['protegidas.tipo','protegidas.ano'],municipios:['bioma'],
+    'de-perto':['serie','leitura','faixa','historico.tabela'],'historico-serie':['serie','leitura','faixa','historico.tabela'],
+    'bloco-credito-e-inadimplencia':['credito.pessoa'],'bloco-ritmo-no-mandato':['serie','leitura'],
+    orcamento:['ano','orcamento.familia'], 'orcamento-detalhe':['ano','orcamento.item'],
+    emendas:['ano','emendas.busca','emendas.modo','emendas.detalhe','emendas.pagina','emendas.plano'],
+    'ano-a-ano':['ano'],'de-onde-veio':['ano'],'todas-as-linhas':['ano'],'fontes-dinheiro':['ano'],
+    'mapa-ambiente':['bioma','municipio','mapa.lente','mapa.modo','mapa.recorte','mapa.anos','mapa.regiao','mapa.area'],
+  };
+  const chaves=secao===null?FILTROS:Object.hasOwn(grupos,secao)?grupos[secao]:[];
+  return Object.fromEntries(chaves.flatMap((id) => {
+    const chave = `r.${id}`, v = q.get(chave);
+    return v !== null && v.length <= 512 ? [[chave, v]] : [];
+  }));
+}
 
 export function secaoCompartilhada(tema: TemaDeSecao, id: string, uf?: string | null): readonly [string, string] | null {
   const secoes = SECOES[tema] as Record<string, readonly [string, string]>;

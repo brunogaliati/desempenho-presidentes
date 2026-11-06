@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {codificarFiltro,decodificarFiltro,linkCompartilhado,idCompartilhavel,opcaoCompartilhada,inteiroCompartilhado} from '../src/lib/compartilhamento.ts';
+import {codificarFiltro,decodificarFiltro,registroDoFiltro,linkCompartilhado,idCompartilhavel,opcaoCompartilhada,inteiroCompartilhado} from '../src/lib/compartilhamento.ts';
+
+test('filtro calculado preserva ano e período efetivos mesmo se o estado interno é padrão',()=>{
+ assert.equal(registroDoFiltro(null,null,null,()=>2024),'2024');
+ assert.equal(registroDoFiltro(2024,null,null,()=>2024),'2024');
+ assert.equal(registroDoFiltro(null,null,null,()=>({desmatamento:2025,fogo:null,protegidas:null})),JSON.stringify({desmatamento:2025,fogo:null,protegidas:null}));
+ assert.equal(registroDoFiltro('pf','pf','pf'),null);
+ assert.equal(registroDoFiltro('pj','pf','pf'),'pj');
+});
 
 test('recorte preserva governo e filtros, distingue null de padrão e aponta ao componente',()=>{
  const url=new URL(linkCompartilhado('https://exemplo.com/?utm_source=x&uf=SP&r.serie=ipca#antigo', [['r.faixa','tudo'],['r.historico.tabela','true'],['r.leitura','pib'],['r.ficha.lula_1','cambio']], {mandato:'lula_1',uf:null,'r.serie':'dolar','r.leitura':null},'de-perto'));
