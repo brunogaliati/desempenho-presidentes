@@ -395,3 +395,26 @@ a política está em `/sobre#privacidade`. O identificador da propriedade é pú
 Verificação: `node --test scripts/test-analytics.mjs`, lint, TypeScript e build do Worker.
 Em produção, conferir recusa sem carregar tag, aceite com `page_view`, navegação
 entre temas, filtro sem nova visualização e revogação com remoção dos cookies.
+
+### Compartilhamentos no GA4
+
+`share_open` mede abertura do menu. `share` mede cópia concluída, clique em um
+destino ou conclusão da API nativa. `share_action` distingue esses resultados:
+`copia_concluida`, `destino_aberto`, `menu_concluido`. Abrir uma plataforma não
+confirma publicação da mensagem; o menu do sistema não revela o aplicativo escolhido.
+Falhas, cancelamentos, hover, foco e a cópia automática da frase para Facebook/LinkedIn
+não produzem um compartilhamento adicional.
+
+O evento acompanha `item_id`, `content_type`, `method` e os campos de
+`DIMENSOES_COMPARTILHAMENTO` em `src/lib/analytics.ts`. A origem é a imagem do
+recorte validado, com filtros tipados (governo, território, indicador, referência,
+bioma, modo, ordenação, família e despesa). Buscas, frases livres, CNPJ e nome de
+parlamentar não entram no payload. Detalhes de emendas usam a categoria e o ID
+público do plano quando disponível. Índices de período da régua são identificados
+com `indice:`; anos e intervalos conservam suas referências.
+
+O envio exige a permissão ativa em memória, os hosts públicos e a tag inicializada.
+Bloqueio do Analytics nunca impede copiar ou abrir o destino. Para rankings,
+filtrar o evento `share` e comparar Conteúdo compartilhado, Tipo de conteúdo,
+Destino do compartilhamento e os filtros cadastrados. Aberturas usam `share_open`
+e devem ser analisadas separadamente. Eventos são agregados; não incluem ID de usuário.

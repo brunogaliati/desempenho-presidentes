@@ -4,7 +4,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { CHAVE_ANALYTICS, ID_ANALYTICS, dominioComAnalytics, enderecoAnalytics, paginaAnalytics } from "@/lib/analytics";
+import { CHAVE_ANALYTICS, ID_ANALYTICS, dominioComAnalytics, enderecoAnalytics, paginaAnalytics, permitirEventosAnalytics } from "@/lib/analytics";
 
 declare global {
   interface Window {
@@ -52,6 +52,8 @@ export function Analytics() {
       page_referrer: enderecoAnalytics(document.referrer) ?? "",
     });
     setPreparado(true);
+    permitirEventosAnalytics(true);
+    return () => permitirEventosAnalytics(false);
   }, [ativo, escolha]);
 
   useEffect(() => {
@@ -67,6 +69,7 @@ export function Analytics() {
   function escolher(valor: Escolha) {
     try { localStorage.setItem(CHAVE_ANALYTICS, valor); } catch { /* A escolha continua válida em memória. */ }
     if (valor === "recusado") {
+      permitirEventosAnalytics(false);
       Reflect.set(window, `ga-disable-${ID_ANALYTICS}`, true);
       for (const cookie of document.cookie.split(";")) {
         const nome = cookie.split("=")[0].trim();

@@ -3,11 +3,12 @@ import { useEffect, useId, useRef, useState, type ChangeEvent, type CSSPropertie
 import { createPortal } from "react-dom";
 import { linkCompartilhado, type FiltrosCompartilhados } from "@/lib/compartilhamento";
 import { useRecorteCompartilhado } from "./RecortesCompartilhaveis";
+import { registrarCompartilhamentoAnalytics, type MetodoCompartilhamento } from "@/lib/analytics";
 
 const cod = encodeURIComponent;
 
 interface Destino {
-  id: string;
+  id: MetodoCompartilhamento | 'mais';
   nome: string;
   /** Complemento de "Como chega…". */
   onde: string;
@@ -105,6 +106,7 @@ export function Compartilhar({ mensagem, ancora, compacto = false, filtros = {},
     const original = mensagem + (descricao && descricao !== mensagem ? " · " + descricao : "");
     setTexto(original); setAlvo(DESTINOS[0]); setCopiado(null); setAviso(""); setSaindo(false); setCapaEstado("carregando");
     setAberto({ url, original, capa });
+    registrarCompartilhamentoAnalytics('share_open','menu','abertura',url,capa.imagem);
   };
   const encerrar = () => { clearTimeout(relogioSaida.current); setAberto(null); setSaindo(false); gatilho.current?.focus({ preventScroll: true }); };
   const fechar = () => {
@@ -117,9 +119,10 @@ export function Compartilhar({ mensagem, ancora, compacto = false, filtros = {},
     setCopiado(qual); setAviso(mensagemAviso);
     relogioCopia.current = setTimeout(() => { setCopiado(null); setAviso(""); }, 3200);
   };
-  const copiar = async (conteudo: string, qual: "link" | "frase", mensagemAviso: string) => {
+  const copiar = async (conteudo: string, qual: "link" | "frase", mensagemAviso: string, metodo?: MetodoCompartilhamento) => {
     try {
       await navigator.clipboard.writeText(conteudo);
+      if(metodo&&aberto)registrarCompartilhamentoAnalytics('share',metodo,'copia_concluida',aberto.url,aberto.capa.imagem);
       avisar(qual, mensagemAviso);
     } catch {
       if (campoUrl.current) getSelection()?.selectAllChildren(campoUrl.current);
@@ -130,6 +133,7 @@ export function Compartilhar({ mensagem, ancora, compacto = false, filtros = {},
     if (!aberto) return;
     try {
       await navigator.share({ title: frase || aberto.capa.titulo, text: frase, url: aberto.url });
+      registrarCompartilhamentoAnalytics('share','menu_sistema','menu_concluido',aberto.url,aberto.capa.imagem);
       fechar();
     } catch (e) {
       if ((e as Error).name !== "AbortError") avisar(null, "Não abriu aqui. Use Copiar link.");
@@ -206,7 +210,7 @@ export function Compartilhar({ mensagem, ancora, compacto = false, filtros = {},
                   </>;
                   const foco = { onPointerEnter: () => setAlvo(d), onFocus: () => setAlvo(d) };
                   return d.link
-                    ? <a key={d.id} className="compartilhar-destino" style={estilo} {...foco} href={d.link(frase, aberto.url)} target="_blank" rel="noopener noreferrer" onClick={d.soLink && frase ? () => copiar(frase, "frase", `Frase copiada. Cole no post do ${d.nome}.`) : undefined}>{conteudo}</a>
+                    ? <a key={d.id} className="compartilhar-destino" style={estilo} {...foco} href={d.link(frase, aberto.url)} target="_blank" rel="noopener noreferrer" onClick={() => {registrarCompartilhamentoAnalytics('share',d.id as MetodoCompartilhamento,'destino_aberto',aberto.url,aberto.capa.imagem);if(d.soLink&&frase)void copiar(frase,"frase",`Frase copiada. Cole no post do ${d.nome}.`);}}>{conteudo}</a>
                     : <button key={d.id} type="button" className="compartilhar-destino" style={estilo} {...foco} onClick={nativo}>{conteudo}</button>;
                 })}
               </div>
@@ -217,7 +221,7 @@ export function Compartilhar({ mensagem, ancora, compacto = false, filtros = {},
                 <a className="compartilhar-abrir" href={aberto.url} target="_blank" rel="noopener noreferrer" aria-label="Abrir o link em outra aba" title="Abrir o link em outra aba">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9" /><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" /></svg>
                 </a>
-                <button ref={botaoCopiar} type="button" className="botao-liquido compartilhar-copiar" onClick={() => copiar(aberto.url, "link", "Link copiado")}>
+                <button ref={botaoCopiar} type="button" className="botao-liquido compartilhar-copiar" onClick={() => copiar(aberto.url, "link", "Link copiado",'copiar_link')}>
                   {copiado === "link"
                     ? <><svg className="compartilhar-visto" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>Copiado</>
                     : <>Copiar link</>}
@@ -225,7 +229,7 @@ export function Compartilhar({ mensagem, ancora, compacto = false, filtros = {},
               </div>
               <div className="compartilhar-rodape">
                 <p data-aviso={aviso ? true : undefined}><span role="status">{aviso}</span>{!aviso && NOTA}</p>
-                {frase && <button type="button" onClick={() => copiar(frase + "\n\n" + aberto.url, "frase", "Frase e link copiados")}>{copiado === "frase" ? "Copiado" : "Copiar com a frase"}</button>}
+                {frase && <button type="button" onClick={() => copiar(frase + "\n\n" + aberto.url, "frase", "Frase e link copiados",'copiar_com_frase')}>{copiado === "frase" ? "Copiado" : "Copiar com a frase"}</button>}
               </div>
             </div>
           </div>
