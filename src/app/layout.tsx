@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { MetricasWeb } from "./MetricasWeb";
+import { Analytics } from "@/components/Analytics";
 import { jsonLd, NOME_SITE, podeIndexar, URL_SITE } from "@/lib/seo";
 
 const geistSans = Geist({
@@ -63,6 +64,7 @@ export default function RootLayout({
           ],
         }) }} />
         {children}
+        <Analytics />
         {process.env.NEXT_PUBLIC_WEB_VITALS==='true' && <MetricasWeb/>}
       </body>
     </html>

@@ -378,3 +378,20 @@ As seções dos painéis geram PNGs com tabelas, séries, barras, treemap e mapa
 Tabelas extensas mostram as primeiras sete linhas na ordem selecionada e identificam o total; o link abre o componente completo. A URL da imagem inclui somente os filtros da seção e uma versão de conteúdo, para separar os recortes no cache. Ano e período calculados são preservados mesmo quando o estado interno usa `null` como padrão.
 
 Validação: `node --test scripts/test-secoes-visuais.mjs scripts/test-compartilhamento.mjs` e `node scripts/test-capa-recorte.mjs` contra o servidor ou Worker em 3000 (`BASE` muda a origem). A integração compara os PNGs de quinze pares de filtros. `CAPAS_DIR` permite salvar as imagens para inspeção.
+
+## Google Analytics 4
+
+Fluxo web público: `G-DSETD1YL9C`, propriedade Desempenho do Governo, na conta do projeto.
+`src/components/Analytics.tsx` fica no layout raiz. A tag só carrega nos hosts públicos,
+em produção e após permitir estatísticas. A escolha pode ser alterada no rodapé;
+a revogação remove os cookies e recarrega a página para encerrar a biblioteca.
+
+A medição otimizada está desativada no fluxo GA4. As visualizações são enviadas
+manualmente por mudança de caminho, sem query, fragmento ou duplicação por filtro.
+Não ativar simultaneamente o rastreamento automático de histórico no GA4.
+Publicidade e Google Signals ficam desativados. Cookies configurados para 180 dias;
+a política está em `/sobre#privacidade`. O identificador da propriedade é público.
+
+Verificação: `node --test scripts/test-analytics.mjs`, lint, TypeScript e build do Worker.
+Em produção, conferir recusa sem carregar tag, aceite com `page_view`, navegação
+entre temas, filtro sem nova visualização e revogação com remoção dos cookies.

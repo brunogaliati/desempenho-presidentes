@@ -54,7 +54,7 @@ export const revisoesPublicadas=unstable_cache(async()=>{
   }
   registrar('site:explorar',['catalogo-unificado-2026-11-04']);
   registrar('site:principal',['painel-publico-v1',...[...fontes].filter(([k])=>k.startsWith('serie:')).map(([,v])=>v).sort()]);
-  for(const nome of ['metodologia','sobre','correcoes','economia','meio-ambiente','dinheiro'])registrar(`site:${nome}`,[]);
+  for(const nome of ['metodologia','sobre','correcoes','economia','meio-ambiente','dinheiro'])registrar(`site:${nome}`,nome==='sobre'?['privacidade-ga4-2026-11-06']:[]);
   await sql`insert into observatorio.revisao_publicacao as r(chave,assinatura)
     select chave,assinatura from jsonb_to_recordset(${JSON.stringify(registros)}::jsonb) as x(chave text,assinatura text)
     on conflict(chave) do update set assinatura=excluded.assinatura,modificado_em=statement_timestamp(),verificado_em=statement_timestamp()

@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+.analytics-preferencias { display:flex; justify-content:center; flex-wrap:wrap; gap:8px 24px; padding:16px 12px 24px; color:var(--tinta-2); font-size:12px; }
+.analytics-preferencias :is(a,button) { min-height:44px; display:inline-flex; align-items:center; text-underline-offset:3px; }
+.analytics-preferencias :is(a,button):hover { text-decoration:underline; }
+.analytics-aviso { position:fixed; z-index:70; bottom:12px; left:12px; right:12px; max-width:960px; margin-inline:auto; padding:20px; display:flex; align-items:center; gap:24px; border:1px solid var(--borda); border-radius:16px; background:var(--plano); color:var(--tinta); box-shadow:0 8px 32px #0002; }
+.analytics-aviso h2 { font-size:16px; font-weight:600; margin-bottom:6px; }
+.analytics-aviso p { font-size:13px; line-height:1.6; max-width:65ch; }
+.analytics-aviso a { text-decoration:underline; text-underline-offset:3px; }
+.analytics-acoes { display:flex; flex-shrink:0; gap:8px; }
+.analytics-acoes button { min-height:44px; padding:10px 14px; border:1px solid var(--borda); border-radius:12px; font-size:13px; font-weight:600; }
+.analytics-acoes button:hover { background:var(--faixa-ativa); }
+.analytics-aviso :is(button,a):focus-visible,.analytics-preferencias :is(button,a):focus-visible { outline:2px solid var(--tinta); outline-offset:3px; }
+@media(max-width:640px) { .analytics-aviso { flex-direction:column; align-items:stretch; gap:14px; padding:16px; } .analytics-acoes button { flex:1; } }
+
 .titulo-painel { margin-bottom:8px; font-size:16px; line-height:1.35; font-weight:600; color:var(--tinta); }
 .painel-governo.troca-aba { position:fixed; inset:0; z-index:45; overflow:auto; padding-inline:12px; background:var(--plano); }
 html:has(.troca-aba) { overflow:hidden; scrollbar-gutter:stable; }
