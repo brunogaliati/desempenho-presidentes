@@ -40,6 +40,8 @@ export function Analytics() {
     // eslint-disable-next-line prefer-rest-params -- Formato da fila oficial do gtag.
     window.gtag = window.gtag || function () { window.dataLayer!.push(arguments); };
     window.gtag("consent", "default", { analytics_storage: "granted", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
+    // Vale também para a configuração inicial que a biblioteca obtém do Google.
+    window.gtag("set", { send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false, page_location: enderecoAnalytics(location.href), page_referrer: enderecoAnalytics(document.referrer) ?? "" });
     window.gtag("js", new Date());
     window.gtag("config", ID_ANALYTICS, {
       send_page_view: false,
@@ -56,7 +58,7 @@ export function Analytics() {
     if (!ativo || escolha !== "aceito" || !preparado) return;
     const pagina = paginaAnalytics(location.origin + caminho, ultimaPagina.current);
     if (!pagina) return;
-    const parametros = { page_location: pagina, page_referrer: ultimaPagina.current ?? enderecoAnalytics(document.referrer) ?? "", page_title: document.title };
+    const parametros = { page_location: pagina, page_referrer: ultimaPagina.current ?? enderecoAnalytics(document.referrer) ?? "", page_title: document.title || document.querySelector("main h1")?.textContent?.trim() || caminho };
     window.gtag?.("set", parametros);
     window.gtag?.("event", "page_view", parametros);
     ultimaPagina.current = pagina;
