@@ -5,7 +5,7 @@ import styles from "./Topo.module.css";
 import Link from "next/link";
 import { LinkTema } from "./LinkTema";
 import { destinoPainel } from "@/lib/rotasPainel";
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 
 import { numero } from "@/lib/formatar";
 import { Retrato } from "@/components/Retrato";
@@ -59,6 +59,77 @@ export function Cabecalho({
   explorarAtivo?: boolean;
 }) {
   const [escuro, setEscuro] = useState(false);
+  const [recolhido, setRecolhido] = useState(false);
+  const cabecalho = useRef<HTMLElement>(null);
+  const estadoRecolhido = useRef(false);
+  const origemMovimento = useRef<{altura:number;topoAbas:number} | null>(null);
+  const mudarRecolhimento = (novo: boolean) => {
+    if (estadoRecolhido.current === novo) return;
+    const el = cabecalho.current, abas = el?.querySelector<HTMLElement>(".navegacao-temas");
+    if (el && abas) origemMovimento.current = {altura:el.getBoundingClientRect().height,topoAbas:abas.getBoundingClientRect().top-el.getBoundingClientRect().top};
+    estadoRecolhido.current = novo;
+    setRecolhido(novo);
+  };
+
+  useLayoutEffect(() => {
+    const el = cabecalho.current, abas = el?.querySelector<HTMLElement>(".navegacao-temas"), origem = origemMovimento.current;
+    origemMovimento.current = null;
+    if (!el || !abas || !origem || !window.matchMedia("(max-width: 760px)").matches || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const moldura = el.parentElement!;
+    const topo = abas.getBoundingClientRect().top-el.getBoundingClientRect().top;
+    moldura.style.height = getComputedStyle(moldura).getPropertyValue("--altura-cabecalho");
+    const tempo = {duration:180,easing:"cubic-bezier(.16,1,.3,1)"};
+    const animacoes = [el.animate({height:[`${origem.altura}px`,`${el.offsetHeight}px`]},tempo),abas.animate({transform:[`translateY(${origem.topoAbas-topo}px)`,"translateY(0)"]},tempo)];
+    if (!recolhido) el.querySelectorAll<HTMLElement>(".marca-painel, .cabecalho-acoes, .mandato-faixa").forEach(item=>animacoes.push(item.animate({opacity:[0,1]},tempo)));
+    animacoes[0].onfinish = () => { moldura.style.height = ""; };
+    return () => { animacoes.forEach(a=>a.cancel()); moldura.style.height = ""; };
+  }, [recolhido]);
+
+  useLayoutEffect(() => {
+    const el = cabecalho.current, moldura = el?.parentElement;
+    if (!el || !moldura) return;
+    // A reserva do conteúdo continua com a altura completa; só as sobreposições seguem a altura visível.
+    const medir = () => {
+      const css = getComputedStyle(moldura);
+      moldura.parentElement?.style.setProperty("--altura-cabecalho-visivel", `${el.offsetHeight + parseFloat(css.paddingTop) + parseFloat(css.paddingBottom)}px`);
+    };
+    medir();
+    const observer = new ResizeObserver(medir);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const mobile = window.matchMedia("(max-width: 760px)");
+    let anterior = Math.max(0, window.scrollY), movimento = 0, quadro = 0, largura = window.innerWidth;
+    const medir = () => {
+      quadro = 0;
+      const atual = Math.max(0, window.scrollY), delta = atual - anterior;
+      anterior = atual;
+      if (!mobile.matches || atual < 32) { movimento = 0; mudarRecolhimento(false); return; }
+      if (cabecalho.current?.querySelector('[aria-expanded="true"], :focus-visible')) return;
+      movimento = Math.sign(delta) === Math.sign(movimento) ? movimento + delta : delta;
+      if (Math.abs(movimento) >= 12) {
+        mudarRecolhimento(movimento > 0 && atual > 80);
+        movimento = 0;
+      }
+    };
+    const rolar = () => { if (!quadro) quadro = requestAnimationFrame(medir); };
+    const redimensionar = () => {
+      if (window.innerWidth === largura) return; // A barra de endereço do celular também altera a altura da janela.
+      largura = window.innerWidth;
+      movimento = 0;
+      anterior = Math.max(0, window.scrollY);
+      mudarRecolhimento(false);
+    };
+    window.addEventListener("scroll", rolar, {passive:true});
+    window.addEventListener("resize", redimensionar);
+    return () => {
+      window.removeEventListener("scroll", rolar);
+      window.removeEventListener("resize", redimensionar);
+      cancelAnimationFrame(quadro);
+    };
+  }, []);
 
   useEffect(() => {
     const raiz = document.documentElement;
@@ -74,7 +145,7 @@ export function Cabecalho({
   };
 
   return (
-    <header className={`cabecalho-painel vidro ${styles.cabecalho} ${!mandato ? styles.semMandato : ""}`}>
+    <header ref={cabecalho} data-recolhido={recolhido || undefined} className={`cabecalho-painel vidro ${styles.cabecalho} ${!mandato ? styles.semMandato : ""} ${recolhido ? styles.recolhido : ""}`} onFocusCapture={e => { if (e.target.matches(":focus-visible")) mudarRecolhimento(false); }}>
       <div className="cabecalho-principal">
         <Link href="/" scroll={false} onNavigate={()=>window.scrollTo({top:0,behavior:"instant"})} className="marca-painel" aria-label="Desempenho do Governo — início">
           <Marca />
@@ -101,21 +172,37 @@ export function Cabecalho({
   );
 }
 
-/**
- * Logo original, preservada no PNG transparente. O viewport remove apenas
- * as margens vazias; os recortes permitem animar bandeira e escrita separadas.
- */
+/** 48 quadros da bandeira; a escrita mantém a arte original. */
 function Marca() {
+  const logo = useRef<SVGSVGElement>(null);
+  const recorteEscrita = useId();
+
+  useEffect(() => {
+    const elemento = logo.current;
+    if (!elemento) return;
+    let visivel = false;
+    const atualizar = () => { elemento.dataset.animando = String(visivel && !document.hidden); };
+    const observador = new IntersectionObserver(([entrada]) => {
+      visivel = entrada.isIntersecting;
+      atualizar();
+    });
+    observador.observe(elemento);
+    document.addEventListener("visibilitychange", atualizar);
+    return () => {
+      observador.disconnect();
+      document.removeEventListener("visibilitychange", atualizar);
+    };
+  }, []);
+
   return (
-    <svg className="marca-logo" width="2068" height="414" viewBox="56 150 2068 414" role="img" aria-label="Desempenho do governo">
+    <svg ref={logo} className="marca-logo" width="2068" height="414" viewBox="56 150 2068 414" role="img" aria-label="Desempenho do governo">
       <defs>
-        <clipPath id="marca-recorte-bandeira"><rect width="580" height="724" /></clipPath>
-        <clipPath id="marca-recorte-escrita"><rect x="580" width="1592" height="724" /></clipPath>
+        <clipPath id={recorteEscrita}><rect x="580" width="1592" height="724" /></clipPath>
       </defs>
-      <g className="marca-bandeira" clipPath="url(#marca-recorte-bandeira)">
-        <image href="/marca/desempenho-do-governo.png" width="2172" height="724" />
-      </g>
-      <g className="marca-escrita" clipPath="url(#marca-recorte-escrita)">
+      <svg className="marca-bandeira" x="56" y="150" width="524" height="414" viewBox="0 0 256 200" overflow="hidden" aria-hidden="true">
+        <image className="marca-bandeira-quadros" href="/marca/bandeira-vento.webp?v=tecido-fluido-48" width="12288" height="200" />
+      </svg>
+      <g className="marca-escrita" clipPath={`url(#${recorteEscrita})`}>
         <image href="/marca/desempenho-do-governo.png" width="2172" height="724" />
       </g>
     </svg>

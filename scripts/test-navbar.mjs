@@ -6,7 +6,7 @@ import { mkdtemp, readFile, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const url = 'http://localhost:3000/';
+const url = process.env.BASE ?? 'http://localhost:3000/';
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function until(fn, label) {
   const deadline = Date.now() + 30000;
@@ -54,11 +54,12 @@ try {
     await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 760 });
     await delay(350);
   };
-  const capture = async name => {
+  const capture = async (name, clip) => {
     if (!process.argv[2]) return;
     await mkdir(process.argv[2], { recursive: true });
-    const shot = await send('Page.captureScreenshot', { format: 'png' });
+    const shot = await send('Page.captureScreenshot', { format: 'png', ...(clip ? { clip } : {}) });
     await writeFile(join(process.argv[2], name), Buffer.from(shot.data, 'base64'));
+    return shot.data;
   };
   await send('Page.enable');
   await send('Emulation.setFocusEmulationEnabled', { enabled: true });
@@ -66,6 +67,104 @@ try {
   await send('Page.navigate', { url });
   await until(() => evaluate(`document.readyState === 'complete' && !!document.querySelector('.tema-interruptor')`), 'cabeçalho');
   await delay(3000);
+  if (process.env.TESTE_MOBILE) {
+    for (const rota of ['/', '/economia/populacao/santa-catarina/florianopolis']) {
+      await send('Page.navigate', { url:new URL(rota, url).href });
+      await until(() => evaluate(`!!document.querySelector('h1') && !!document.querySelector('.navegacao-temas a')`), 'página carregada');
+      for (const width of [320, 390, 760, 1024, 1440]) {
+        await viewport(width, 900);
+        await evaluate(`document.activeElement?.blur(); window.scrollTo({ top:0, behavior:'instant' })`);
+        await until(() => evaluate(`!document.querySelector('.cabecalho-painel').hasAttribute('data-recolhido') && Math.abs(document.querySelector('.painel-cabecalho').offsetHeight - parseFloat(getComputedStyle(document.querySelector('.painel-governo')).paddingTop)) < 1`), 'cabeçalho completo');
+        const inicial = await evaluate(`(() => { const h=document.querySelector('.cabecalho-painel'), p=h.closest('.painel-governo'), t=document.querySelector('main'); return { altura:h.offsetHeight, reserva:parseFloat(getComputedStyle(p).paddingTop), conteudo:t.getBoundingClientRect().top+scrollY, overflow:document.documentElement.scrollWidth>innerWidth, abas:[...h.querySelectorAll('.navegacao-temas a')].map(a=>{const r=a.getBoundingClientRect();return {left:r.left,right:r.right,height:r.height,align:getComputedStyle(a).alignItems}}) }; })()`);
+        assert(!inicial.overflow, `${rota}: sem overflow em ${width}px`);
+        assert(inicial.abas.every(a=>a.left>=0 && a.right<=width), 'Abas inteiras');
+        if (width<=760) assert(inicial.abas.every(a=>a.height>=44 && a.align==='center'), 'Abas centralizadas e com área de toque');
+        if (width===390) await capture(rota==='/'?'mobile-inicio.png':'municipal-inicio.png');
+        await evaluate(`window.scrollTo({ top:600, behavior:'instant' })`);
+        if (width<=760) await until(() => evaluate(`document.querySelector('.cabecalho-painel').hasAttribute('data-recolhido') && document.querySelector('.cabecalho-painel').offsetHeight<65`), 'recolhimento');
+        else await delay(100);
+        const rolado=await evaluate(`(() => { const h=document.querySelector('.cabecalho-painel'), p=h.closest('.painel-governo'); return { recolhido:h.hasAttribute('data-recolhido'), altura:h.offsetHeight, reserva:parseFloat(getComputedStyle(p).paddingTop), conteudo:document.querySelector('main').getBoundingClientRect().top+scrollY, marca:getComputedStyle(h.querySelector('.marca-painel')).display, mandato:h.querySelector('.mandato-faixa')?getComputedStyle(h.querySelector('.mandato-faixa')).display:null, visivel:parseFloat(getComputedStyle(p).getPropertyValue('--altura-cabecalho-visivel')), limite:h.getBoundingClientRect().bottom }; })()`);
+        assert.equal(rolado.recolhido, width<=760, 'Recolhe apenas no celular');
+        assert(Math.abs(rolado.reserva-inicial.reserva)<1 && Math.abs(rolado.conteudo-inicial.conteudo)<1, `Conteúdo não pula ao recolher (${rota}, ${width}px): ${JSON.stringify({inicial,rolado})}`);
+        if (width<=760) {
+          assert(rolado.altura<65 && rolado.marca==='none' && (!rolado.mandato || rolado.mandato==='none'), 'Só as abas permanecem');
+          assert(Math.abs(rolado.visivel-rolado.limite-10)<2, 'Altura visível atualiza as sobreposições');
+          await send('Emulation.setDeviceMetricsOverride', {width,height:820,deviceScaleFactor:1,mobile:true});
+          await delay(100);
+          assert(await evaluate(`document.querySelector('.cabecalho-painel').hasAttribute('data-recolhido')`), 'Barra de endereço do celular não expande o cabeçalho');
+          if (width===390) await capture(rota==='/'?'mobile-rolagem.png':'municipal-rolagem.png');
+          await evaluate(`window.scrollTo({ top:598, behavior:'instant' })`);
+          await delay(100);
+          assert(await evaluate(`document.querySelector('.cabecalho-painel').hasAttribute('data-recolhido')`), 'Pequena oscilação não expande');
+          await evaluate(`window.scrollTo({ top:540, behavior:'instant' })`);
+          await until(() => evaluate(`!document.querySelector('.cabecalho-painel').hasAttribute('data-recolhido') && document.querySelector('.cabecalho-painel').getAnimations().length===0`), 'retorno ao subir');
+          assert.equal(await evaluate(`document.querySelector('.cabecalho-painel').offsetHeight`), inicial.altura, 'Cabeçalho completo volta ao subir');
+        }
+      }
+      await viewport(390, 900);
+      await evaluate(`window.scrollTo({top:0,behavior:'instant'})`);
+      await until(() => evaluate(`!document.querySelector('.cabecalho-painel').hasAttribute('data-recolhido') && document.querySelector('.cabecalho-painel').getAnimations().length===0`), 'início da animação');
+      for (const top of [600, 540, 650]) {
+        await evaluate(`window.scrollTo({top:${top},behavior:'instant'})`);
+        await delay(50);
+      }
+      await until(() => evaluate(`document.querySelector('.cabecalho-painel').hasAttribute('data-recolhido') && document.querySelector('.cabecalho-painel').getAnimations().length===0`), 'animação interrompida');
+      assert.equal(await evaluate(`document.querySelector('.painel-cabecalho').style.height`), '', 'Interrupção não deixa altura temporária');
+      await send('Emulation.setEmulatedMedia', {features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+      await evaluate(`window.scrollTo({top:500,behavior:'instant'})`);
+      await until(() => evaluate(`!document.querySelector('.cabecalho-painel').hasAttribute('data-recolhido')`), 'abrir com movimento reduzido');
+      await evaluate(`window.scrollTo({top:600,behavior:'instant'})`);
+      await until(() => evaluate(`document.querySelector('.cabecalho-painel').hasAttribute('data-recolhido')`), 'recolher com movimento reduzido');
+      assert.equal(await evaluate(`document.querySelector('.cabecalho-painel').getAnimations().length`), 0, 'Movimento reduzido sem animação espacial');
+      await send('Emulation.setEmulatedMedia', {features:[]});
+    }
+    console.log('PASSOU: abertura, abas alinhadas, recolhimento/retorno sem saltos, oscilação, interrupção, movimento reduzido e desktop preservado na home e na página municipal (320, 390, 760, 1024 e 1440px).');
+  } else if (process.env.TESTE_MARCA) {
+    const sprite = await fetch(new URL('/marca/bandeira-vento.webp', url));
+    assert.equal(sprite.status, 200, 'Sprite disponível');
+    await until(() => evaluate(`document.querySelector('.marca-logo')?.dataset.animando === 'true'`), 'animação visível');
+    const movimento = await evaluate(`(() => { const e = document.querySelector('.marca-bandeira-quadros'); const s = getComputedStyle(e); return { nome:s.animationName, passos:s.animationTimingFunction, estado:s.animationPlayState, duracao:s.animationDuration }; })()`);
+    assert.deepEqual(movimento, { nome:'marca-bandeira-vento', passos:'steps(48)', estado:'running', duracao:'1.6s' });
+    const antes = await evaluate(`getComputedStyle(document.querySelector('.marca-bandeira-quadros')).transform`);
+    await delay(250);
+    assert.notEqual(await evaluate(`getComputedStyle(document.querySelector('.marca-bandeira-quadros')).transform`), antes, 'Bandeira troca de quadro');
+    if (process.argv[2]) {
+      const clip = await evaluate(`(() => { const r = document.querySelector('.marca-logo').getBoundingClientRect(); return { x:r.x, y:r.y, width:r.width, height:r.height, scale:2 }; })()`);
+      const poses = [];
+      for (let i = 0; i < 48; i++) {
+        await evaluate(`(() => { const a = document.querySelector('.marca-bandeira-quadros').getAnimations()[0]; a.pause(); a.currentTime = ${(i + .5) * 1600 / 48}; })()`);
+        await delay(30);
+        poses.push(await capture('logo-quadro-'+i+'.png', clip));
+      }
+      assert.equal(new Set(poses).size, 48, 'O navegador deve mostrar 48 poses visualmente distintas');
+      await evaluate(`document.querySelector('.marca-bandeira-quadros').getAnimations()[0].play()`);
+    }
+    await capture('marca-desktop-claro.png');
+    await click('.tema-interruptor');
+    await capture('marca-desktop-escuro.png');
+    await click('.tema-interruptor');
+    await evaluate(`Object.defineProperty(document, 'hidden', { configurable:true, value:true }); document.dispatchEvent(new Event('visibilitychange'));`);
+    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.marca-bandeira-quadros')).animationPlayState`), 'paused', 'Pausa na aba oculta');
+    await evaluate(`delete document.hidden; document.dispatchEvent(new Event('visibilitychange'));`);
+    await until(() => evaluate(`document.querySelector('.marca-logo').dataset.animando === 'true'`), 'retomada');
+    await evaluate(`document.querySelector('.marca-logo').style.visibility = 'hidden'; document.querySelector('.marca-painel').style.transform = 'translateX(-200vw)'`);
+    await until(() => evaluate(`document.querySelector('.marca-logo').dataset.animando === 'false'`), 'pausa fora da tela');
+    await evaluate(`document.querySelector('.marca-logo').style.visibility = ''; document.querySelector('.marca-painel').style.transform = ''`);
+    await until(() => evaluate(`document.querySelector('.marca-logo').dataset.animando === 'true'`), 'retomada visível');
+    await send('Emulation.setEmulatedMedia', { features:[{ name:'prefers-reduced-motion', value:'reduce' }] });
+    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.marca-bandeira-quadros')).animationName`), 'none', 'Preferência de movimento reduzido');
+    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.marca-bandeira-quadros')).transform`), 'none', 'Primeiro quadro estático');
+    await capture('marca-movimento-reduzido.png');
+    await send('Emulation.setEmulatedMedia', { features:[] });
+    for (const width of [1440, 390, 320]) {
+      await viewport(width, 900);
+      const layout = await evaluate(`(() => { const e = document.querySelector('.marca-logo'), r = e.getBoundingClientRect(); return { esquerda:r.left, direita:r.right, largura:r.width, altura:r.height, nome:e.closest('a').getAttribute('aria-label') }; })()`);
+      assert(layout.esquerda >= 0 && layout.direita <= width && layout.largura > 0 && layout.altura > 0, 'Logo íntegra em '+width+'px');
+      assert.equal(layout.nome, 'Desempenho do Governo — início');
+      if (width === 390) await capture('marca-celular.png');
+    }
+    console.log('PASSOU: logo com 48 quadros em 1,6s, poses distintas, pausa oculta/fora da tela, movimento reduzido e encaixe em 1440, 390 e 320px.');
+  } else {
   await capture('navbar-desktop.png');
   const overlay = await evaluate(`(() => { const h = document.querySelector('.painel-cabecalho'), mapa = document.querySelector('.sala-tema'), painel = h.parentElement; return { background: getComputedStyle(h).backgroundColor, position: getComputedStyle(h).position, mapTop: mapa.getBoundingClientRect().top, padding: parseFloat(getComputedStyle(painel).paddingTop), height: h.offsetHeight, mapBehind: !!document.elementFromPoint(8, 6)?.closest('.sala-tema') }; })()`);
   assert.equal(overlay.background, 'rgba(0, 0, 0, 0)', 'Sem faixa opaca atrás da navbar');
@@ -124,6 +223,7 @@ try {
     if (width === 390) await capture('navbar-celular.png');
   }
   console.log('PASSOU: cabeçalho e abas íntegros em 320, 390, 768, 1024 e 1440px; altura sincronizada com o mapa.');
+  }
 } finally {
   if (socket?.readyState === WebSocket.OPEN) await Promise.race([send('Browser.close').catch(() => {}), delay(1500)]);
   socket?.close();

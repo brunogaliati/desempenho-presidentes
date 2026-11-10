@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useState, type PointerEvent } from "react";
 
 import { Retrato } from "@/components/Retrato";
 import { mesLegivel, numero, rotuloMandato } from "@/lib/formatar";
@@ -294,7 +294,19 @@ export function GraficoTempo({
   const primeiro = presentes[0];
   const ultimo = presentes[presentes.length - 1];
   const doUltimo = julgados.findLast((j) => j.tFinal === ultimo.t);
-  const alvo = hover !== null && visiveis[hover]?.v != null ? (visiveis[hover] as typeof ultimo) : null;
+  const selecionado = hover !== null ? visiveis[hover] : null;
+  const alvo = selecionado?.v != null ? (selecionado as typeof ultimo) : null;
+  const selecionarPonto = (e: PointerEvent<SVGSVGElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) * L;
+    const t = t0 + ((px - MARGEM.esq) / (L - MARGEM.esq - MARGEM.dir)) * (t1 - t0);
+    let melhor = 0, dist = Infinity;
+    visiveis.forEach((p, i) => {
+      const d = Math.abs(p.t - t);
+      if (d < dist) { dist = d; melhor = i; }
+    });
+    setHover(melhor);
+  };
 
   // Rostos alinhados ao eixo do tempo, em HTML sobre o SVG.
   //
@@ -361,28 +373,30 @@ export function GraficoTempo({
         </div>
       )}
 
+      <p id={`${id}-ajuda`} className="sr-only">Passe o mouse ou toque no gráfico para consultar cada referência. Com o teclado, use as setas para navegar, Home e End para os extremos e Escape para fechar a legenda.</p>
+      <div className="relative">
       <svg
         viewBox={`0 0 ${L} ${A}`}
-        className="w-full touch-none"
+        className="w-full touch-pan-y focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--serie)]"
         style={{ height: "auto" }}
         role="img"
+        tabIndex={0}
+        aria-describedby={`${id}-ajuda`}
         aria-label={`${serie.nome} de ${rotuloData(primeiro.mes)} a ${rotuloData(ultimo.mes)}`}
-        onPointerMove={(e) => {
-          const r = e.currentTarget.getBoundingClientRect();
-          const px = ((e.clientX - r.left) / r.width) * L;
-          const t = t0 + ((px - MARGEM.esq) / (L - MARGEM.esq - MARGEM.dir)) * (t1 - t0);
-          let melhor = 0;
-          let dist = Infinity;
-          visiveis.forEach((p, i) => {
-            const d = Math.abs(p.t - t);
-            if (d < dist && p.v !== null) {
-              dist = d;
-              melhor = i;
-            }
-          });
-          setHover(melhor);
+        onPointerMove={selecionarPonto}
+        onPointerDown={selecionarPonto}
+        onPointerLeave={(e) => { if (e.pointerType !== "touch" && document.activeElement !== e.currentTarget) setHover(null); }}
+        onPointerCancel={() => setHover(null)}
+        onFocus={() => setHover(h => h ?? 0)}
+        onBlur={() => setHover(null)}
+        onKeyDown={(e) => {
+          if (!["ArrowLeft", "ArrowRight", "Home", "End", "Escape"].includes(e.key)) return;
+          e.preventDefault();
+          if (e.key === "Escape") setHover(null);
+          else if (e.key === "Home") setHover(0);
+          else if (e.key === "End") setHover(visiveis.length - 1);
+          else setHover(h => Math.max(0, Math.min(visiveis.length - 1, (h ?? 0) + (e.key === "ArrowRight" ? 1 : -1))));
         }}
-        onPointerLeave={() => setHover(null)}
       >
         <defs>
           <clipPath id={`${id}-area`}>
@@ -394,6 +408,7 @@ export function GraficoTempo({
             />
           </clipPath>
         </defs>
+        <rect x={MARGEM.esq} y={MARGEM.topo} width={L - MARGEM.esq - MARGEM.dir} height={A - MARGEM.topo - MARGEM.baixo} fill="transparent" />
 
         {/* Faixas de mandato: lavagem neutra alternada. A identidade vem do
             rótulo, não da cor — pintar partido seria opinião disfarçada. */}
@@ -603,8 +618,17 @@ export function GraficoTempo({
           </g>
         )}
       </svg>
+      {selecionado && <div role="tooltip" className="pointer-events-none absolute rounded-xl p-3 text-sm" style={{
+        left: `clamp(8px, calc(${x(selecionado.t) / L * 100}% - 100px), calc(100% - 208px))`,
+        top: alvo ? `clamp(8px, calc(${y(alvo.v) / A * 100}% - 80px), calc(100% - 88px))` : "8px",
+        width: 200, maxWidth: "calc(100% - 16px)", background: "var(--superficie)", color: "var(--tinta)",
+        boxShadow: "0 4px 16px rgba(0,0,0,.18)", fontVariantNumeric: "tabular-nums",
+      }}><span className="block" style={{color:"var(--tinta-2)"}}>{rotuloData(selecionado.mes)}</span><strong className="mt-1 block font-semibold">{alvo ? formatoValor(alvo.v) : "Sem dados publicados"}</strong></div>}
+      </div>
 
       <figcaption
+        aria-live="polite"
+        aria-atomic="true"
         className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm"
         style={{ color: "var(--tinta-2)" }}
       >
@@ -616,6 +640,8 @@ export function GraficoTempo({
               </span>{" "}
               <span style={{ color: "var(--tinta-2)" }}>em {rotuloData(alvo.mes)}</span>
             </>
+          ) : selecionado ? (
+            <>Sem dados publicados em {rotuloData(selecionado.mes)}</>
           ) : (
             <>{serie.nome} · {serie.unidade}</>
           )}

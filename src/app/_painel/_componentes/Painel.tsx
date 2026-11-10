@@ -121,7 +121,7 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
 
       {/* Antes dos painéis de propósito: ao entrar numa rota, o Next rola até o primeiro elemento dela. Depois deles, o perfil abria no rodapé. */}
       {children}
-      <div className={`relative z-[2] mx-auto flex items-center justify-end gap-4 py-1 text-xs text-[var(--tinta-2)] ${perfil?`px-3 ${estilosPerfil.barra}`:"max-w-6xl px-2"}`}>
+      <div className={`relative z-[2] mx-auto flex items-center justify-end gap-4 py-1 text-xs text-[var(--tinta-2)] ${perfil?`px-3 ${estilosPerfil.barra}`:"painel-acoes-pagina max-w-6xl px-2"}`}>
         {perfil&&<TrilhaPerfil proprios={mandatos.filter(m=>m.pessoaId===perfil.pessoaId).sort((a,b)=>a.inicio.localeCompare(b.inicio))} atual={perfil.id} aoEscolher={setMandatoId}/>}
         <Compartilhar {...(fraseDoPainel?{contexto:"",mensagem:fraseDoPainel}:{mensagem:perfil?`${aba==="economia"?"Economia":TEMAS_PAINEL[aba].titulo} no governo ${perfil.nomeCurto}`:TEMAS_PAINEL[aba].titulo})} compacto/>
       </div>

@@ -27,7 +27,7 @@ export function HistoricoMunicipal({id,nome,pontos}:{id:IndicadorMunicipal;nome:
     </div>
     {valido ? <>
       <p aria-live="polite" className="max-w-prose text-sm leading-relaxed">De {data(de)} a {data(ate)}, a diferença na medida selecionada foi de <strong>{comSinal(b!-a!,0)} {unidade}</strong>{a!>0?` (${comSinal((b!/a!-1)*100,2)}%)`:""}. {medida===3 && id==="emprego-formal"?"Comparamos os saldos dos dois meses, sem somar o intervalo.":"Comparação dos valores nas duas referências."}</p>
-      <div style={{minHeight:330}}><GraficoTempo serie={{id:`municipal-${id}-${medida}`,nome:`${cfg.medidas[medida]} · ${nome}`,unidade,frequencia:cfg.anual?"anual":"mensal",agregacao:null,datas:recorte.map(p=>p.referencia),valores:recorte.map(valor)}} presidentes={[]} formatoValor={v=>numero(v,0)} rotuloData={data} largura={largura||1000} altura={300}/></div>
+      <div style={{minHeight:330}}><GraficoTempo serie={{id:`municipal-${id}-${medida}`,nome:`${cfg.medidas[medida]} · ${nome}`,unidade,frequencia:cfg.anual?"anual":"mensal",agregacao:null,datas:recorte.map(p=>p.referencia),valores:recorte.map(valor)}} presidentes={[]} formatoValor={v=>`${numero(v,0)} ${unidade}`} rotuloData={data} largura={largura||1000} altura={300}/></div>
     </>:<p role="status" className="py-5">Escolha referências com dados e início anterior ou igual ao fim.</p>}
     <p className="text-sm leading-relaxed text-[var(--tinta-2)]">{cfg.anual?"Estimativas anuais. Anos sem publicação interrompem a linha.":"Referências mensais. Ausências interrompem a linha e não são transformadas em zero."}</p>
   </div>;

@@ -800,7 +800,7 @@ body {
    cabeçalho na pilha, para os menus dele passarem por cima. */
 .nav-terminal {
   position: fixed;
-  top: calc(var(--altura-cabecalho, 112px) - 4px);
+  top: calc(var(--altura-cabecalho-visivel, var(--altura-cabecalho, 112px)) - 4px);
   left: 0;
   right: 0;
   z-index: 40;
@@ -886,14 +886,14 @@ body {
   transition: transform 220ms ease-out;
 }
 
-.marca-bandeira {
+.marca-bandeira-quadros {
   transform-box: fill-box;
-  transform-origin: 15% 50%;
-  animation: marca-bandeira-entrada 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: marca-bandeira-vento 1.6s steps(48) infinite;
+  animation-play-state: paused;
 }
 
-.marca-escrita {
-  animation: marca-escrita-entrada 640ms 120ms cubic-bezier(0.16, 1, 0.3, 1) both;
+.marca-logo[data-animando="true"] .marca-bandeira-quadros {
+  animation-play-state: running;
 }
 
 :root:not([data-theme="dark"]) .painel-governo .painel-cabecalho .marca-escrita {
@@ -907,14 +907,8 @@ body {
   opacity: 0.92;
 }
 
-@keyframes marca-bandeira-entrada {
-  from { opacity: 0; transform: translateX(-30px) rotate(-5deg) scale(0.94); }
-  to { opacity: 1; transform: translateX(0) rotate(0) scale(1); }
-}
-
-@keyframes marca-escrita-entrada {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes marca-bandeira-vento {
+  to { transform: translateX(-100%); }
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -922,8 +916,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .marca-bandeira,
-  .marca-escrita { animation: none; }
+  .marca-bandeira-quadros { animation: none; }
   .marca-logo { transition: none; }
   .marca-painel:hover .marca-logo { transform: none; }
 }
@@ -1113,6 +1106,10 @@ body {
 
 @media (max-width: 760px) {
   .painel-cabecalho { padding: 10px 12px; }
+  .painel-cabecalho:has(> .cabecalho-painel[data-recolhido]) { height:var(--altura-cabecalho); }
+  .painel-acoes-pagina { height:0; padding-block:0; top:12px; align-items:flex-start; pointer-events:none; }
+  .painel-acoes-pagina .compartilhar-gatilho { pointer-events:auto; }
+  .painel-governo:has(> .painel-acoes-pagina) .titulo-painel { padding-right:52px; }
   .cabecalho-painel { border-radius: 24px; }
   .cabecalho-principal { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "marca acoes" "temas temas" "mandato mandato"; gap: 10px; padding: 12px; }
   .marca-painel { width: 180px; }

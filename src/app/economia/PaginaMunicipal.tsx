@@ -34,6 +34,8 @@ function fraseMunicipal(d:DadosIndicadorMunicipal) {
 export function PaginaMunicipal({dados:d}:{dados:DadosIndicadorMunicipal}) {
   const m=d.municipio,cfg=INDICADORES_MUNICIPAIS[d.id],url=URL_SITE+rotaMunicipal(d.id,m),titulo=tituloMunicipal(d.id,m);
   const antes=d.pontos.find(p=>p.referencia===`${Number(d.ultimo.referencia.slice(0,4))-1}${d.ultimo.referencia.slice(4)}`)?.valor;
+  const referencia=rotuloReferenciaMunicipal(d.ultimo.referencia,cfg.anual);
+  const variacao=antes!==null && antes!==undefined && d.ultimo.valor!==null?d.ultimo.valor-antes:null;
   const gasolina=buscarPaginaEconomia(["gasolina",m.uf.slug,m.slug]);
   const crumbs=[{name:"Início",item:URL_SITE},{name:"Explorar dados",item:URL_SITE+"/explorar"},{name:cfg.nome,item:`${URL_SITE}/economia/${d.id}`},{name:m.uf.nome,item:`${URL_SITE}/economia/${d.id}/${m.uf.slug}`},{name:m.nome,item:url}];
   const schema={"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList",itemListElement:crumbs.map((c,i)=>({"@type":"ListItem",position:i+1,...c}))},{"@type":"WebPage","@id":url+"#pagina",url,name:titulo,description:resumoMunicipal(d),inLanguage:"pt-BR",dateModified:d.revisadoEm,mainEntity:{"@id":url+"#dados"},isPartOf:{"@id":URL_SITE+"/#site"}},{"@type":"Dataset","@id":url+"#dados",name:titulo,description:resumoMunicipal(d),url,inLanguage:"pt-BR",dateModified:d.revisadoEm,isBasedOn:cfg.url,creator:{"@id":URL_SITE+"/#organizacao"},spatialCoverage:{"@type":"City",name:m.nome,identifier:m.codigo,containedInPlace:{"@type":"State",name:m.uf.nome,identifier:m.uf.codigo,containedInPlace:{"@type":"Country",name:"Brasil"}}},temporalCoverage:`${d.pontos[0].referencia}-01/${d.ultimo.referencia}-01`,variableMeasured:cfg.medidas.map((nome,i)=>({"@type":"PropertyValue",name:nome,unitText:d.id==="cadunico" && i===1?"pessoas":d.id==="emprego-formal" && i>0?"movimentações":cfg.unidade}))}]};
@@ -42,10 +44,27 @@ export function PaginaMunicipal({dados:d}:{dados:DadosIndicadorMunicipal}) {
     <header>
       <Trilha itens={[{nome:'Explorar dados',href:'/explorar'},{nome:cfg.nome,href:`/economia/${d.id}`},{nome:m.uf.nome,href:`/economia/${d.id}/${m.uf.slug}`},{nome:`${m.nome} (${m.uf.sigla})`}]}/>
       <h1>{titulo}</h1>
+      <dl className={styles.resumoMunicipal} aria-label="Resumo do indicador">
+        <div className={styles.valorMunicipal}>
+          <dt>{cfg.medidas[0]}</dt>
+          <dd><strong>{numero(d.ultimo.valor,0)}</strong> <span>{cfg.unidade}</span></dd>
+          <dd className={styles.referenciaMunicipal}>Referência: <time dateTime={`${d.ultimo.referencia}-01`}>{cfg.anual?`1º de julho de ${referencia}`:referencia}</time></dd>
+        </div>
+        {variacao!==null && <div>
+          <dt>Variação em um ano</dt>
+          <dd className={styles.contextoValorMunicipal}>{antes!>0?`${comSinal(variacao/antes!*100,2)}%`: <>{comSinal(variacao,0)} <span>{cfg.unidade}</span></>}</dd>
+          <dd className={styles.referenciaMunicipal}>{antes!>0?`${comSinal(variacao,0)} ${cfg.unidade} · `:""}mesma referência de {Number(d.ultimo.referencia.slice(0,4))-1}</dd>
+        </div>}
+        {d.contexto && <div>
+          <dt>Posição em {m.uf.sigla}</dt>
+          <dd className={styles.contextoValorMunicipal}>{d.contexto.posicao}ª <span>de {numero(d.contexto.comDados,0)}</span></dd>
+          <dd className={styles.referenciaMunicipal}><a href="#comparacao">Por {cfg.medidas[0].toLowerCase()} · {referencia}</a></dd>
+        </div>}
+      </dl>
       <p className="my-5 text-lg leading-relaxed">{resumoMunicipal(d)}</p>
       {d.historicoPreservado && <p role="status" className="mb-5 max-w-prose leading-relaxed"><strong>Histórico preservado.</strong> A fonte já tem referências até {rotuloReferenciaMunicipal(d.referenciaFonte,cfg.anual)}, mas este município ainda não tem uma nova janela completa e consistente. Mantivemos os dados válidos até {rotuloReferenciaMunicipal(d.ultimo.referencia,cfg.anual)}; ausência não foi preenchida com zero.</p>}
       <p className="text-sm leading-relaxed text-[var(--tinta-2)]">Fonte: <a href={cfg.url}>{cfg.fonte}</a> · {m.nome} ({m.uf.sigla}) · {rotuloReferenciaMunicipal(d.ultimo.referencia,cfg.anual)}.</p>
-      <nav aria-label="Nesta página" className="mt-6 flex flex-wrap gap-2"><a href="#historico">Explorar o histórico</a><a href="#comparacao">Comparar na UF</a><a href="#tabela">Tabela de dados</a><a href="#fontes">Fontes e metodologia</a><a href="#relacionados">Outros indicadores da cidade</a></nav>
+      <nav aria-label="Nesta página" className={styles.navegacaoMunicipal}><a href="#historico">Explorar o histórico</a>{d.contexto && <a href="#comparacao">Comparar na UF</a>}<a href="#tabela">Tabela de dados</a><a href="#fontes">Fontes e metodologia</a><a href="#relacionados">Outros indicadores da cidade</a></nav>
     </header>
     <section id="historico" className="vidro" data-lustro="fixo"><TituloCompartilhavel>Como o indicador evoluiu em {m.nome}?</TituloCompartilhavel><p className="mt-3 max-w-prose leading-relaxed">Escolha as referências{cfg.medidas.length>1?" e a medida":""} para comparar os dados do município.</p><HistoricoMunicipal id={d.id} nome={`${m.nome} (${m.uf.sigla})`} pontos={d.pontos}/></section>
     {antes!==null && antes!==undefined && <section className="vidro" data-lustro="fixo"><TituloCompartilhavel>Comparação com o ano anterior</TituloCompartilhavel><div className="mt-4">      {antes!==null && antes!==undefined && <p className="mb-4 leading-relaxed">Em relação à mesma referência do ano anterior, a diferença em {cfg.medidas[0].toLowerCase()} foi de <strong>{comSinal(d.ultimo.valor!-antes,0)} {cfg.unidade}</strong>{antes>0?` (${comSinal((d.ultimo.valor!/antes-1)*100,2)}%)`:""}.</p>}

@@ -84,9 +84,27 @@
 .pagina > header > p { font-size:15px; line-height:1.65; margin-top:12px; margin-bottom:12px; }
 .pagina > header > p:not(:first-of-type):last-of-type { font-size:13px; }
 .pagina > header > nav:last-child { margin-top:16px; }
+.resumoMunicipal { display:grid; grid-template-columns:minmax(0,1.3fr) repeat(2,minmax(0,1fr)); gap:24px 32px; align-items:start; margin:24px 0 20px; font-variant-numeric:tabular-nums; }
+.resumoMunicipal > div { min-width:0; }
+.resumoMunicipal dt { color:var(--tinta-2); font-size:13px; line-height:1.5; }
+.resumoMunicipal dd { margin-top:6px; }
+.valorMunicipal strong { font-size:clamp(36px,4vw,48px); font-weight:600; line-height:1.1; letter-spacing:-.03em; }
+.valorMunicipal dd:first-of-type { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; }
+.valorMunicipal dd:first-of-type > span { font-size:15px; color:var(--tinta-2); }
+.contextoValorMunicipal { font-size:28px; font-weight:550; line-height:1.25; letter-spacing:-.02em; }
+.contextoValorMunicipal span { font-size:14px; font-weight:400; letter-spacing:0; color:var(--tinta-2); }
+.resumoMunicipal .referenciaMunicipal { margin-top:8px; color:var(--tinta-2); font-size:12px; line-height:1.6; }
+.pagina > header > nav.navegacaoMunicipal { display:flex; flex-wrap:wrap; gap:0 24px; margin-top:20px; padding-top:8px; border-top:1px solid var(--borda); }
+.pagina > header > nav.navegacaoMunicipal a { display:inline-flex; align-items:center; min-height:44px; padding:8px 0; border:0; border-radius:0; background:none; font-size:13px; color:var(--tinta-2); }
+.pagina > header > nav.navegacaoMunicipal a:first-child { color:var(--serie); font-weight:600; }
+.pagina > header > nav.navegacaoMunicipal a:hover { color:var(--tinta); text-decoration:underline; }
 .pagina :global(.titulo-compartilhavel) { gap:12px; }
 .pagina :is(button,a,summary) { touch-action:manipulation; }
 @media (max-width: 640px) {
+  .resumoMunicipal { grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px 16px; margin:20px 0; }
+  .valorMunicipal { grid-column:1 / -1; }
+  .contextoValorMunicipal { font-size:24px; }
+  .pagina > header > nav.navegacaoMunicipal { column-gap:20px; }
   .pagina > header { padding: 6px 6px 16px; }
   .pagina > section { margin-top: 12px; padding: 20px 16px; border-radius: 16px; }
   .pagina h2 { font-size: 20px; }
