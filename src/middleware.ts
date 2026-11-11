@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { destinoPainel, linkDaEconomia, type ParametrosLegadosPainel } from "@/lib/rotasPainel";
 import { acharParlamentar } from "@/app/_painel/_dados/paginaParlamentar";
+import { previaHome } from "@/lib/previaHome";
 
 /** Decide antes do streaming para devolver HTTP 308, não um redirect em HTML 200. */
 export function middleware(request: NextRequest) {
@@ -15,6 +16,12 @@ export function middleware(request: NextRequest) {
   // A home é o Resumo; links da Economia de quando ela morava em "/" seguem para /economia, com a busca inteira.
   // Temporário (307): se a home mudar de novo, nenhum navegador fica preso a este desvio.
   if (request.nextUrl.pathname === "/") {
+    const previa = previaHome(request.url, request.headers.get("user-agent") ?? "");
+    if (previa) return new NextResponse(previa, { headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "public, max-age=0, s-maxage=300",
+      "Vary": "User-Agent",
+    } });
     if (!linkDaEconomia(request.nextUrl.searchParams)) return NextResponse.next();
     const destino = request.nextUrl.clone();
     destino.pathname = "/economia";

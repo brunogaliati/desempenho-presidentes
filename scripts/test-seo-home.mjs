@@ -2,6 +2,34 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { destinoPainel, linkDaEconomia } from '../src/lib/rotasPainel.ts';
 import { TEMAS_PAINEL, temaDoCaminho } from '../src/lib/temasPainel.ts';
+import { previaHome } from '../src/lib/previaHome.ts';
+import { imagemDaPagina } from '../src/lib/seo.ts';
+import { readFileSync } from 'node:fs';
+
+test('home entrega prévia social completa sem carregar o painel e usa PNG estático válido', () => {
+  const imagem = imagemDaPagina('/');
+  assert.match(imagem, /^\/capas\/[^?]+\.png\?v=/);
+  const png = readFileSync(new URL('../public' + imagem.split('?')[0], import.meta.url));
+  assert.equal(png.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+  assert.equal(png.readUInt32BE(16), 1200);
+  assert.equal(png.readUInt32BE(20), 630);
+  for (const ua of ['WhatsApp/2.24.1.1 A', 'facebookexternalhit/1.1', 'Twitterbot/1.0', 'TelegramBot', 'LinkedInBot', 'Cardyb', 'Discordbot']) {
+    const html = previaHome('https://desempenhodogoverno.com.br/', ua);
+    assert(html.includes(TEMAS_PAINEL.resumo.titulo));
+    assert(html.includes(TEMAS_PAINEL.resumo.descricao));
+    assert(html.includes('property="og:image:type" content="image/png"'));
+    assert(html.includes(imagem.replaceAll('&', '&amp;')));
+    assert(html.includes('property="og:url" content="https://desempenhodogoverno.com.br/"'));
+    assert(Buffer.byteLength(html) < 4096);
+    assert.doesNotMatch(html, /<script|<meta[^>]*http-equiv="refresh"/);
+  }
+});
+
+test('prévia rápida preserva navegador, Google e cartões com recortes de governo ou estado', () => {
+  for (const ua of ['', 'Mozilla/5.0', 'Googlebot', 'Bingbot']) assert.equal(previaHome('https://desempenhodogoverno.com.br/', ua), null);
+  for (const path of ['/economia', '/?mandato=lula_3', '/?uf=SP', '/?painel=de-perto', '/?r.resumo.area=saude']) assert.equal(previaHome('https://desempenhodogoverno.com.br' + path, 'WhatsApp/2.24.1.1 A'), null);
+  assert.match(imagemDaPagina('/', '/compartilhar/recorte?mandato=lula_3'), /^\/compartilhar\/recorte\?mandato=lula_3&v=/);
+});
 
 test('links antigos chegam diretamente ao tema público, sem outro protótipo', () => {
   for (const aba of [undefined, 'economia', 'mercado', 'congresso', 'desconhecida']) assert.equal(destinoPainel({aba}), '/economia');

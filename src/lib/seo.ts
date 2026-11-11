@@ -10,7 +10,7 @@ export function podeIndexar(env: NodeJS.ProcessEnv = process.env): boolean {
 /** A imagem que uma página anuncia. A prévia do compartilhar precisa chegar na mesma URL. */
 export function imagemDaPagina(caminho: string, imagem?: string): string {
   const propria = caminho === '/economia/inflacao' || caminho === '/economia/salario-minimo' || /^\/presidente\/[^/]+$/.test(caminho) || /^\/congresso\/(deputados|senadores)\/[^/]+$/.test(caminho);
-  const capa = imagem ?? (propria ? `${caminho}/opengraph-image` : `/compartilhar?pagina=${encodeURIComponent(caminho.split('?')[0])}`);
+  const capa = imagem ?? (caminho === '/' ? '/capas/inicio-20261111.png' : propria ? `${caminho}/opengraph-image` : `/compartilhar?pagina=${encodeURIComponent(caminho.split('?')[0])}`);
   return `${capa}${capa.includes('?')?'&':'?'}v=${caminho === '/' || caminho === '/dinheiro' ? '20261111' : caminho === '/resumo' ? '20261110' : '20261104'}`;
 }
 
