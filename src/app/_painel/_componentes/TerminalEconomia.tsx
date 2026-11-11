@@ -608,6 +608,8 @@ export function Historico({
       <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10.5px]" style={{ color: "var(--tinta-3)" }}>
         {s.calculo && <span>{`${s.calculo[0].toUpperCase()}${s.calculo.slice(1)}.`}</span>}
         <span>Estar no cargo não é ter causado o número.</span>
+        {s.id === "inflacao12m" && <Link href="/economia/inflacao#historico" className="hover:underline" style={{ color: "var(--serie)" }}>Ver IPCA mensal e acumulado</Link>}
+        {s.id === "salario_minimo_real" && <Link href="/economia/salario-minimo#historico" className="hover:underline" style={{ color: "var(--serie)" }}>Ver valores, reajustes e poder de compra</Link>}
         {espera && (
           <a href={FOCUS_URL} target="_blank" rel="noreferrer" className="hover:underline" style={{ color: "var(--serie)" }}>
             O que o mercado espera: pesquisa Focus, BCB ↗

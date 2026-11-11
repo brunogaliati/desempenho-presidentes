@@ -321,6 +321,8 @@ function cartaoDoDesmatamento(p: Extract<PedidoDeCapa, { tipo: "desmatamento" }>
 export function pedidoDoLink(caminho: string, q: URLSearchParams, inteiros: DadosPainel): PedidoDeCapa | null {
   const pessoaId = caminho.match(/^\/presidente\/([^/]+)$/)?.[1];
   const tema = temaDoCaminho(caminho);
+  // Resumo e Congresso usam a capa temática, sem um cartão numérico por mandato.
+  if (tema === "congresso" || tema === "resumo") return null;
   if (!pessoaId && caminho !== TEMAS_PAINEL[tema].caminho) return null;
   const sigla = pessoaId ? null : (inteiros.ufs.find((u) => u.sigla === q.get("uf")?.toUpperCase())?.sigla ?? null);
   const pedido = q.get("mandato");

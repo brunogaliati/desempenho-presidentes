@@ -10,8 +10,9 @@ import styles from "./indicador.module.css";
 
 import { RecortesCompartilhaveis } from "@/components/RecortesCompartilhaveis";
 import { DefinirFrase } from "@/components/FraseDaPagina";
+import type { AbaId } from "@/app/_painel/_dados/tipos";
 
-export function EstruturaEconomia({ children }: { children: React.ReactNode }) {
+export function EstruturaEconomia({ children, tema }: { children: React.ReactNode; tema?: AbaId }) {
   const [frase, setFrase] = useState<string | null>(null);
   const caminho = usePathname();
   const institucional = ["/metodologia", "/sobre", "/correcoes"].includes(caminho);
@@ -30,7 +31,7 @@ export function EstruturaEconomia({ children }: { children: React.ReactNode }) {
     <div aria-hidden className="fundo-painel" />
     <FiltroRefracao />
     <div ref={cabecalho} className="painel-cabecalho">
-      <Cabecalho aba="economia" semTemaAtivo explorarAtivo={!institucional} publico aoTrocar={() => {}} mandato={null}/>
+      <Cabecalho aba={tema ?? "economia"} semTemaAtivo={!tema} explorarAtivo={!tema && !institucional} publico aoTrocar={() => {}} mandato={null}/>
     </div>
     <div className={`${styles.contexto} ${!institucional?styles.compartilharPagina:""}`}>
       {institucional&&<nav aria-label="Sobre os dados">

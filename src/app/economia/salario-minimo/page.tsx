@@ -69,6 +69,7 @@ export default async function SalarioMinimo() {
         <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">O mínimo compra mais ou menos?</TituloCompartilhavel>
         <p className="mt-3 max-w-prose leading-relaxed text-[var(--tinta-2)]">O valor no papel e o poder de compra contam histórias diferentes. Compare duas datas: a linha corrigida desconta a inflação e coloca os salários na mesma moeda.</p>
         <HistoricoSalario historico={historico} referenciaReal={referenciaReal} />
+        <p className="mt-4 text-sm"><Link href="/economia?r.serie=salario_minimo_real&r.leitura=null&painel=de-perto#de-perto">Ver poder de compra no painel de governos</Link></p>
         <p className="mt-5 max-w-prose leading-relaxed">Entre reajustes, o valor nominal pode ficar igual enquanto o poder de compra muda com os preços. A correção usa o IPCA geral; ela não representa a cesta de consumo de cada família.</p>
       </section>
 
@@ -103,7 +104,7 @@ export default async function SalarioMinimo() {
           <p>O poder de compra é calculado com o <a href={IPCA}>IPCA do IBGE</a>, distribuído também pela série 433 do Banco Central. Multiplicamos o salário de cada mês pela razão entre o índice de preços do mês-base e o índice daquele mês. As taxas mensais são compostas, nunca somadas.</p>
           <p>O mês-base é {mesPorExtenso(referenciaReal)}, último IPCA disponível. Por isso, o valor nominal mais recente pode ter uma referência posterior à série real. Datas futuras não entram na página.</p>
           <p>O histórico começa em janeiro de 1995 para evitar a troca de moeda e os valores não comparáveis de 1994. O reajuste legal do piso e nossa correção pelo IPCA são cálculos diferentes. Mudança durante um governo não demonstra, por si só, sua causa.</p>
-          <p><Link href="/economia/inflacao">Consulte o IPCA e a inflação acumulada</Link>, <Link href="/metodologia">leia a metodologia do observatório</Link> ou <Link href="/">compare os indicadores por governo</Link>.</p>
+          <p><Link href="/economia/inflacao">Consulte o IPCA e a inflação acumulada</Link>, <Link href="/metodologia">leia a metodologia do observatório</Link> ou <Link href="/economia">compare os indicadores por governo</Link>.</p>
         </div>
       </section>
       <section className="vidro border-t border-[var(--borda)] pt-9" data-lustro="fixo">

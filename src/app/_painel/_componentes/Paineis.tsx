@@ -330,6 +330,7 @@ export function Ficha({
   const delta = variacao(leitura, leitura.ufs[uf.codigo], periodo);
 
   const secoes: Record<AbaId, React.ReactNode> = {
+    resumo: null,
     economia: <FichaEconomia dados={dados} uf={uf} />,
     congresso: <FichaCongresso dados={dados} uf={uf} />,
     dinheiro: <FichaDinheiro dados={dados} uf={uf} />,

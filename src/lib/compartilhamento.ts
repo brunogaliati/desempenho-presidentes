@@ -26,14 +26,14 @@ export function decodificarFiltro<T>(valor: string, validar: (valor: unknown) =>
 export function linkCompartilhado(atual: string, registros: Iterable<[string,string|null]>, filtros: FiltrosCompartilhados = {}, ancora?: string) {
   const origem = new URL(atual), link = new URL(origem.pathname,origem.origin);
   for (const [chave,valor] of origem.searchParams) {
-    if (['uf','mandato','pagina','q'].includes(chave) || /^r\.[a-z0-9_.-]{1,140}$/.test(chave)) link.searchParams.append(chave,valor);
+    if (['uf','mandato','municipio','gestao','pagina','q'].includes(chave) || /^r\.[a-z0-9_.-]{1,140}$/.test(chave)) link.searchParams.append(chave,valor);
   }
   for (const [chave,valor] of registros) {
     if (!/^r\.[a-z0-9_.-]{1,140}$/.test(chave)) continue;
     if (valor === null) link.searchParams.delete(chave); else link.searchParams.set(chave,valor);
   }
   for (const [chave,valor] of Object.entries(filtros)) {
-    if (!['uf','mandato','pagina','q'].includes(chave) && !/^r\.[a-z0-9_.-]{1,140}$/.test(chave)) continue;
+    if (!['uf','mandato','municipio','gestao','pagina','q'].includes(chave) &&!/^r\.[a-z0-9_.-]{1,140}$/.test(chave)) continue;
     if (valor === undefined || (valor === null && !chave.startsWith('r.'))) link.searchParams.delete(chave); else link.searchParams.set(chave,String(valor));
   }
   const destino = ancora ?? origem.hash.slice(1);

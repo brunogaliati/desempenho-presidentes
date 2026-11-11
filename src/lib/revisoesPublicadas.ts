@@ -54,13 +54,16 @@ export const revisoesPublicadas=unstable_cache(async()=>{
   }
   registrar('site:explorar',['catalogo-unificado-2026-11-04']);
   registrar('site:principal',['painel-publico-v1',...[...fontes].filter(([k])=>k.startsWith('serie:')).map(([,v])=>v).sort()]);
-  for(const nome of ['metodologia','sobre','correcoes','economia','meio-ambiente','dinheiro'])registrar(`site:${nome}`,nome==='sobre'?['privacidade-ga4-compartilhamento-2026-11-06']:[]);
-  await sql`insert into observatorio.revisao_publicacao as r(chave,assinatura)
-    select chave,assinatura from jsonb_to_recordset(${JSON.stringify(registros)}::jsonb) as x(chave text,assinatura text)
-    on conflict(chave) do update set assinatura=excluded.assinatura,modificado_em=statement_timestamp(),verificado_em=statement_timestamp()
-    where r.assinatura is distinct from excluded.assinatura`;
+  for(const nome of ['metodologia','sobre','correcoes','economia','meio-ambiente','dinheiro','resumo'])registrar(`site:${nome}`,nome==='sobre'?['privacidade-ga4-compartilhamento-2026-11-06']:[]);
+  // Lotes pequenos evitam esgotar a memória do Neon ao decodificar todo o cadastro.
+  for(let inicio=0;inicio<registros.length;inicio+=500){
+    await sql`insert into observatorio.revisao_publicacao as r(chave,assinatura)
+      select chave,assinatura from jsonb_to_recordset(${JSON.stringify(registros.slice(inicio,inicio+500))}::jsonb) as x(chave text,assinatura text)
+      on conflict(chave) do update set assinatura=excluded.assinatura,modificado_em=statement_timestamp(),verificado_em=statement_timestamp()
+      where r.assinatura is distinct from excluded.assinatura`;
+  }
   return await sql`select chave,to_char(modificado_em at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') modificado from observatorio.revisao_publicacao` as {chave:string;modificado:string}[];
-},["revisoes-publicadas-v1",REVISAO_EDITORIAL],{revalidate:3600,tags:["painel-economia"]});
+},["revisoes-publicadas-v2",REVISAO_EDITORIAL],{revalidate:3600,tags:["painel-economia"]});
 
 export async function dataRevisao(chave:string) {
   const r=(await revisoesPublicadas()).find(r=>r.chave===chave);

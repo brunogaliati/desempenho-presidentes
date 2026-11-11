@@ -11,6 +11,11 @@ export async function POST(request: NextRequest) {
   try {
     revalidatePath('/');
     revalidateTag('painel-economia');
+    revalidateTag('painel-resumo');
+    revalidateTag('painel-saude');
+    revalidateTag('painel-votacoes');
+    revalidatePath('/resumo');
+    revalidatePath('/resumo/municipios', 'layout');
     revalidatePath('/meio-ambiente');
     revalidatePath('/dinheiro');
     revalidatePath('/metodologia');

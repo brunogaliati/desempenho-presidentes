@@ -91,7 +91,7 @@ export function AbaDinheiro({
   if (erro && !painel) {
     return (
       <div className="dn-aviso">
-        <h1 className="titulo-painel">Dinheiro público</h1>
+        <h1 className="titulo-painel">Orçamento público</h1>
         <p>O orçamento não respondeu agora.</p>
         <button type="button" className="dn-acao" onClick={() => { setErro(false); setTentativa((t) => t + 1); }}>
           Tentar de novo
@@ -99,7 +99,7 @@ export function AbaDinheiro({
       </div>
     );
   }
-  if (!painel) return <><h1 className="sr-only">Dinheiro público</h1><CarregandoPainel aba="dinheiro" embutido/></>;
+  if (!painel) return <><h1 className="sr-only">Orçamento público</h1><CarregandoPainel aba="dinheiro" embutido/></>;
 
   const chave = sigla && painel.entes[sigla] ? sigla : "BR";
 

@@ -7,6 +7,7 @@ import { paginasMunicipaisPublicaveis } from "@/lib/dadosIndicadoresMunicipais";
 import { rotaMunicipal } from "@/lib/indicadoresMunicipais";
 import { hubsEconomia } from "@/lib/hubsEconomia";
 import { revisoesPublicadas } from "@/lib/revisoesPublicadas";
+import { caminhoResumoMunicipal } from "@/lib/resumoMunicipalModelo";
 
 export async function sitemapPublico(): Promise<MetadataRoute.Sitemap> {
   if (!podeIndexar()) return [];
@@ -29,7 +30,9 @@ export async function sitemapPublico(): Promise<MetadataRoute.Sitemap> {
   for(const caminho of diretorios){const uf=new URL(caminho,URL_SITE).pathname.split('/')[3];datas.set(caminho,ultimas.get(uf?`municipios:${uf}`:'municipios')!);}
   const institucionais=['metodologia','sobre','correcoes','explorar'];
   for(const nome of institucionais)datas.set('/'+nome,revisoes.get('site:'+nome)!);
-  datas.set('/',revisoes.get('site:principal')!);
-  return ["/",...institucionais.map(n=>'/'+n),'/meio-ambiente','/dinheiro', ...paginas.map(rotaEconomia),...hubs.map(h=>`/economia/${h.slug}`),...municipais.map(p=>rotaMunicipal(p.id,p.municipio)),...diretorios, ...pessoas.map((p) => `/presidente/${encodeURIComponent(String(p.pessoa_id))}`)]
+  datas.set('/',revisoes.get('site:resumo')!);
+  datas.set('/economia',revisoes.get('site:principal')!);
+  const resumos=[...new Map(municipais.map(p=>[p.municipio.codigo,p.municipio])).values()].map(caminhoResumoMunicipal);
+  return ["/",'/economia',...institucionais.map(n=>'/'+n),'/meio-ambiente','/dinheiro','/resumo/municipios',...[...ufs.keys()].map(uf=>`/resumo/municipios/${uf}`),...resumos, ...paginas.map(rotaEconomia),...hubs.map(h=>`/economia/${h.slug}`),...municipais.map(p=>rotaMunicipal(p.id,p.municipio)),...diretorios, ...pessoas.map((p) => `/presidente/${encodeURIComponent(String(p.pessoa_id))}`)]
     .map((caminho) => ({ url: `${URL_SITE}${caminho}`, ...(datas.get(caminho)?{lastModified:datas.get(caminho)}:{}) }));
 }

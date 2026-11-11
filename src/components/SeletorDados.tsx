@@ -6,8 +6,10 @@ import styles from "./SeletorDados.module.css";
 export interface OpcaoDado { valor: string; rotulo: string }
 
 /** Um único controle para referências da fonte, medidas e territórios. */
-export function SeletorDados({ rotulo, valor, opcoes, aoEscolher, rotuloFechado, alinharFim=false }: {
-  rotulo: string; valor: string; opcoes: OpcaoDado[]; aoEscolher: (valor: string) => void; rotuloFechado?:string; alinharFim?:boolean;
+export function SeletorDados({ rotulo, valor, opcoes, aoEscolher, rotuloFechado, alinharFim=false, placeholderBusca="Buscar nome ou ano", compacto=false }: {
+  rotulo: string; valor: string; opcoes: OpcaoDado[]; aoEscolher: (valor: string) => void; rotuloFechado?:string; alinharFim?:boolean; placeholderBusca?:string;
+  /** Pílula no meio de uma frase: o rótulo fica só para o leitor de tela e o menu abre sob o ancestral posicionado. */
+  compacto?: boolean;
 }) {
   const [aberto, setAberto] = useState(false), [busca, setBusca] = useState("");
   const [acima,setAcima]=useState(false);
@@ -38,13 +40,13 @@ export function SeletorDados({ rotulo, valor, opcoes, aoEscolher, rotuloFechado,
       itens[e.key === "Home" ? 0 : e.key === "End" ? itens.length - 1 : (i + (e.key === "ArrowDown" ? 1 : -1) + itens.length) % itens.length]?.focus();
     }
   };
-  return <div className={styles.campo} ref={raiz} onKeyDown={teclado} onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) fechar(); }}>
+  return <div className={`${styles.campo} ${compacto ? styles.compacto : ""}`} ref={raiz} onKeyDown={teclado} onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) fechar(); }}>
     <span id={labelId} className={styles.rotulo}>{rotulo}</span>
     <button ref={gatilho} type="button" className={styles.gatilho} aria-label={`${rotulo}: ${opcoes.find(o => o.valor === valor)?.rotulo ?? "Escolher"}`} aria-haspopup="listbox" aria-expanded={aberto} aria-controls={aberto ? id : undefined} disabled={!opcoes.length} onClick={() => aberto ? fechar() : setAberto(true)}>
       <span>{rotuloFechado??opcoes.find(o => o.valor === valor)?.rotulo ?? "Escolher"}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden><path d="m6 9 6 6 6-6"/></svg>
     </button>
     {aberto && <div className={`${styles.menu} ${alinharFim?styles.menuFim:""} ${acima?styles.menuAcima:""}`}>
-      {opcoes.length > 12 && <input className={styles.busca} type="search" aria-label={`Buscar em ${rotulo.toLowerCase()}`} placeholder="Buscar nome ou ano" value={busca} onChange={e => setBusca(e.target.value)}/>}
+      {opcoes.length > 12 && <input className={styles.busca} type="search" aria-label={`Buscar em ${rotulo.toLowerCase()}`} placeholder={placeholderBusca} value={busca} onChange={e => setBusca(e.target.value)}/>}
       <div id={id} role="listbox" aria-labelledby={labelId} className={styles.lista}>
         {visiveis.map(o => <button key={o.valor} type="button" role="option" tabIndex={-1} aria-selected={o.valor === valor} className={styles.opcao} onClick={() => { aoEscolher(o.valor); fechar(); gatilho.current?.focus(); }}>{o.rotulo}{o.valor === valor && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="m5 12 4 4 10-10"/></svg>}</button>)}
       </div>

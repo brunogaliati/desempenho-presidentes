@@ -7,7 +7,7 @@ import { registrarCompartilhamentoAnalytics, type MetodoCompartilhamento } from 
 
 const cod = encodeURIComponent;
 
-interface Destino {
+export interface Destino {
   id: MetodoCompartilhamento | 'mais';
   nome: string;
   /** Complemento de "Como chega…". */
@@ -22,7 +22,8 @@ interface Destino {
   link?: (texto: string, url: string) => string;
 }
 
-const DESTINOS: Destino[] = [
+/** Exportado para o card do resumo usar os mesmos ícones e cores. */
+export const DESTINOS: Destino[] = [
   {
     id: "whatsapp", nome: "WhatsApp", onde: "no WhatsApp", cor: "#1da851", tamanho: 26,
     dica: "Abre a conversa com a frase e o link prontos.",

@@ -1,0 +1,6 @@
+.retrato { display:inline-flex; flex-shrink:0; align-items:center; justify-content:center; overflow:hidden; border:1px solid var(--borda); border-radius:50%; background:var(--faixa-a); color:var(--tinta-2); font-weight:600; letter-spacing:.02em; }
+.retrato[data-forma="cracha"] { border-radius:16px; }
+.retrato[data-carregando="true"] { background:var(--grade); }
+.retrato img { opacity:1; transition:opacity 180ms ease-out; }
+.retrato[data-carregando="true"] img { opacity:0; }
+@media(prefers-reduced-motion:reduce) { .retrato img { transition-duration:80ms; } }

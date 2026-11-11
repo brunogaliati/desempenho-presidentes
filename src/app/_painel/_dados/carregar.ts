@@ -431,6 +431,7 @@ async function carregarPainelSemCache(): Promise<{ painel: Omit<DadosPainel, "go
       economia: [desocupacao, subutilizacao, inadimplencia, precoGasolina, pibPorHabitante].filter((l): l is Leitura => l !== null).map(afinarLeitura),
       congresso: [deputadosPorMilhao],
       dinheiro: [],
+      resumo: [],
       ambiente: ambiente.leituras.map(afinarLeitura),
     },
     economia: {

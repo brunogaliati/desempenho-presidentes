@@ -75,8 +75,8 @@ try {
   assert(await evaluate(naFrente('.compartilhar-gatilho')), 'O mapa não cobre o compartilhar do perfil');
   await evaluate(`document.querySelector('nav[aria-label^="Mandatos de"] a[aria-label^="1º"]').click()`);
   await until(() => evaluate(`location.search.includes('mandato=lula_1')`), 'troca de mandato');
-  await abrir('/', '.compartilhar-gatilho');
-  assert(await evaluate(naFrente('.compartilhar-gatilho')), 'O mapa não cobre o compartilhar da home');
+  await abrir('/economia', '.compartilhar-gatilho');
+  assert(await evaluate(naFrente('.compartilhar-gatilho')), 'O mapa não cobre o compartilhar da Economia');
   console.log('PASSOU: a linha acima do mapa recebe os cliques e o mandato troca sem sair do perfil.');
 
   // O expansor: sem triângulo nativo, e fechar não deixa rastro no endereço.
@@ -104,7 +104,7 @@ try {
   const dialogo = `(() => { const zap = new URL(document.querySelector('.compartilhar-destinos a').href).searchParams.get('text'), i = zap.lastIndexOf('http'); return { frase: document.querySelector('.compartilhar-frase textarea').value, url: zap.slice(i) }; })()`;
   let linkDaDivida;
   for (const [mandato, nome] of [['lula_3', 'Lula'], ['bolsonaro', 'Bolsonaro'], ['dilma_2', 'Dilma']]) {
-    await abrir(`/?mandato=${mandato}`, '.grupo-cotacao .compartilhar-gatilho');
+    await abrir(`/economia?mandato=${mandato}`, '.grupo-cotacao .compartilhar-gatilho');
     await evaluate(`[...document.querySelectorAll('.grupo-cotacao')].find(c => c.textContent.includes('Dívida bruta')).querySelector('.compartilhar-gatilho').click()`);
     await until(() => evaluate(`!!document.querySelector('.compartilhar-frase textarea')`), 'o diálogo abre');
     const { frase, url } = await evaluate(dialogo);
@@ -121,13 +121,13 @@ try {
   console.log('PASSOU: a frase é a mesma para qualquer governo, e o link curto abre no mesmo recorte.');
 
   // A medida que o mapa mostra sozinho não vai para o link, a não ser que seja dela que se fala.
-  await abrir('/?mandato=lula_3', '[data-destaque] .compartilhar-gatilho');
+  await abrir('/economia?mandato=lula_3', '[data-destaque] .compartilhar-gatilho');
   const primeira = await evaluate(`document.querySelector('[data-destaque]').getAttribute('data-destaque')`);
   await until(() => evaluate(`document.querySelector('[data-destaque]').getAttribute('data-destaque') !== ${JSON.stringify(primeira)}`), 'o mapa passeia');
   await evaluate(`document.querySelector('#de-perto .compartilhar-gatilho').click()`);
   await until(() => evaluate(`!!document.querySelector('.compartilhar-frase textarea')`), 'o diálogo abre');
   assert.doesNotMatch((await evaluate(dialogo)).url, /r\.mapa/, 'O passeio do mapa fora do link do gráfico');
-  await abrir('/?mandato=lula_3', '[data-destaque] .compartilhar-gatilho');
+  await abrir('/economia?mandato=lula_3', '[data-destaque] .compartilhar-gatilho');
   const medida = await evaluate(`document.querySelector('[data-destaque]').getAttribute('data-destaque')`);
   await until(() => evaluate(`document.querySelector('[data-destaque]').getAttribute('data-destaque') !== ${JSON.stringify(medida)}`), 'o mapa passeia');
   await evaluate(`document.querySelector('[data-destaque] .compartilhar-gatilho').click()`);
@@ -154,21 +154,21 @@ try {
     assert.match(p.imagem, /\/compartilhar\/recorte\?/, `${rotulo}: ${p.imagem}`);
     return { ...p, real };
   };
-  const dividaNaPrevia = await conferirPrevia('série', '/?mandato=lula_3', '.grupo-cotacao .compartilhar-gatilho', `[...document.querySelectorAll('.grupo-cotacao')].find(c => c.textContent.includes('Dívida bruta')).querySelector('.compartilhar-gatilho').click()`);
+  const dividaNaPrevia = await conferirPrevia('série', '/economia?mandato=lula_3', '.grupo-cotacao .compartilhar-gatilho', `[...document.querySelectorAll('.grupo-cotacao')].find(c => c.textContent.includes('Dívida bruta')).querySelector('.compartilhar-gatilho').click()`);
   assert.match(dividaNaPrevia.imagem, /serie=divida_bruta_pib/);
-  const placarNaPrevia = await conferirPrevia('placar', '/?mandato=bolsonaro', '.compartilhar-gatilho', `document.querySelector('.compartilhar-gatilho').click()`);
+  const placarNaPrevia = await conferirPrevia('placar', '/economia?mandato=bolsonaro', '.compartilhar-gatilho', `document.querySelector('.compartilhar-gatilho').click()`);
   assert.match(placarNaPrevia.imagem, /recorte\?mandato=bolsonaro&d=/);
   // Quem abriu um recorte e compartilha outro bloco vê o cartão desse outro, e não o da página aberta.
-  const outra = await conferirPrevia('outro bloco', '/?mandato=lula_3&r.serie=selic&painel=de-perto', '.grupo-cotacao .compartilhar-gatilho', `[...document.querySelectorAll('.grupo-cotacao')].find(c => c.textContent.includes('Dívida bruta')).querySelector('.compartilhar-gatilho').click()`);
+  const outra = await conferirPrevia('outro bloco', '/economia?mandato=lula_3&r.serie=selic&painel=de-perto', '.grupo-cotacao .compartilhar-gatilho', `[...document.querySelectorAll('.grupo-cotacao')].find(c => c.textContent.includes('Dívida bruta')).querySelector('.compartilhar-gatilho').click()`);
   assert.match(outra.imagem, /serie=divida_bruta_pib/, outra.imagem);
   const ambienteNaPrevia = await conferirPrevia('meio ambiente', '/meio-ambiente?mandato=lula_3', '#de-perto .compartilhar-gatilho', `document.querySelector('#de-perto .compartilhar-gatilho').click()`);
   assert.match(ambienteNaPrevia.imagem, /tema=ambiente/);
   console.log('PASSOU: a prévia do diálogo é o cartão que os aplicativos recebem.');
 
   // A contagem do cartão é a do placar da tela.
-  await abrir('/?mandato=lula_3', '[data-destaque]');
+  await abrir('/economia?mandato=lula_3', '[data-destaque]');
   const naTela = await evaluate(`document.body.innerText`);
-  const placarReal = await metaDoLink(base + '/?mandato=lula_3');
+  const placarReal = await metaDoLink(base + '/economia?mandato=lula_3');
   const conta = placarReal.titulo.match(/(\d+) melhor\S+ e (\d+) pior/);
   assert(conta, placarReal.titulo);
   assert(new RegExp(`${conta[1]}\\s+melhor`).test(naTela) && new RegExp(`${conta[2]}\\s+pior`).test(naTela), `A tela não diz ${conta[0]}`);

@@ -57,6 +57,7 @@ export default async function Inflacao() {
       <TituloCompartilhavel className="text-2xl font-semibold tracking-tight">Quanto os preços mudaram no período?</TituloCompartilhavel>
       <p className="mt-3 max-w-prose leading-relaxed text-[var(--tinta-2)]">Escolha as datas e veja o acumulado. No gráfico, alterne entre a variação mensal, o acumulado no ano e a inflação em 12 meses.</p>
       <HistoricoInflacao historico={historico} />
+      <p className="mt-4 text-sm"><Link href="/economia?r.serie=inflacao12m&r.leitura=null&painel=de-perto#de-perto">Ver inflação no painel de governos</Link></p>
       <p className="mt-5 max-w-prose leading-relaxed">Inflação mais baixa significa que os preços subiram menos, quando a taxa continua positiva. Não significa que voltaram ao patamar anterior. Uma variação negativa indica queda do índice no período.</p>
     </section>
 
@@ -92,7 +93,7 @@ export default async function Inflacao() {
         <p>Para acumular, multiplicamos os fatores mensais: (1 + taxa do mês ÷ 100). Depois subtraímos 1 e multiplicamos por 100. Por exemplo, doze meses de 1% resultam em 12,68%, e não em 12%. Não arredondamos os fatores antes de multiplicá-los; exibimos o resultado com duas casas decimais.</p>
         <p>O acumulado no ano usa janeiro até a referência. O acumulado em 12 meses usa a referência e os onze meses anteriores. A comparação de datas inclui as variações de todos os meses escolhidos, inclusive o primeiro e o último; um único mês retorna a taxa daquele mês.</p>
         <p>O recorte começa em julho de 1994, após o Plano Real. Por isso, o acumulado de 1994 não é apresentado como ano completo, e o primeiro acumulado de 12 meses do recorte só pode aparecer em junho de 1995. Meses ausentes permanecem sem valor e impedem o acumulado correspondente. Datas futuras não entram.</p>
-        <p><Link href={ROTA_SALARIO}>Veja o efeito da inflação no poder de compra do salário mínimo</Link>, <Link href="/metodologia">leia a metodologia</Link> ou <Link href="/">compare os indicadores por governo</Link>.</p>
+        <p><Link href={ROTA_SALARIO}>Veja o efeito da inflação no poder de compra do salário mínimo</Link>, <Link href="/metodologia">leia a metodologia</Link> ou <Link href="/economia">compare os indicadores por governo</Link>.</p>
       </div>
     </section>
     <section className="vidro border-t border-[var(--borda)] pt-9" data-lustro="fixo">

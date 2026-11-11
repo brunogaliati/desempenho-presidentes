@@ -1,0 +1,149 @@
+.sala { --congresso-psol:light-dark(#b48916,#e2b84b); --congresso-rede:light-dark(#369b8a,#6dbca7); --congresso-avante:light-dark(#cd672d,#e8915b); --congresso-prd:light-dark(#566e91,#94acd1); --congresso-missao:light-dark(#7045a0,#b197d3); --altura-plenario:clamp(380px,calc(100svh - 256px),660px); position:relative; display:grid; grid-template-columns:minmax(0,1fr); gap:24px; max-width:1480px; margin:0 auto; padding:12px 16px 32px; align-items:start; }
+/* Uma linha só no topo: título e casa à esquerda, compartilhar à direita. Os filtros ficam no recorte, ao lado da maquete. */
+.cabecalho { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"titulo acoes"; align-items:center; gap:16px 12px; }
+.tituloCasa { grid-area:titulo; display:flex; align-items:center; flex-wrap:wrap; gap:12px 24px; min-width:0; }
+.acoes { grid-area:acoes; display:flex; align-items:center; min-height:44px; }
+.tituloCasa :global(.titulo-painel) { margin:0; }
+.casas { min-width:0; width:fit-content; flex:none; }
+/* Maquete à esquerda, bancadas ao lado: a legenda fica à vista enquanto destaca o partido. */
+.composicao { display:grid; grid-template-columns:minmax(0,1fr) clamp(260px,21vw,312px); grid-template-rows:auto minmax(0,1fr); grid-template-areas:"figura recorte" "figura lateral"; gap:0 32px; align-items:start; min-width:0; }
+.figura { grid-area:figura; position:relative; min-width:0; margin:0; }
+/* O menu do estado abre por cima da legenda e da maquete. */
+.recorte { grid-area:recorte; position:relative; z-index:4; min-width:0; padding-top:4px; }
+.palcoEsqueleto { position:relative; display:flex; align-items:center; justify-content:center; height:var(--altura-plenario); }
+.palcoEsqueleto svg { width:auto; max-width:100%; height:78%; }
+.lateral { grid-area:lateral; display:flex; flex-direction:column; min-width:0; }
+.total > strong { display:block; font-size:clamp(36px,3.4vw,52px); font-weight:650; letter-spacing:-.03em; line-height:1.05; }
+.frase { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; margin-top:8px; font-size:13px; line-height:1.4; color:var(--tinta-2); }
+.chipRecorte { display:inline-flex; align-items:center; gap:6px; min-height:32px; padding:4px 10px 4px 12px; border-radius:999px; background:var(--faixa-ativa); color:var(--tinta); font-size:13px; font-weight:600; transition:background-color 140ms ease-out,transform 100ms ease-out; }
+.chipRecorte:hover { background:var(--faixa-a); }
+.chipRecorte:active { transform:translateY(var(--pressao,1px)); }
+.chipRecorte svg { color:var(--tinta-2); }
+@media(pointer:coarse) { .chipRecorte { min-height:44px; } }
+.cartaoPessoa { display:flex; align-items:center; gap:12px; padding:10px 14px 10px 10px; }
+.cartaoTexto { display:grid; gap:4px; min-width:0; }
+.cartaoTexto > strong { font-size:14px; font-weight:600; line-height:1.3; overflow-wrap:anywhere; }
+.cartaoAcoes { display:flex; align-items:center; gap:4px; margin-top:4px; }
+.verFicha { display:inline-flex; align-items:center; gap:6px; min-height:32px; padding:0 12px; border-radius:999px; background:var(--tinta); color:var(--superficie); font-size:12px; font-weight:600; transition:transform 100ms ease-out,opacity 140ms ease-out; }
+.verFicha:hover { opacity:.88; }
+.fecharCartao { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:999px; color:var(--tinta-2); transition:background-color 140ms ease-out; }
+.fecharCartao:hover { background:var(--faixa-a); color:var(--tinta); }
+.numero { animation:atualizarResultado 180ms ease-out; }
+.leitura { min-height:20px; margin-top:8px; text-align:center; font-size:12px; line-height:1.5; color:var(--tinta-2); }
+.legendaCabecalho { display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 12px; margin-top:20px; padding-top:16px; border-top:1px solid var(--borda); }
+.legendaCabecalho h2 { font-size:13px; font-weight:600; }
+.legendaCabecalho > span { font-size:11px; color:var(--tinta-2); }
+.legenda { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:8px; margin-top:8px; }
+.legenda button { display:flex; align-items:center; gap:8px; width:100%; min-height:44px; padding:6px; border-radius:8px; font-size:11px; text-align:left; transition:background-color 140ms ease-out; }
+@media(pointer:fine) { .lateral .legenda button { min-height:32px; padding-block:4px; } }
+.legenda button:hover,.legenda button[aria-pressed="true"] { background:var(--faixa-ativa); }
+.legenda button[data-vazio="true"]:not([aria-pressed="true"]) { opacity:.42; }
+.corPartido { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.bancadaTotal { margin-left:auto; color:var(--tinta-2); }
+.referencia { margin:2px auto 0; max-width:72ch; text-align:center; font-size:11px; line-height:1.6; color:var(--tinta-2); }
+.referencia a { text-decoration:underline; text-underline-offset:3px; }
+.parlamentares { position:relative; scroll-margin-top:calc(var(--altura-cabecalho-visivel,80px) + 16px); }
+/* Sem o desfoque do vidro neste bloco: atrás dele o fundo é liso, então ele não aparecia (a tela fica igual),
+   mas o navegador refazia o desfoque do bloco inteiro, de milhares de pixels, a cada quadro da rolagem.
+   Sem placa de vídeo, a página rolava a 13 quadros por segundo; sem o desfoque, a 53. */
+.parlamentares::before { -webkit-backdrop-filter:none; backdrop-filter:none; }
+.busca { display:flex; align-items:center; gap:8px; width:280px; max-width:100%; min-height:36px; padding:0 12px; border:1px solid var(--borda); border-radius:12px; background:var(--superficie); color:var(--tinta-2); }
+.busca:focus-within { outline:2px solid var(--serie); outline-offset:2px; }
+.busca svg { flex-shrink:0; }
+.busca input { min-width:0; width:100%; min-height:36px; font-size:14px; background:transparent; color:var(--tinta); caret-color:var(--serie); outline:none; }
+.busca input::placeholder { color:var(--tinta-2); opacity:1; }
+.resultado { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:4px 12px; min-height:36px; margin-bottom:12px; font-size:12px; color:var(--tinta-2); }
+.resultado button { min-height:36px; text-decoration:underline; text-underline-offset:3px; }
+.acoesResultado { display:flex; flex-wrap:wrap; align-items:center; gap:0 16px; }
+.verResumo { display:inline-flex; align-items:center; min-height:36px; color:var(--serie); font-weight:600; text-decoration:none; }
+.verResumo:hover { text-decoration:underline; text-underline-offset:3px; }
+@media(max-width:760px) { .verResumo { min-height:44px; } }
+.partidoPessoa { display:flex; align-items:center; gap:4px; flex-wrap:wrap; font-size:12px; color:var(--tinta-2); }
+.sala :is(button,a,[tabindex]):focus-visible { outline:2px solid var(--serie); outline-offset:3px; }
+.casas :global(button) { transition:background-color 140ms ease-out,transform 100ms ease-out; }
+.casas :global(button):active,.verFicha:active { transform:translateY(var(--pressao,1px)); }
+@keyframes atualizarResultado { from { opacity:.45; } to { opacity:1; } }
+.esqueleto .osso,.esqueletoAssentos { animation:pulsoEspera 1400ms ease-in-out infinite alternate; animation-play-state:paused; }
+.esqueleto[data-animando="true"] .osso,.esqueleto[data-animando="true"] .esqueletoAssentos { animation-play-state:running; }
+.osso { display:block; height:12px; width:100%; border-radius:8px; background:var(--grade); }
+.ossoTitulo { width:120px; height:20px; margin:4px 0; }
+.ossoCasas { width:210px; height:46px; border-radius:999px; }
+.esqueletoAssentos { display:block; width:100%; fill:var(--grade); }
+/* As mesmas alturas da página pronta: número (49) e pílula do estado (32; 44 no toque). */
+.ossoNumero { width:112px; height:44px; margin:2px 0 3px; border-radius:10px; }
+.ossoPilula { width:82px; height:32px; margin-top:8px; border-radius:999px; }
+@media(pointer:coarse) { .ossoPilula { height:44px; } }
+/* O seletor de vista da maquete: no canto de cima; no celular, embaixo e no meio, como o real. */
+.ossoVistas { position:absolute; top:0; right:0; width:233px; height:46px; border-radius:999px; }
+.ossoLinhaCentro { height:10px; margin:5px auto 0; }
+.ossoCabecalhoLegenda { width:190px; height:12px; margin:4px 0 5px; }
+.ossoAcao { width:40px; height:40px; border-radius:50%; }
+.esqueletoPartido { display:flex; align-items:center; gap:8px; min-height:44px; padding:0 6px; }
+@media(pointer:fine) { .esqueletoPartido { min-height:32px; } }
+.esqueletoPartido > span:first-child { width:9px; height:9px; flex:none; border-radius:50%; }
+.esqueletoPartido > span:nth-child(2) { width:52%; height:10px; }
+.esqueletoPartido > span:last-child { width:16px; height:10px; margin-left:auto; }
+.esqueletoTopoLista { display:flex; align-items:center; justify-content:space-between; gap:12px 16px; flex-wrap:wrap; margin-bottom:12px; }
+.esqueletoTitulos { display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; }
+.ossoDetalhe { width:200px; height:10px; }
+.esqueletoBusca { display:flex; align-items:center; gap:8px; }
+.ossoBusca { width:280px; max-width:100%; height:38px; border-radius:12px; }
+.esqueletoResultado { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:36px; margin-bottom:12px; }
+.esqueletoResultado > span:first-child { width:110px; }
+.esqueletoResultado > span:last-child { width:150px; }
+.ossoMedida { height:46px; border-radius:999px; }
+.esqueletoCabeca { display:flex; align-items:center; justify-content:space-between; min-height:35px; margin-top:12px; padding-bottom:6px; border-bottom:1px solid var(--borda); }
+.esqueletoCabeca > span:first-child { width:40px; height:10px; }
+.esqueletoCabeca > span:last-child { width:130px; height:10px; }
+.esqueletoValor { display:grid; justify-items:end; gap:8px; width:88px; flex:none; }
+.esqueletoValor > span:first-child { width:44px; height:10px; }
+.esqueletoValor > span:last-child { height:4px; }
+.esqueletoDiretorio { display:grid; grid-template-columns:minmax(300px,380px) minmax(0,1fr); gap:0 32px; }
+.esqueletoLinha { display:flex; align-items:center; gap:10px; min-height:57px; padding:8px; }
+.esqueletoLinha > span:first-child { width:40px; height:40px; flex:none; border-radius:50%; }
+.esqueletoLinha > div { display:grid; gap:6px; flex:1; }
+.esqueletoLinha > div > span:last-child { width:50%; height:10px; }
+.esqueletoLinha > .esqueletoValor { flex:none; gap:8px; }
+.esqueletoLinha > .esqueletoValor > span:last-child { width:100%; height:4px; }
+.esqueleto .referencia { min-height:18px; }
+@media(max-width:1099px) { .ossoPilula { margin-top:0; } }
+@media(max-width:760px) { .esqueletoResultado { min-height:44px; } .ossoBusca { height:44px; } }
+@media(max-width:640px) { .ossoVistas { top:auto; right:auto; bottom:0; left:50%; transform:translateX(-50%); } }
+@media(max-width:600px) {
+  .ossoNumero { width:58px; height:30px; margin:2px 0; }
+  .esqueleto .leitura { min-height:33px; }
+  .esqueleto .referencia { min-height:35px; }
+  .esqueletoBusca { flex:1 1 100%; }
+  .esqueletoBusca .ossoBusca { flex:1; width:auto; }
+}
+.esqueletoPainel { display:grid; align-content:start; gap:12px; }
+@media(max-width:1023px) { .esqueletoDiretorio { grid-template-columns:minmax(0,1fr); } .esqueletoPainel { display:none; } }
+@keyframes pulsoEspera { from { opacity:.45; } to { opacity:.8; } }
+@media(max-width:1099px) {
+  .sala { --altura-plenario:clamp(340px,min(54vw,calc(100svh - 220px)),560px); }
+  .composicao { grid-template-columns:minmax(0,1fr); grid-template-rows:none; grid-template-areas:"recorte" "figura" "lateral"; gap:16px; }
+  .recorte { padding-top:0; }
+  .total { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; }
+  .frase { margin-top:0; }
+  .legenda { grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); }
+}
+@media(max-width:1079px) {
+  .sala { padding:12px 8px 24px; }
+}
+@media(max-width:600px) {
+  .sala { --altura-plenario:300px; gap:20px; padding-inline:4px; }
+  .total > strong { font-size:32px; }
+  .leitura { margin-top:8px; font-size:11px; }
+  .legenda { grid-template-columns:repeat(3,minmax(0,1fr)); gap:0 8px; }
+  .legenda button { gap:5px; font-size:10px; }
+  .legenda .corPartido { width:7px; height:7px; }
+  .parlamentares > header > div { flex:1 1 100%; margin-left:0; }
+  .busca { flex:1; width:auto; }
+}
+@media(max-width:760px) { .sala .casas :global(button),.busca,.busca input,.resultado button { min-height:44px; } }
+@media(prefers-reduced-motion:reduce) {
+  .sala { --pressao:0px; }
+  .sala :is(.numero,.osso,.esqueletoAssentos) { animation:none; }
+  .sala :is(.legenda button),.sala .casas :global(button) { transition-duration:80ms; }
+  .sala :is(button,a):active { transform:none; }
+}

@@ -20,6 +20,10 @@ import type { AbaId, DadosPainel } from "../_dados/tipos";
 import { AbaDinheiro } from "./AbaDinheiro";
 import { AbaAmbiente } from "./AbaAmbiente";
 import { AbaEconomia } from "./AbaEconomia";
+import { AbaCongresso } from "./AbaCongresso";
+import { AbaResumo } from "./AbaResumo";
+import { ResumoMunicipal } from "./ResumoMunicipal";
+import { gestaoEmCurso, gestaoValida } from "../_dados/resumoMunicipalModelo";
 import { PosseContext } from "./GraficoLinha";
 import { BarraMandato, Cabecalho } from "./Topo";
 import { FiltroRefracao, useVidro } from "./Vidro";
@@ -51,6 +55,9 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
   const emCurso = inteiros.presidente.id, mandatos = inteiros.economia.mandatos;
   const presidentesDe2015 = mandatos.filter(m=>m.inicio>="2015"&&m.inicio<"2019").map(m=>m.id);
   const pedido=parametros.get('mandato');
+  // No resumo, um município (código do IBGE) abre a prefeitura no lugar do governo.
+  const municipio=aba==="resumo"&&!pessoaId&&/^\d{7}$/.test(parametros.get('municipio')??"")?parametros.get('municipio'):null;
+  const gestao=Number(parametros.get('gestao'))||null;
   const perfil=pessoaId?mandatoDoPerfil(mandatos,pessoaId,pedido):undefined;
   const mandatoId=mandatoDoEndereco(inteiros,{pessoaId,sigla,pedido});
   const presidenteAntes=useRef<string|null>(null);
@@ -75,7 +82,8 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
   const setSigla=(s:string|null)=>{
     const url=new URL(location.href);
     if(s)url.searchParams.set('uf',s);else url.searchParams.delete('uf');
-    if(pessoaId){url.pathname='/';url.searchParams.set('mandato',mandatoId);}
+    // O perfil de presidente fica na Economia: trocar de território leva ao painel dela, que não é mais a home.
+    if(pessoaId){url.pathname=TEMAS_PAINEL.economia.caminho;url.searchParams.set('mandato',mandatoId);}
     if(s&&presidentesDe2015.includes(mandatoId)){presidenteAntes.current=mandatoId;url.searchParams.set('mandato',TERMO_2015);}
     if(!s&&mandatoId===TERMO_2015)url.searchParams.set('mandato',presidenteAntes.current??presidentesDe2015[0]??emCurso);
     if(pessoaId)navegar(url.pathname+url.search+url.hash);else window.history.replaceState(null,'',url);
@@ -100,12 +108,13 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
   }, []);
 
   const trocarAba = (a: AbaId) => {
-    if(a!=="economia"&&a!=="ambiente"&&a!=="dinheiro")return;
+    if(a==="congresso"){navegar(`/congresso${sigla?`?uf=${sigla}`:""}`);return;}
+    if(a!=="economia"&&a!=="ambiente"&&a!=="dinheiro"&&a!=="resumo")return;
     navegar(destinoPainel({aba:a,uf:sigla??undefined,mandato:mandatoId}));
   };
 
   return (
-    <RecortesCompartilhaveis capaDoLink={(link)=>capaDoLink(link,inteiros)} titulo={`${sigla ? 'Governo de '+(dados.ufs.find(u=>u.sigla===sigla)?.nome??sigla) : mandatos.find(m=>m.id===mandatoId)?.nomeCurto??'Governo'} · ${dados.foco.posse.slice(0,4)}–${dados.foco.fim.slice(0,4)}`} filtros={{uf:sigla,mandato:mandatoId}}>
+    <RecortesCompartilhaveis capaDoLink={aba==="congresso"?undefined:(link)=>capaDoLink(link,inteiros)} titulo={aba==="congresso"?"Congresso Nacional":`${sigla ? 'Governo de '+(dados.ufs.find(u=>u.sigla===sigla)?.nome??sigla) : mandatos.find(m=>m.id===mandatoId)?.nomeCurto??'Governo'} · ${dados.foco.posse.slice(0,4)}–${dados.foco.fim.slice(0,4)}`} filtros={aba==="congresso"?{uf:sigla}:{uf:sigla,mandato:mandatoId}}>
     <PosseContext.Provider value={dados.foco.posse}>
     <ContextoPerfil.Provider value={perfil?{pessoaId:perfil.pessoaId,nome:perfil.nomeCurto}:null}>
     <div
@@ -116,21 +125,24 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
       <div aria-hidden className="fundo-painel" />
       <FiltroRefracao />
       <div ref={cabecalho} className="painel-cabecalho relative -mx-3 mb-3 border-b">
-        <Cabecalho publico recorte={{uf:sigla??undefined,mandato:mandatoId}} aba={aba} aoTrocar={trocarAba} mandato={<BarraMandato dados={atual} foco={dados.foco} retrato={retrato} sigla={sigla} aba={aba} aoEscolher={setMandatoId} />} />
+        <Cabecalho publico recorte={{uf:sigla??undefined,mandato:mandatoId}} aba={aba} aoTrocar={trocarAba} mandato={aba==="congresso"?<div className="mandato-faixa flex items-center gap-2 text-xs text-[var(--tinta-2)]"><span className="font-semibold">{inteiros.congresso.legislatura.numero}ª legislatura</span><span>2023–2027</span></div>:municipio?<div className="mandato-faixa flex items-center gap-2 text-xs text-[var(--tinta-2)]"><span className="font-semibold">Governo municipal</span><span>{(()=>{const a=gestao&&gestaoValida(gestao)?gestao:gestaoEmCurso();return `${a}–${a+3}`;})()}</span></div>:<BarraMandato dados={atual} foco={dados.foco} retrato={retrato} sigla={sigla} aba={aba} aoEscolher={setMandatoId} />} />
       </div>
 
       {/* Antes dos painéis de propósito: ao entrar numa rota, o Next rola até o primeiro elemento dela. Depois deles, o perfil abria no rodapé. */}
       {children}
-      <div className={`relative z-[2] mx-auto flex items-center justify-end gap-4 py-1 text-xs text-[var(--tinta-2)] ${perfil?`px-3 ${estilosPerfil.barra}`:"painel-acoes-pagina max-w-6xl px-2"}`}>
+      {/* No Congresso o botão mora no cabeçalho da aba, sem uma faixa só para ele. */}
+      {aba!=="congresso"&&<div className={`relative z-[2] mx-auto flex items-center justify-end gap-4 py-1 text-xs text-[var(--tinta-2)] ${perfil?`px-3 ${estilosPerfil.barra}`:"painel-acoes-pagina max-w-6xl px-2"}`}>
         {perfil&&<TrilhaPerfil proprios={mandatos.filter(m=>m.pessoaId===perfil.pessoaId).sort((a,b)=>a.inicio.localeCompare(b.inicio))} atual={perfil.id} aoEscolher={setMandatoId}/>}
         <Compartilhar {...(fraseDoPainel?{contexto:"",mensagem:fraseDoPainel}:{mensagem:perfil?`${aba==="economia"?"Economia":TEMAS_PAINEL[aba].titulo} no governo ${perfil.nomeCurto}`:TEMAS_PAINEL[aba].titulo})} compacto/>
-      </div>
+      </div>}
       <main>
+      {aba === "resumo" && (municipio ? <ResumoMunicipal key={municipio} dados={atual} codigo={municipio} gestao={gestao} setSigla={setSigla} /> : <AbaResumo dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} aoEscolherMandato={setMandatoId} />)}
       {aba === "economia" && (
         <AbaEconomia dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} aoTrocarAba={trocarAba} />
       )}
       {aba === "ambiente" && <AbaAmbiente dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} />}
       {aba === "dinheiro" && <AbaDinheiro dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} aoEscolherMandato={setMandatoId} />}
+      {aba === "congresso" && <AbaCongresso dados={inteiros} sigla={sigla} setSigla={setSigla} />}
       </main>
       {perfil&&<ContextoPresidente nome={perfil.nome}/>}
 
@@ -138,7 +150,7 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
       <nav aria-label="Sobre os dados" className="mx-auto mt-6 flex max-w-6xl flex-wrap gap-5 text-sm"><Link href="/metodologia">Metodologia</Link><Link href="/sobre">Sobre o projeto</Link><Link href="/correcoes">Relatar um erro</Link></nav>
       <footer className="mx-auto mt-6 max-w-6xl text-[11px] leading-snug" style={{ color: "var(--tinta-3)" }}>
         {descricao && <p className="mb-3">{descricao} Os períodos e fontes aparecem em cada painel; ausência de informação não significa zero.</p>}
-        {aba === "dinheiro" ? (<>Fontes: Tesouro Nacional · Siconfi e Transferegov · transferências especiais.</>) : aba === "ambiente" ? (
+        {aba === "resumo" ? (<>Fontes: Sinesp (Ministério da Justiça), Inep, Ministério da Saúde (DEMAS), Tesouro Nacional (Siconfi), IBGE, Banco Central, INPE e TSE. Cada linha diz o período e a fonte.</>) : aba === "congresso" ? (<>Fontes: Câmara dos Deputados e Senado Federal. Cadastro da coleta de 26/10/2026; a composição atual ainda requer nova conferência.</>) : aba === "dinheiro" ? (<>Fontes: Tesouro Nacional · Siconfi e Transferegov · transferências especiais.</>) : aba === "ambiente" ? (
           <>
             Fontes: INPE (PRODES, DETER e Programa Queimadas), Ibama (dados abertos da fiscalização) e IBGE (malhas). Cada painel diz a data
             em que o dado entrou no banco; medida cuja fonte não respondeu sai da tela, nunca vira zero.

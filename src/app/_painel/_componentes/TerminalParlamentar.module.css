@@ -1,0 +1,105 @@
+/*
+ * A página do parlamentar como terminal (`TerminalParlamentar.tsx`): a faixa do crachá com a
+ * fita de números e, embaixo, duas colunas de painéis (8/4). Abaixo de 1100px as colunas se
+ * desfazem (`display: contents`) e a ordem dos painéis vem de `.o1`…`.o9`, do mais importante
+ * para o menos. Mesmo vidro, mesmas cores e mesmo cabeçalho de painel (`Bloco`) do terminal
+ * da Economia; nada de degradê.
+ */
+
+.pagina { display:grid; gap:12px; width:100%; max-width:1400px; margin:0 auto; min-width:0; }
+
+/* --- Faixa do crachá ------------------------------------------------------- */
+.cabeca { display:grid; gap:16px; min-width:0; padding:18px 20px 16px; border-radius:1.6rem; box-shadow:inset 4px 0 0 var(--cor-partido, var(--serie)); }
+.identidade { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:start; gap:18px; }
+.identidade > :first-child { border-radius:12px; }
+.quem { display:grid; align-content:start; gap:4px; min-width:0; }
+.sobre { font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--tinta-2); }
+.quem h1 { font-size:clamp(24px,2.4vw,32px); font-weight:650; letter-spacing:-.025em; line-height:1.1; overflow-wrap:anywhere; }
+.partido { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; margin-top:2px; font-size:13px; color:var(--tinta-2); }
+.fatos { min-height:18px; font-size:12.5px; line-height:1.45; color:var(--tinta-2); }
+.links { display:flex; flex-wrap:wrap; align-items:center; gap:2px 16px; }
+.links a { display:inline-flex; align-items:center; gap:5px; min-height:32px; font-size:12.5px; font-weight:600; text-decoration:underline; text-underline-offset:4px; }
+.periodo { display:grid; justify-items:end; gap:6px; min-width:0; }
+.periodo > span { font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--tinta-3); }
+
+/* A fita: três grupos (plenário, cota, emendas) com um fio entre eles. */
+.fita { display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr) minmax(0,1fr); padding-top:14px; border-top:1px solid var(--borda); }
+.grupo { display:grid; align-content:start; gap:8px; min-width:0; }
+.grupo + .grupo { margin-left:20px; padding-left:20px; border-left:1px solid var(--borda); }
+.grupoNome { font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--tinta-3); }
+.celulas { display:grid; grid-template-columns:repeat(var(--n, 1), minmax(0,1fr)); gap:12px 18px; }
+.celula { min-width:0; }
+.celula dt { font-size:12px; line-height:1.3; color:var(--tinta-2); }
+.celula dd strong { display:block; margin-top:4px; font-size:28px; font-weight:650; letter-spacing:-.02em; line-height:1.05; }
+.celula dd span { display:block; margin-top:4px; font-size:11.5px; line-height:1.4; color:var(--tinta-2); }
+
+/* --- Grade de painéis ------------------------------------------------------ */
+.grade { display:grid; grid-template-columns:minmax(0,8fr) minmax(0,4fr); align-items:start; gap:12px; }
+.coluna { display:grid; align-content:start; gap:12px; min-width:0; }
+.par { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:12px; min-width:0; }
+.o1 { order:1; } .o2 { order:2; } .o3 { order:3; } .o4 { order:4; } .o5 { order:5; } .o6 { order:6; } .o7 { order:7; } .o8 { order:8; } .o9 { order:9; }
+
+.nota { margin-top:10px; font-size:11.5px; line-height:1.5; color:var(--tinta-2); }
+.apagado { color:var(--tinta-3); }
+.linkPainel { display:inline-flex; align-items:center; min-height:32px; font-size:12.5px; font-weight:600; text-decoration:underline; text-underline-offset:3px; }
+.rodape { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; margin-top:6px; font-size:12px; color:var(--tinta-2); }
+.verTodas { margin-top:8px; }
+.fontes { display:grid; gap:10px; }
+.fontes > p:first-child { padding-top:0; border-top:0; }
+
+/* Como votou: uma linha por votação. */
+.votos { width:100%; border-collapse:collapse; font-size:13px; line-height:1.4; }
+.votos th { padding:0 10px 8px; border-bottom:1px solid var(--borda); font-size:10.5px; font-weight:600; letter-spacing:.08em; text-align:left; text-transform:uppercase; color:var(--tinta-3); }
+.votos td { padding:9px 10px; border-bottom:1px solid var(--borda); vertical-align:top; }
+.votos :is(th,td):first-child { padding-left:2px; }
+.votos :is(th,td):last-child { padding-right:2px; }
+.votos tbody tr { transition:background-color 120ms ease-out; }
+.votos tbody tr:hover { background:var(--faixa-a); }
+.votos small { display:block; font-size:11.5px; color:var(--tinta-2); }
+.data { width:1%; white-space:nowrap; color:var(--tinta-2); }
+.proposicao strong { display:block; font-size:12.5px; font-weight:650; }
+.proposicao span { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; color:var(--tinta); }
+.resultado,.voto,.governo { width:1%; white-space:nowrap; }
+
+/* Plenário ano a ano: os anos são botões que escolhem o período da página. */
+.anos { width:100%; border-collapse:collapse; }
+.anos thead th { padding:0 0 6px; text-align:right; }
+.anos thead button { min-height:28px; padding:0 9px; border:0; border-radius:999px; background:transparent; color:var(--tinta-2); font:inherit; font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; cursor:pointer; transition:background-color 140ms ease-out, color 140ms ease-out; }
+.anos thead button:hover { background:var(--faixa-a); color:var(--tinta); }
+.anos thead button[aria-pressed="true"] { background:var(--superficie); color:var(--tinta); box-shadow:0 1px 2px rgb(0 0 0 / .14); }
+.anos thead button:focus-visible { outline:2px solid var(--serie); outline-offset:1px; }
+.anos tbody tr { border-top:1px solid var(--borda); }
+.anos tbody th { padding:9px 8px 9px 0; font-size:12.5px; font-weight:500; text-align:left; white-space:nowrap; color:var(--tinta-2); }
+.anos td { padding:8px 9px; text-align:right; }
+.anos td[data-ativo] { background:color-mix(in oklab, var(--serie) 9%, transparent); }
+.anos td b { display:block; font-size:15px; font-weight:650; line-height:1.2; }
+.anos td small { display:block; margin-top:1px; font-size:11px; color:var(--tinta-3); }
+
+@media (max-width:1100px) {
+  .grade { grid-template-columns:minmax(0,1fr); }
+  .coluna { display:contents; }
+  .fita { grid-template-columns:minmax(0,1fr); gap:14px; }
+  .grupo + .grupo { margin-left:0; padding-left:0; padding-top:12px; border-left:0; border-top:1px solid var(--borda); }
+}
+
+@media (max-width:700px) {
+  .cabeca { padding:14px 14px 12px; box-shadow:inset 0 4px 0 var(--cor-partido, var(--serie)); }
+  .identidade { grid-template-columns:auto minmax(0,1fr); gap:12px; }
+  .identidade > :first-child { width:64px !important; height:86px !important; }
+  .periodo { grid-column:1 / -1; justify-items:start; min-width:0; max-width:100%; }
+  .celulas { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .celula dd strong { font-size:24px; }
+  .par { grid-template-columns:minmax(0,1fr); }
+  /* A tabela de votações vira uma ficha por votação. */
+  .votos thead { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+  .votos tr { display:grid; grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"data resultado voto" "proposicao proposicao proposicao" "governo governo governo"; align-items:center; gap:4px 10px; padding:10px 2px; border-bottom:1px solid var(--borda); }
+  .votos td { display:block; width:auto; padding:0; border:0; }
+  .votos :is(th,td):first-child, .votos :is(th,td):last-child { padding:0; }
+  .data { grid-area:data; }
+  .resultado { grid-area:resultado; display:flex !important; gap:6px; align-items:baseline; }
+  .resultado small { display:inline; }
+  .voto { grid-area:voto; }
+  .proposicao { grid-area:proposicao; }
+  .governo { grid-area:governo; display:flex !important; gap:6px; align-items:baseline; color:var(--tinta-2); font-size:12px; }
+  .governo small { display:inline; }
+}

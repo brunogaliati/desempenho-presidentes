@@ -14,7 +14,7 @@
 .semMandato :global(.cabecalho-principal) { grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"marca temas acoes"; }
 @media(max-width:760px) {
   .cabecalho :global(.cabecalho-principal) { gap:6px; padding:8px; }
-  .cabecalho :global(.navegacao-temas :is(button,a)) { display:flex; align-items:center; justify-content:center; min-height:44px; font-size:12px; }
+  .cabecalho :global(.navegacao-temas :is(button,a)) { display:flex; align-items:center; justify-content:center; min-height:44px; padding-inline:6px; font-size:12px; }
   .cabecalho :global(.tema-interruptor) { flex-shrink:0; }
   .cabecalho :global(.mandato-faixa) { gap:2px 12px; padding-top:6px; }
   .semMandato :global(.cabecalho-principal) { grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"marca acoes" "temas temas"; }
@@ -28,4 +28,15 @@
   .recolhido :global(.mandato-faixa) { display:none; }
   .recolhido :global(.navegacao-temas .segmentos) { background:none; border-color:transparent; padding:0; }
 }
-@media(max-width:380px) { .cabecalho :global(.marca-painel) { width:120px; } }
+/* As cinco abas numa linha: no celular estreito o respiro sai do lado das palavras, não da última aba. */
+@media(max-width:440px) {
+  .cabecalho :global(.navegacao-temas :is(button,a)) { padding-inline:4px; }
+}
+@media(max-width:380px) {
+  .cabecalho :global(.marca-painel) { width:120px; }
+  .cabecalho :global(.navegacao-temas :is(button,a)) { font-size:11px; padding-inline:4px; }
+}
+@media(max-width:340px) {
+  .cabecalho :global(.navegacao-temas :is(button,a)) { font-size:10.5px; padding-inline:2px; }
+  .cabecalho :global(.navegacao-temas .divisor-temas) { margin-inline:1px; }
+}

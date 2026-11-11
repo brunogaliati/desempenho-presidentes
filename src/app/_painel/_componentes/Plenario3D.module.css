@@ -1,0 +1,60 @@
+/* Tons da maquete. Câmara em carpete verde, Senado em azul, como os plenários de verdade. */
+.palco {
+  --p3-piso: light-dark(#e6ede1, #1a271f);
+  --p3-carpete: light-dark(#cfe0c8, #24392b);
+  --p3-base: light-dark(#bccab5, #0b130e);
+  --p3-bancada: light-dark(#fbfaf5, #3b4a43);
+  --p3-madeira: light-dark(#c8b393, #5d4c37);
+  --p3-parede: light-dark(#efebe2, #26332b);
+  --p3-acento: light-dark(#2f8a55, #58b07c);
+  --p3-sombra: light-dark(rgba(38, 51, 44, .2), rgba(0, 0, 0, .6));
+  position: relative;
+  height: var(--altura-plenario, clamp(340px, 46vw, 600px));
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 20px;
+}
+.palco[data-casa="senadores"] {
+  --p3-piso: light-dark(#e3e9f1, #18212d);
+  --p3-carpete: light-dark(#ccd9ea, #223247);
+  --p3-base: light-dark(#b6c2d2, #0a1018);
+  --p3-bancada: light-dark(#fbfaf7, #3a4656);
+  --p3-parede: light-dark(#ece9e3, #232d3a);
+  --p3-acento: light-dark(#2f63a8, #6b9ad6);
+  --p3-sombra: light-dark(rgba(32, 44, 62, .2), rgba(0, 0, 0, .6));
+}
+.palco:focus-visible { outline: 2px solid var(--serie); outline-offset: 4px; }
+.sonda { position: absolute; width: 0; height: 0; overflow: hidden; visibility: hidden; pointer-events: none; }
+.tela { position: absolute; inset: 0; display: block; width: 100%; height: 100%; cursor: grab; }
+.tela[data-alvo="true"] { cursor: pointer; }
+.tela[data-arrastando="true"] { cursor: grabbing; }
+
+.vistas { position: absolute; top: 0; right: 0; z-index: 2; }
+.dica { position: absolute; left: 0; bottom: 2px; z-index: 2; display: flex; align-items: center; gap: 8px; max-width: 45%; font-size: 11px; line-height: 1.4; color: var(--tinta-2); transition: opacity 400ms ease-out; pointer-events: none; }
+.dica svg { flex-shrink: 0; }
+.dica[data-escondida="true"] { opacity: 0; }
+.dicaToque { display: none; }
+@media (hover: none) {
+  .dicaPonteiro { display: none; }
+  .dicaToque { display: inline; }
+}
+
+/* Cartão que flutua sobre a cadeira apontada ou escolhida. */
+.cartao { position: absolute; left: 0; top: 0; z-index: 6; width: max-content; max-width: min(300px, calc(100% - 8px)); pointer-events: none; will-change: transform; }
+.cartao[data-fixo="true"] { pointer-events: auto; }
+.cartao > * { position: relative; border: 1px solid var(--borda); border-radius: 16px; background: color-mix(in srgb, var(--superficie) 94%, transparent); box-shadow: 0 10px 30px var(--p3-sombra), 0 1px 0 var(--borda); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: surgirCartao 160ms cubic-bezier(.16, 1, .3, 1); }
+.cartao > *::after { content: ""; position: absolute; left: calc(var(--seta, 50%) - 7px); bottom: -7px; width: 12px; height: 12px; border: 1px solid var(--borda); border-top: 0; border-left: 0; background: inherit; transform: rotate(45deg); backdrop-filter: none; }
+.cartao[data-abaixo="true"] > *::after { top: -7px; bottom: auto; transform: rotate(225deg); }
+@keyframes surgirCartao { from { opacity: 0; transform: translateY(4px) scale(.98); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 640px) {
+  .vistas { top: auto; bottom: 0; left: 0; display: flex; justify-content: center; pointer-events: none; }
+  .vistas > * { pointer-events: auto; }
+  .dica { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cartao > * { animation: none; }
+  .dica { transition: none; }
+}

@@ -1,0 +1,378 @@
+/*
+ * Resumo do governo. Usa os tokens do painel (`.painel-governo`): tinta, borda,
+ * bom/ruim do placar e o ouro do que está escolhido. Verde e vermelho só para
+ * melhor e pior; o dinheiro e os partidos usam as cores da família e do partido.
+ */
+.raiz {
+  --dn-claro: light-dark(#ffffff, #0b1218);
+  --dn-escuro: light-dark(#263746, #0b1218);
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0.25rem 0.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+/* --- Cabeçalho ----------------------------------------------------------- */
+.cabeca { border-radius: 1.6rem; padding: 1.1rem 1.25rem 0.9rem; display: flex; flex-direction: column; gap: 1rem; }
+/* Só com a lista aberta o cabeçalho sobe de camada: fechado, o botão de compartilhar da página (no celular, no canto dele) fica por cima. */
+.cabeca:has([aria-haspopup][aria-expanded="true"]) { z-index: 4; }
+.topoCabeca { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
+
+/* A esfera: o mesmo seletor em cápsula do resto do painel (`.seletor`), com a lista de estados presa a ele. */
+.esferas { position: relative; display: inline-flex; align-items: center; gap: 2px; padding: 2px; border: 1px solid var(--borda); border-radius: 999px; background: var(--faixa-a); max-width: 100%; }
+.esfera { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--tinta-2); font: inherit; font-size: 13px; font-weight: 500; line-height: 1; white-space: nowrap; cursor: pointer; transition: background 160ms ease-out, color 160ms ease-out; }
+.esfera:hover:not(:disabled) { color: var(--tinta); background: var(--faixa-b); }
+.esfera:link { text-decoration: none; }
+.esfera[aria-pressed="true"] { color: var(--tinta); font-weight: 600; background: var(--superficie); box-shadow: 0 1px 2px rgb(0 0 0 / 0.14); }
+.esfera:focus-visible { outline: 2px solid var(--ouro-forte, var(--serie)); outline-offset: 1px; }
+.esfera:disabled { color: var(--tinta-3); cursor: default; }
+.breve { font-size: 9.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1; padding: 3px 6px; border-radius: 999px; border: 1px solid var(--borda); color: var(--tinta-3); }
+.seletorUf { display: contents; }
+/* Na cápsula apertada, só o nome do estado encolhe; Brasil e Municípios ficam inteiros. */
+.esferas > .esfera { flex-shrink: 0; }
+.esferas .esfera[aria-haspopup] { flex-shrink: 1; min-width: 0; }
+.nomeUf { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.siglaUf { display: none; }
+.setaMenu { margin-left: -1px; color: var(--tinta-3); transition: transform 160ms ease-out; }
+.esfera[aria-expanded="true"] .setaMenu { transform: rotate(180deg); }
+.bandeira { width: 18px; height: 13px; flex: none; border-radius: 2px; object-fit: cover; box-shadow: 0 0 0 1px var(--borda); }
+/* A caixa de vidro não rola (o fundo dela ficaria para trás); quem rola é a lista de dentro. */
+.listaUf { position: absolute; top: calc(100% + 8px); left: 0; z-index: 60; width: min(25rem, calc(100vw - 2.5rem)); overflow: hidden; border-radius: 16px; }
+.listaUfRolagem { max-height: min(34rem, calc(100dvh - 12rem)); overflow-y: auto; overscroll-behavior: contain; padding: 6px; scrollbar-width: thin; scrollbar-color: var(--grade) transparent; }
+.grupoUf { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+/* No computador, três colunas: os 27 estados cabem sem rolar. */
+@media (min-width: 720px) {
+  .listaUf { width: min(40rem, calc(100vw - 2.5rem)); }
+  .grupoUf { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .listaUf .opcaoUf { min-height: 32px; padding: 5px 9px; }
+  .listaUf .regiao { padding: 6px 9px 3px; }
+}
+.grupoUf + .grupoUf { margin-top: 4px; }
+.regiao { grid-column: 1 / -1; padding: 8px 9px 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tinta-3); }
+.opcaoUf { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 6px 9px; border: 0; background: transparent; font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.opcaoUf span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.opcaoUf small { font-size: 10.5px; color: var(--tinta-3); font-variant-numeric: tabular-nums; }
+.opcaoUf[aria-selected="true"] { font-weight: 600; }
+
+.quem { display: flex; flex-wrap: wrap; gap: 1.25rem 2rem; align-items: stretch; }
+.identidade { flex: 999 1 26rem; min-width: 0; display: flex; gap: 1rem; align-items: center; }
+.retratos { display: flex; flex: none; }
+.retratos > * + * { margin-left: -14px; }
+/* Caixa do tamanho exato da foto: como linha de texto, ganhava a folga de baixo da linha e o anel virava oval. */
+.retratoGrande { display: flex; line-height: 0; border-radius: 50%; box-shadow: 0 0 0 3px var(--superficie), 0 0 0 4.5px var(--ouro); }
+.sobretitulo { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tinta-3); font-weight: 600; }
+.titulo { margin: 2px 0 0; font-size: clamp(1.6rem, 3.2vw, 2.2rem); line-height: 1.08; font-weight: 700; letter-spacing: -0.01em; }
+.linhaPartido { margin-top: 0.45rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; font-size: 13px; color: var(--tinta-2); }
+.logo { width: 24px; height: 20px; flex: none; object-fit: contain; }
+.partidoComLogo { display: inline-flex; align-items: center; gap: 6px; color: var(--tinta); font-weight: 600; }
+.nota { margin-top: 0.4rem; font-size: 12.5px; color: var(--tinta-2); line-height: 1.45; }
+.nota b { color: var(--tinta); font-weight: 600; }
+
+.placar { flex: 1 1 18rem; min-width: 0; border-left: 1px solid var(--borda); padding-left: 1.5rem; display: flex; flex-direction: column; justify-content: center; gap: 0.55rem; }
+.placarRotulo { font-size: 12.5px; color: var(--tinta-2); }
+.placarBarra { display: flex; height: 12px; border-radius: 999px; overflow: hidden; gap: 3px; background: var(--faixa-a); }
+.placarBarra i { display: block; }
+.placarNumeros { display: flex; gap: 1.1rem; align-items: baseline; flex-wrap: wrap; }
+.placarNumeros span { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+.placarNumeros small { font-size: 14px; font-weight: 500; margin-left: 4px; }
+.contraBrasil { font-size: 12.5px; color: var(--tinta-2); }
+
+/* O trilho sem barra de rolagem: as bordas esmaecem do lado em que há mais governos, com uma seta. */
+.trilhoCaixa { position: relative; --m-esq: 0px; --m-dir: 0px; }
+.trilhoCaixa[data-esq] { --m-esq: 56px; }
+.trilhoCaixa[data-dir] { --m-dir: 56px; }
+.trilho { display: flex; gap: 6px; overflow-x: auto; padding: 2px; scrollbar-width: none; overscroll-behavior-x: contain; -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--m-esq), #000 calc(100% - var(--m-dir)), transparent); mask-image: linear-gradient(to right, transparent, #000 var(--m-esq), #000 calc(100% - var(--m-dir)), transparent); }
+.trilho::-webkit-scrollbar { display: none; }
+.setaTrilho { position: absolute; top: 50%; z-index: 1; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 1px solid var(--borda); border-radius: 50%; background: var(--superficie); color: var(--tinta-2); box-shadow: 0 1px 3px rgb(0 0 0 / 0.12); cursor: pointer; transform: translateY(-50%); }
+.setaTrilho[data-lado="esq"] { left: 0; }
+.setaTrilho[data-lado="dir"] { right: 0; }
+.setaTrilho:hover { color: var(--tinta); }
+.setaTrilho:focus-visible { outline: 2px solid var(--ouro-forte, var(--serie)); outline-offset: 1px; }
+.setaTrilho[hidden] { display: none; }
+@media (hover: none) { .setaTrilho { display: none; } }
+.termo { flex: none; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--borda); background: transparent; color: var(--tinta-2); font: inherit; font-size: 12px; line-height: 1; white-space: nowrap; padding: 3px 12px 3px 3px; border-radius: 999px; cursor: pointer; min-height: 40px; }
+.termo:hover { background: var(--faixa-a); }
+.termo[aria-current="true"] { border-color: var(--ouro); box-shadow: inset 0 0 0 1px var(--ouro); color: var(--tinta); font-weight: 600; background: var(--faixa-a); }
+.termo:focus-visible { outline: 2px solid var(--ouro-forte, var(--ouro)); outline-offset: -2px; }
+
+.comoLer { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; align-items: center; font-size: 12.5px; color: var(--tinta-2); padding: 0 0.25rem; }
+.comoLer b { color: var(--tinta); }
+.quadradinho { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+/* --- Seções -------------------------------------------------------------- */
+.secao { display: flex; flex-direction: column; gap: 0.85rem; }
+.secaoTitulo { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.8rem; padding: 0 0.25rem; }
+.secaoTitulo h2 { margin: 0; font-size: 1.3rem; font-weight: 700; letter-spacing: -0.005em; }
+.secaoTitulo span { font-size: 12.5px; color: var(--tinta-3); }
+.grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 0.9rem; align-items: start; }
+
+/* --- Linhas -------------------------------------------------------------- */
+.linhas { list-style: none; margin: 0; padding: 0; }
+.linhas > li + li { border-top: 1px solid var(--borda); }
+.grupo { margin: 0.9rem 0 0.2rem; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tinta-3); font-weight: 600; }
+.linha { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto auto 14px; grid-template-areas: "nome valores pilula seta" "brasil brasil brasil seta"; align-items: center; gap: 2px 12px; padding: 0.7rem 0.15rem; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 10px; }
+.linha:hover { background: var(--faixa-a); }
+.linha:focus-visible { outline: 2px solid var(--ouro); outline-offset: 1px; }
+.linhaNome { grid-area: nome; min-width: 0; }
+.linhaNome b { display: block; font-size: 14.5px; font-weight: 600; }
+.linhaNome small { display: block; font-size: 11.5px; color: var(--tinta-3); }
+.linhaValores { grid-area: valores; font-size: 13.5px; color: var(--tinta-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.linhaValores b { color: var(--tinta); font-weight: 650; }
+.pilula { grid-area: pilula; font-size: 13px; padding: 2px 8px !important; border-radius: 999px !important; min-width: 3.4rem; text-align: center; }
+.semComparar { grid-area: pilula; font-size: 11.5px; color: var(--tinta-3); }
+.linhaBrasil { grid-area: brasil; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: 11.5px; color: var(--tinta-3); min-height: 0; }
+.tag { border: 1px solid currentColor; border-radius: 999px; padding: 0 7px; font-weight: 550; line-height: 1.5; }
+.seta { grid-area: seta; width: 8px; height: 8px; border-right: 1.5px solid var(--tinta-3); border-bottom: 1.5px solid var(--tinta-3); transform: rotate(45deg); transition: transform 160ms ease; justify-self: center; margin-top: -4px; }
+.linha[aria-expanded="true"] .seta { transform: rotate(-135deg); margin-top: 4px; }
+@media (max-width: 540px) {
+  .linha { grid-template-columns: minmax(0, 1fr) auto 14px; grid-template-areas: "nome pilula seta" "valores valores seta" "brasil brasil seta"; }
+}
+
+.detalhe { padding: 0.2rem 0.15rem 0.9rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.detalhe p { margin: 0; font-size: 12px; color: var(--tinta-2); line-height: 1.45; }
+.rodapeDetalhe { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-size: 11.5px; color: var(--tinta-3); }
+.rodapeDetalhe a { color: var(--serie); font-weight: 550; text-decoration: none; }
+.rodapeDetalhe a:hover { text-decoration: underline; }
+
+/* --- Gráfico ------------------------------------------------------------- */
+.grafico { position: relative; width: 100%; touch-action: pan-y; }
+.grafico svg { display: block; overflow: visible; }
+.balao { position: absolute; top: 0; transform: translateX(-50%); pointer-events: none; background: var(--superficie); border: 1px solid var(--borda); border-radius: 8px; padding: 4px 8px; font-size: 11.5px; white-space: nowrap; box-shadow: 0 4px 14px rgba(15, 24, 32, 0.12); z-index: 2; }
+.balao b { font-weight: 650; }
+.tituloGrafico { font-size: 11.5px; color: var(--tinta-3); }
+
+/* --- Mosaico do contexto -------------------------------------------------- */
+.mosaico { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12.5rem), 1fr)); gap: 0.75rem; }
+.tile { border-radius: 1.2rem; padding: 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.4rem; text-align: left; font: inherit; color: inherit; cursor: pointer; border: 1px solid transparent; }
+.tile[aria-expanded="true"] { border-color: var(--ouro); box-shadow: inset 0 0 0 1px var(--ouro); }
+.tile:focus-visible { outline: 2px solid var(--ouro); outline-offset: 2px; }
+.tileNome { font-size: 13.5px; font-weight: 600; }
+.tileValor { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 8px; }
+.tileValor strong { font-size: 1.55rem; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.tileQuando { font-size: 11.5px; color: var(--tinta-3); line-height: 1.4; }
+.tileBrasil { margin-top: auto; padding-top: 0.45rem; border-top: 1px solid var(--borda); display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; font-size: 11.5px; color: var(--tinta-3); }
+.detalheMosaico { border-radius: 1.4rem; padding: 1rem 1.1rem; }
+
+/* --- Dinheiro ------------------------------------------------------------ */
+.numerosOrc { display: flex; flex-wrap: wrap; gap: 0.3rem 1.6rem; align-items: baseline; }
+.numerosOrc strong { font-size: 1.7rem; font-weight: 700; letter-spacing: -0.01em; }
+.numerosOrc span { font-size: 13px; color: var(--tinta-2); }
+.barraOrc { display: flex; height: 58px; gap: 2px; border-radius: 12px; overflow: hidden; margin-top: 0.8rem; }
+.segOrc { min-width: 0; border: 0; padding: 0 8px; background: var(--f); color: var(--f-t); font: inherit; text-align: left; cursor: pointer; display: flex; flex-direction: column; justify-content: center; overflow: hidden; transition: opacity 140ms ease; }
+.segOrc strong { font-size: 15px; line-height: 1; }
+.segOrc small { font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 3px; }
+.barraOrc[data-escolhido] .segOrc:not([aria-pressed="true"]) { opacity: 0.35; }
+.segOrc:focus-visible { outline: 2px solid var(--ouro); outline-offset: -2px; }
+.listaOrc { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); gap: 0 1.6rem; margin-top: 0.7rem; }
+.itemOrc { display: flex; align-items: center; gap: 8px; padding: 0.5rem 0.15rem; border: 0; border-top: 1px solid var(--borda); background: transparent; color: inherit; font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.itemOrc:hover { background: var(--faixa-a); }
+.itemOrc[aria-pressed="true"] { background: var(--faixa-a); font-weight: 600; }
+.itemOrc:focus-visible { outline: 2px solid var(--ouro); outline-offset: -2px; }
+.itemOrc .quadradinho { background: var(--f); margin: 0; flex: none; }
+.itemOrc em { margin-left: auto; font-style: normal; color: var(--tinta-3); font-size: 12px; white-space: nowrap; }
+/* Orçamento ano a ano: gráfico com valor, chave de governo, detalhe do ano e aviso de rubrica. */
+.hist { margin-top: 1.1rem; padding-top: 0.9rem; border-top: 1px solid var(--borda); }
+.hist .rotuloBarra { flex-wrap: wrap; align-items: baseline; row-gap: 4px; margin: 0 0 0.4rem; }
+.hist .rotuloBarra b { color: var(--tinta); font-weight: 600; }
+.verTotal { margin-left: 8px; padding: 1px 9px; border: 1px solid var(--borda); border-radius: 999px; font-size: 11px; color: var(--tinta-2); background: transparent; cursor: pointer; }
+.verTotal:hover { color: var(--tinta); background: var(--faixa-a); }
+.verTotal:focus-visible { outline: 2px solid var(--ouro-forte, var(--serie)); outline-offset: 1px; }
+.legendaHist { display: inline-flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; }
+.legendaHist > span { display: inline-flex; align-items: center; gap: 5px; }
+.amostraMandato { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--serie); }
+.amostraMandato[data-item] { background: var(--f); }
+.amostraBase { display: inline-block; width: 16px; height: 0; border-top: 1.5px dashed var(--tinta-2); }
+.histGrafico { position: relative; width: 100%; touch-action: pan-y; }
+.histGrafico svg { display: block; overflow: visible; }
+.chaveGoverno { cursor: pointer; outline: none; }
+.chaveGoverno:hover text, .chaveGoverno:focus-visible text { fill: var(--tinta); text-decoration: underline; }
+.chaveGoverno:hover path, .chaveGoverno:focus-visible path { stroke: var(--tinta); opacity: 1; }
+.chaveGoverno:focus-visible rect { stroke: var(--ouro-forte, var(--serie)); stroke-width: 2px; }
+.detalheAno { margin: 0.35rem 0 0; font-size: 12px; color: var(--tinta-2); line-height: 1.5; font-variant-numeric: tabular-nums; }
+.detalheAno b { color: var(--tinta); }
+.dica { color: var(--tinta-3); }
+@media (hover: none) { .dica { display: none; } }
+.alertaOrc { margin: 0.6rem 0 0; padding: 8px 11px; border-left: 3px solid var(--ouro); border-radius: 4px; background: var(--faixa-a); font-size: 12px; color: var(--tinta-2); line-height: 1.5; }
+
+/* --- Partidos ------------------------------------------------------------ */
+.barraPartidos { display: flex; height: 34px; gap: 2px; border-radius: 9px; overflow: hidden; }
+.barraPartidos[data-baixa] { height: 24px; }
+.segPartido { min-width: 0; border: 0; padding: 0; font: inherit; font-size: 11px; font-weight: 650; display: flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden; cursor: pointer; transition: opacity 140ms ease; }
+.segPartido[data-destaque] { box-shadow: inset 0 0 0 3px var(--ouro); }
+.segPartido[data-apagado] { opacity: 0.22; }
+.segPartido:focus-visible { outline: 2px solid var(--ouro); outline-offset: -2px; }
+.rotuloBarra { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--tinta-2); margin: 0.85rem 0 0.35rem; }
+.rotuloBarra:first-child { margin-top: 0; }
+.rotuloBarra span:last-child { color: var(--tinta-3); }
+.tabelaPartidos { width: 100%; border-collapse: collapse; margin-top: 0.8rem; font-size: 12.5px; }
+.tabelaPartidos th { font-weight: 500; color: var(--tinta-3); text-align: right; font-size: 11px; padding: 0 0 4px; }
+.tabelaPartidos th:first-child { text-align: left; }
+.tabelaPartidos td { padding: 0; border-top: 1px solid var(--borda); text-align: right; font-variant-numeric: tabular-nums; }
+.tabelaPartidos td:first-child { text-align: left; }
+.tabelaPartidos tr[data-apagado] { opacity: 0.4; }
+.tabelaPartidos tr[data-ativo] td { background: var(--faixa-a); }
+.botaoPartido { display: flex; align-items: center; gap: 7px; width: 100%; padding: 5px 2px; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; text-align: left; }
+.botaoPartido:focus-visible { outline: 2px solid var(--ouro); outline-offset: -2px; }
+.logoPequeno { width: 20px; height: 16px; object-fit: contain; flex: none; }
+.pontoPartido { width: 10px; height: 10px; border-radius: 3px; flex: none; margin: 0 5px; }
+.legenda { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 0.55rem; font-size: 12px; color: var(--tinta-2); }
+.legenda button { display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; color: inherit; font: inherit; padding: 2px 0; cursor: pointer; }
+.legenda button[data-apagado] { opacity: 0.4; }
+.observacao { margin: 0.6rem 0 0; font-size: 11.5px; color: var(--tinta-3); line-height: 1.45; }
+.governadores { display: grid; grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr)); gap: 6px; margin-top: 0.8rem; }
+.governador { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 2px 5px; border-radius: 12px; border: 1px solid var(--borda); background: transparent; color: inherit; font: inherit; font-size: 11px; cursor: pointer; transition: opacity 140ms ease; }
+.governador[data-apagado] { opacity: 0.25; }
+.governador:focus-visible { outline: 2px solid var(--ouro); outline-offset: 1px; }
+.governador b { font-weight: 650; }
+.federal { font-size: 9.5px; letter-spacing: 0.12em; font-weight: 600; color: var(--tinta-3); border: 1px solid var(--borda); border-radius: 999px; padding: 2px 7px; margin-left: 6px; vertical-align: 2px; }
+.faltam { border: 1.5px dashed var(--grade); border-radius: 1.4rem; padding: 1rem 1.2rem; display: flex; flex-wrap: wrap; gap: 0.8rem 2rem; font-size: 12.5px; color: var(--tinta-2); line-height: 1.45; }
+.faltam > div { flex: 1 1 13rem; }
+.faltam b { color: var(--tinta); font-weight: 600; }
+.carregando { min-height: 16rem; border-radius: 1.6rem; display: grid; place-items: center; font-size: 13px; color: var(--tinta-3); }
+.aviso { border-radius: 1.4rem; padding: 1rem 1.2rem; font-size: 13px; color: var(--tinta-2); }
+.aviso button { margin-left: 0.6rem; border: 0; background: transparent; color: var(--serie); font: inherit; font-weight: 600; cursor: pointer; }
+/* O orçamento ocupa a linha inteira: a barra empilhada precisa de largura para os rótulos. */
+.largo { grid-column: 1 / -1; }
+.pilha { display: flex; flex-direction: column; gap: 0.9rem; min-width: 0; }
+.colunas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 0 2rem; align-items: start; }
+/* Saúde: a consulta de filas do estado, quando existe, e a fila do GERCON (só no RS) embaixo das colunas. */
+.notaSaude { margin: 0.7rem 0.15rem 0; font-size: 12px; line-height: 1.45; color: var(--tinta-2); }
+.notaSaude a { color: var(--serie); font-weight: 600; }
+.notaSaude a:hover { text-decoration: underline; }
+.filasSaude { margin-top: 0.9rem; border-top: 1px solid var(--borda); }
+/* As seções do índice (`NavTerminal`) descontam o cabeçalho e a faixa dele ao rolar. */
+/* A altura visível, não a cheia: no celular o cabeçalho encolhe ao rolar, e a faixa desce com ele. */
+:global(.painel-governo) .raiz [id] { scroll-margin-top: calc(var(--altura-cabecalho-visivel, var(--altura-cabecalho, 112px)) + 56px); }
+.compartilhar { margin-top: 0.2rem; }
+@media (max-width: 600px) {
+  .cabeca { padding: 1rem 0.9rem 0.8rem; }
+  .identidade { flex-direction: column; align-items: flex-start; gap: 0.7rem; }
+  .placar { border-left: 0; padding-left: 0; border-top: 1px solid var(--borda); padding-top: 0.9rem; }
+  .esfera { padding: 4px 11px; }
+  .nomeUf { display: none; }
+  .siglaUf { display: inline; }
+  /* O canto direito é do botão de compartilhar da página, que flutua sobre o primeiro bloco. */
+  .topoCabeca { padding-right: 46px; }
+  .opcaoUf { align-items: flex-start; }
+  .opcaoUf span { white-space: normal; line-height: 1.25; }
+  .opcaoUf small { display: none; }
+  .opcaoUf .bandeira { margin-top: 2px; }
+}
+
+/* --- Política: a chave do contorno dourado e a leitura do partido fixado ----------------- */
+.chaveDourada { display: inline-flex; align-items: center; gap: 5px; margin-left: 10px; white-space: nowrap; }
+.chaveDourada i { display: inline-block; width: 16px; height: 11px; border-radius: 3px; background: var(--faixa-b); box-shadow: inset 0 0 0 2px var(--ouro); }
+/* Gruda no pé da tela enquanto a seção Política está à vista e, no fim dela, descansa depois do último bloco. */
+.leituraPartido { position: sticky; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 5; padding: 12px 14px 12px 16px; border-radius: 20px; --vidro-tinta: light-dark(rgba(250, 252, 254, 0.94), rgba(23, 35, 45, 0.95)); animation: leitura-entra 240ms cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+@keyframes leitura-entra { from { opacity: 0; transform: translateY(14px); } }
+@media (prefers-reduced-motion: reduce) { .leituraPartido { animation: none; } }
+.leituraTopo { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.leituraNome { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; font-size: 12.5px; color: var(--tinta-2); }
+.leituraNome b { font-size: 15px; color: var(--tinta); }
+.leituraNome .pontoPartido { margin: 0; }
+.leituraNome .chaveDourada { margin-left: 2px; font-size: 11.5px; color: var(--tinta-3); }
+.leituraFechar { display: grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px; margin: -4px -4px -4px 0; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--tinta-2); cursor: pointer; }
+.leituraFechar:hover { background: var(--faixa-a); color: var(--tinta); }
+.leituraFechar:focus-visible, .leituraLink:focus-visible { outline: 2px solid var(--ouro-forte, var(--serie)); outline-offset: 2px; }
+.leituraItens { display: flex; flex-wrap: wrap; gap: 3px 20px; margin: 8px 0 0; padding: 0; list-style: none; font-size: 12.5px; line-height: 1.45; color: var(--tinta-2); }
+.leituraItens b { color: var(--tinta); font-weight: 650; font-variant-numeric: tabular-nums; }
+.leituraHoje { color: var(--tinta); }
+.leituraNota { color: var(--tinta-3); }
+p.leituraNota { margin: 8px 0 0; font-size: 12px; }
+.leituraLink { display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 600; color: var(--serie); text-decoration: none; border-radius: 6px; }
+.leituraLink:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 540px) {
+  .leituraPartido { padding: 11px 12px 12px 14px; border-radius: 18px; }
+  .leituraItens { flex-direction: column; gap: 3px; }
+  .chaveDourada { margin-left: 0; }
+}
+@media (pointer: coarse) {
+  .leituraFechar { width: 44px; height: 44px; margin: -10px -10px -10px 0; }
+  .leituraLink { padding-block: 8px; margin-top: 2px; }
+}
+
+/* --- Votações da Assembleia ------------------------------------------------
+   Mesmo padrão das outras linhas do resumo: nada de <details>, caixa de marcar ou campo nativo. */
+.votBusca { display: flex; align-items: center; gap: 7px; width: 240px; max-width: 100%; min-height: 34px; padding: 0 6px 0 12px; border: 1px solid var(--borda); border-radius: 999px; background: var(--superficie); color: var(--tinta-3); transition: border-color 140ms, box-shadow 140ms; }
+.votBusca:focus-within { border-color: var(--serie); box-shadow: 0 0 0 3px color-mix(in srgb, var(--serie) 16%, transparent); color: var(--tinta-2); }
+.votBusca svg { flex-shrink: 0; }
+.votBusca input { flex: 1; min-width: 0; min-height: 32px; padding: 0; border: 0; outline: 0; background: transparent; color: var(--tinta); font: inherit; font-size: 13px; }
+.votBusca input::placeholder { color: var(--tinta-3); }
+.votBusca input:focus-visible { outline: none; }
+.votBusca input::-webkit-search-cancel-button { display: none; -webkit-appearance: none; appearance: none; }
+.votLimpar { display: grid; place-items: center; flex-shrink: 0; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 999px; background: var(--faixa-b); color: var(--tinta-2); cursor: pointer; }
+.votLimpar:hover { color: var(--tinta); }
+.votFiltros { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.votContagem { margin: 0; font-size: 12.5px; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
+.votContagem b { color: var(--tinta); font-weight: 650; }
+.votAviso { margin: 0.6rem 0 0; font-size: 12px; color: var(--tinta-2); }
+.votVazio { margin: 0.6rem 0 0; padding: 0.85rem 1rem; border-radius: 14px; background: var(--faixa-a); font-size: 13px; color: var(--tinta-2); line-height: 1.5; }
+.votVazio:first-child { margin-top: 0; }
+:is(.votVazio, .votAviso) button { margin-left: 8px; padding: 0; border: 0; background: transparent; color: var(--serie); font: inherit; font-weight: 600; cursor: pointer; }
+.votLista { scroll-margin-top: 96px; transition: opacity 160ms; }
+.votLista[data-atualizando] { opacity: 0.5; }
+.votLinha { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto auto 14px; grid-template-areas: "nome placar resultado seta"; align-items: center; gap: 3px 12px; padding: 0.6rem 0.15rem; border: 0; border-radius: 10px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.votLinha:hover { background: var(--faixa-a); }
+.votLinha:focus-visible { outline: 2px solid var(--ouro); outline-offset: 1px; }
+.votLinha[aria-expanded="true"] .seta { transform: rotate(-135deg); margin-top: 4px; }
+.votNome { grid-area: nome; min-width: 0; }
+.votNome b { display: block; font-size: 13.5px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.votNome small { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 11.5px; line-height: 1.4; color: var(--tinta-3); }
+.votLinha[aria-expanded="true"] .votNome small { display: none; }
+.votPlacar { grid-area: placar; font-size: 12px; color: var(--tinta-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Resultado neutro: aprovar ou rejeitar não é bom nem ruim por si; só o tracejado separa a rejeição. */
+.votResultado { grid-area: resultado; padding: 1px 9px; border: 1px solid var(--borda); border-radius: 999px; font-size: 11.5px; font-weight: 550; line-height: 1.5; color: var(--tinta-2); white-space: nowrap; }
+.votResultado[data-resultado="rejeitada"] { border-style: dashed; border-color: var(--tinta-3); color: var(--tinta); }
+.votEmenta { color: var(--tinta) !important; font-size: 12.5px !important; }
+.votSubtitulo { font-weight: 600; color: var(--tinta) !important; }
+.votVotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 2px 18px; margin: 0; padding: 0; list-style: none; font-size: 12px; }
+.votVotos li { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--borda); }
+.votVotos a { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--tinta-2); text-decoration: none; }
+.votVotos a:hover { color: var(--serie); }
+.votPaginas { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 0.5rem; padding-top: 0.6rem; border-top: 1px solid var(--borda); font-size: 12px; color: var(--tinta-3); }
+.votPaginas button { min-height: 32px; padding: 0 14px; border: 1px solid var(--borda); border-radius: 999px; background: transparent; color: var(--tinta-2); font: inherit; font-weight: 550; cursor: pointer; transition: background-color 140ms, color 140ms; }
+.votPaginas button:hover:not(:disabled) { background: var(--faixa-a); color: var(--tinta); }
+.votPaginas button:disabled { opacity: 0.4; cursor: default; }
+.votPaginas button:focus-visible { outline: 2px solid var(--ouro-forte, var(--serie)); outline-offset: 1px; }
+@media (max-width: 540px) {
+  .votLinha { grid-template-columns: minmax(0, 1fr) auto 14px; grid-template-areas: "nome resultado seta" "placar placar seta"; }
+  .votPlacar { justify-self: start; }
+}
+@media (pointer: coarse) {
+  .votBusca, .votBusca input, .votPaginas button { min-height: 44px; }
+  .votBusca input { font-size: 16px; }
+  .votLimpar { width: 30px; height: 30px; }
+}
+
+/* Card para redes: o diálogo é o do "Compartilhar recorte"; só a prévia, o seletor de formato e a
+   divisão em duas colunas são daqui. Celular primeiro: tudo numa coluna, como folha. */
+:global(.compartilhar-dialogo).dialogoCartao { width: min(460px, calc(100vw - 24px)); }
+.cartaoGrade { display: flex; flex-direction: column; }
+.cartaoLado { display: contents; }
+.formatoCartao { order: -1; display: flex; width: 100%; margin-bottom: 12px; }
+.formatoCartao .esfera { flex: 1; justify-content: center; }
+.cartaoQuadro { position: relative; display: flex; justify-content: center; align-items: center; padding: 10px; overflow: hidden; border-radius: 15px 4px 15px 15px; background: var(--faixa-a); box-shadow: inset 0 0 0 1px var(--borda); }
+.cartaoCanvas { display: block; width: auto; max-width: 100%; height: min(42vh, 400px); border-radius: 8px; box-shadow: 0 4px 16px rgba(15, 24, 32, 0.14); opacity: 0.35; transition: opacity 200ms; }
+.cartaoCanvas[data-pronto] { opacity: 1; }
+.cartaoCarregando { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; color: var(--tinta-2); }
+@media (max-height: 680px) { .cartaoCanvas { height: 34vh; } }
+/* A legenda rola sem barra nativa, como o resto do site; o esmaecido nas pontas avisa que tem mais. */
+.cartaoLegenda { margin-top: 10px; }
+.cartaoLegenda :global(.compartilhar-frase) { margin-top: 0; }
+.cartaoLegenda :global(.compartilhar-frase textarea) { max-height: calc(5 * 1.42em + 14px); scrollbar-width: none; mask-image: linear-gradient(transparent, #000 7px, #000 calc(100% - 10px), transparent); }
+.cartaoLegenda :global(.compartilhar-frase textarea::-webkit-scrollbar) { display: none; }
+@media (max-width: 640px) { :global(.compartilhar-dialogo).dialogoCartao { width: 100vw; } }
+/* Computador: a imagem à esquerda; à direita formato, legenda, destinos e ações. A legenda estica até
+   a base da imagem, para as duas colunas terminarem juntas. */
+@media (min-width: 761px) {
+  :global(.compartilhar-dialogo).dialogoCartao { width: min(820px, calc(100vw - 24px)); }
+  .cartaoGrade { display: grid; grid-template-columns: minmax(0, 410px) minmax(0, 1fr); gap: 22px; }
+  .cartaoLado { display: flex; flex-direction: column; min-width: 0; }
+  .cartaoCanvas { height: min(64vh, 470px); }
+  .cartaoLegenda { display: flex; flex-direction: column; flex: 1 1 0; min-height: 8rem; margin-top: 0; }
+  .cartaoLegenda :global(.compartilhar-bolha) { display: flex; flex: 1; min-height: 0; }
+  .cartaoLegenda :global(.compartilhar-frase) { display: flex; flex: 1; }
+  .cartaoLegenda :global(.compartilhar-frase textarea) { flex: 1; max-height: none; field-sizing: fixed; }
+}

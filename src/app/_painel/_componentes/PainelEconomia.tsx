@@ -6,6 +6,7 @@ import { opcaoCompartilhada, inteiroCompartilhado } from "@/lib/compartilhamento
 import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { comSinal, corDaMudanca, numero, sentido } from "@/lib/formatar";
@@ -857,6 +858,20 @@ function Destaque({
   return (
     <div className="order-1 animate-[subir_.5s_ease-out_backwards]" data-destaque={l.id}>
             <h1 className="titulo-painel">{perfil?`Economia no governo ${perfil.nome}`:"Economia"}</h1>
+      <nav aria-label="Atalhos da economia" className="relative z-10 flex flex-wrap gap-x-4 text-xs" style={{ color: "var(--tinta-2)" }}>
+        {[
+          { id: "de-perto", rotulo: "Histórico" },
+          { id: "governo-a-governo", rotulo: "Governos" },
+          { id: "estados", rotulo: "Estados" },
+        ].map(({ id, rotulo }) => (
+          <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center underline underline-offset-4 hover:no-underline" onClick={(e) => {
+            const alvo = document.getElementById(id);
+            if (!alvo) return;
+            e.preventDefault();
+            alvo.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+          }}>{rotulo}</a>
+        ))}
+      </nav>
       <p className="mono text-[11px] font-medium uppercase tracking-[0.18em]" style={{ color: "var(--serie)" }}>
         {uf ? uf.nome : "Brasil"}
       </p>
@@ -898,6 +913,7 @@ function Destaque({
           {`${lugar[0].toUpperCase()}${lugar.slice(1)}.`}
         </p>
       )}
+      {l.id === "gasolina" && !uf && <p className="mt-2 text-xs"><Link href="/economia/gasolina#historico" className="hover:underline" style={{ color: "var(--serie)" }}>Ver histórico e comparação de preços</Link></p>}
     </div>
   );
 }

@@ -8,7 +8,6 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   async redirects() {
     return [
-      { source: "/economia", destination: "/explorar", permanent: true },
       { source: "/prototipo/api/:path*", destination: "/api/painel/:path*", permanent: true },
       { source: "/prototipo/:arquivo+", destination: "/painel/:arquivo+", permanent: true },
     ];

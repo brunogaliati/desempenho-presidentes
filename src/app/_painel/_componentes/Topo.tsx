@@ -5,7 +5,7 @@ import styles from "./Topo.module.css";
 import Link from "next/link";
 import { LinkTema } from "./LinkTema";
 import { destinoPainel } from "@/lib/rotasPainel";
-import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
+import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 
 import { numero } from "@/lib/formatar";
 import { Retrato } from "@/components/Retrato";
@@ -35,10 +35,16 @@ import { RetratoGovernador } from "./RetratoGovernador";
  * marcos ficam no título do trilho e no balão de cada marco.
  */
 
-export const ABAS: { id: Exclude<AbaId, "congresso">; rotulo: string; indisponivel?: boolean }[] = [
+// Economia e Orçamento lado a lado (os dois falam de dinheiro). O Congresso vem por último, depois de um
+// divisor: é a única aba que não segue o mandato escolhido no topo. A aba "dinheiro" se chama Orçamento
+// desde 11/11/2026; o endereço continua /dinheiro. `curto` é o rótulo no celular estreito, onde as cinco
+// não cabem na linha; o leitor de tela continua ouvindo o nome inteiro.
+export const ABAS: { id: AbaId; rotulo: string; curto?: string; indisponivel?: boolean }[] = [
+  { id: "resumo", rotulo: "Resumo" },
   { id: "economia", rotulo: "Economia" },
-  { id: "ambiente", rotulo: "Meio ambiente" },
-  { id: "dinheiro", rotulo: "Dinheiro" },
+  { id: "dinheiro", rotulo: "Orçamento" },
+  { id: "ambiente", rotulo: "Meio ambiente", curto: "Ambiente" },
+  { id: "congresso", rotulo: "Congresso" },
 ];
 
 export function Cabecalho({
@@ -151,7 +157,7 @@ export function Cabecalho({
           <Marca />
         </Link>
         <nav className="navegacao-temas" aria-label="Temas">
-          {publico ? <div className="segmentos vidro inline-flex gap-1 p-1">{ABAS.map(a=><LinkTema key={a.id} href={destinoPainel({aba:a.id,...recorte})} aba={a.id} atual={!semTemaAtivo&&aba===a.id} rotulo={a.rotulo}/>)}</div> : <Segmentos opcoes={ABAS} ativo={aba} aoEscolher={aoTrocar} rotulo="Temas" papel="pagina" classeBotao="px-3 py-2" />}
+          {publico ? <div className="segmentos vidro inline-flex gap-1 p-1">{ABAS.map(a=><Fragment key={a.id}>{a.id==="congresso"&&<span aria-hidden="true" className="divisor-temas"/>}<LinkTema href={a.id==="congresso"?`/congresso${recorte.uf?`?uf=${encodeURIComponent(recorte.uf)}`:""}`:destinoPainel({aba:a.id,...recorte})} aba={a.id} atual={!semTemaAtivo&&aba===a.id} rotulo={a.rotulo} curto={a.curto}/></Fragment>)}</div> : <Segmentos opcoes={ABAS} ativo={aba} aoEscolher={aoTrocar} rotulo="Temas" papel="pagina" classeBotao="px-3 py-2" />}
         </nav>
         {mandato}
         <div className="cabecalho-acoes">

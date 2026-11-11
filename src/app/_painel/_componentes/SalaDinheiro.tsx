@@ -111,7 +111,7 @@ export function SalaDinheiro(props: PropsSala) {
 
   return (
     <section id="orcamento" className="dn-sala" data-aberta={aberto ? "" : undefined} aria-label="De cada R$ 100">
-      <h1 className="titulo-painel dn-titulo">Dinheiro público</h1>
+      <h1 className="titulo-painel dn-titulo">Orçamento público</h1>
       <ColunaDinheiro {...props} ente={ente} ponto={ponto} base={base} aoAbrir={(id) => {
         setSelecionado(id);
         const f = itemDe(id)?.familia;

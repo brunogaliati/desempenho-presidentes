@@ -8,7 +8,7 @@ import type { Benchmark, Direcao, Indicador, Presidente } from "@/types/dados";
  * escolhe o formatador.
  */
 
-export type AbaId = "economia" | "congresso" | "dinheiro" | "ambiente";
+export type AbaId = "resumo" | "economia" | "congresso" | "dinheiro" | "ambiente";
 
 /**
  * pp1 = pontos percentuais com sinal ("−2,0 pts"); pctsinal1 = variação em %

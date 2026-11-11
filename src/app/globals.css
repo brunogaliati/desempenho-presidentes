@@ -529,7 +529,7 @@ body {
  *
  * Economia: a bandeira (verde no alto à esquerda, azul à direita).
  */
-.painel-governo[data-aba="economia"] {
+.painel-governo:is([data-aba="economia"], [data-aba="congresso"]) {
   --paisagem-papel: light-dark(#fff, #0f1820);
   --paisagem-de: light-dark(#e3ece3, #142720);
   --paisagem-ate: light-dark(#dce7eb, #162b3b);
@@ -654,10 +654,10 @@ body {
   --rodape-ate: light-dark(#efe6d4, #2a2418);
 }
 
-.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"], [data-aba="congresso"]) {
   background: var(--paisagem-papel);
 }
-.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"], [data-aba="congresso"]) > .fundo-painel {
   position: absolute;
   height: max(100dvh, 720px);
   overflow: hidden;
@@ -666,13 +666,13 @@ body {
     radial-gradient(ellipse 82% 72% at 48% 40%, var(--paisagem-papel) 38%, transparent 100%),
     linear-gradient(145deg, var(--paisagem-de), var(--paisagem-papel) 48%, var(--paisagem-ate));
 }
-.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel::before,
-.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel::after {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"], [data-aba="congresso"]) > .fundo-painel::before,
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"], [data-aba="congresso"]) > .fundo-painel::after {
   content: "";
   position: absolute;
   pointer-events: none;
 }
-.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel::before {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"], [data-aba="congresso"]) > .fundo-painel::before {
   width: 100%;
   height: clamp(260px, 30vw, 440px);
   left: -18%;
@@ -682,7 +682,7 @@ body {
   background: linear-gradient(110deg, var(--paisagem-a-de), var(--paisagem-a-ate));
   box-shadow: 0 14px 0 var(--paisagem-a-fio);
 }
-.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel::after {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"], [data-aba="congresso"]) > .fundo-painel::after {
   width: 70%;
   height: clamp(260px, 28vw, 400px);
   right: -32%;
@@ -692,12 +692,12 @@ body {
   background: linear-gradient(120deg, var(--paisagem-b-de), var(--paisagem-b-ate));
 }
 @media (max-width: 640px) {
-  .painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel::before {
+  .painel-governo:is([data-aba="economia"], [data-aba="ambiente"], [data-aba="congresso"]) > .fundo-painel::before {
     width: 135%;
     left: -50%;
     top: -190px;
   }
-  .painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > .fundo-painel::after {
+  .painel-governo:is([data-aba="economia"], [data-aba="ambiente"], [data-aba="congresso"]) > .fundo-painel::after {
     width: 100%;
     right: -48%;
     top: -175px;
@@ -743,7 +743,7 @@ body {
   --vidro-tinta: light-dark(rgba(255, 255, 255, .64), rgba(23, 35, 45, .78));
   --vidro-filtro: blur(2px) saturate(1.15);
 }
-.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > footer {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"], [data-aba="congresso"]) > footer {
   position: relative;
   padding: 28px 24px;
   border-radius: 24px;
@@ -752,7 +752,7 @@ body {
 @media (max-width: 640px) {
   .terminal-tema::before { left: -235px; }
   .terminal-tema::after { right: -245px; }
-  .painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) > footer { padding: 20px 16px; }
+  .painel-governo:is([data-aba="economia"], [data-aba="ambiente"], [data-aba="congresso"]) > footer { padding: 20px 16px; }
 }
 
 .painel-cabecalho {
@@ -1090,6 +1090,14 @@ body {
 .painel-governo .segmentos :is(button, a)[aria-current="page"] { background: light-dark(rgba(32, 49, 58, 0.08), rgba(244, 250, 255, 0.12)); color: var(--tinta); font-weight: 600; box-shadow: inset 0 1px 0 var(--vidro-brilho), inset 0 0 0 1px var(--borda), 0 3px 8px var(--vidro-sombra); }
 .painel-governo .navegacao-temas :is(button, a):focus-visible,
 .painel-governo .segmentos :is(button, a):focus-visible { outline-offset: -2px; }
+/* Antes do Congresso, a única aba que não segue o mandato do topo. */
+.navegacao-temas .divisor-temas { flex: none; align-self: stretch; width: 1px; margin: 9px 3px; background: var(--borda); }
+/* "Meio ambiente" vira "Ambiente" onde as cinco abas não cabem; o nome inteiro fica para o leitor de tela. */
+.navegacao-temas .rotulo-tema-curto { display: none; }
+@media (max-width: 440px) {
+  .navegacao-temas .rotulo-tema-longo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .navegacao-temas .rotulo-tema-curto { display: inline; }
+}
 
 @media (max-width: 1400px) {
   .marca-painel { width: 190px; }
@@ -1117,6 +1125,7 @@ body {
   .navegacao-temas { grid-area: temas; justify-self: stretch; justify-content: space-between; gap: 0; }
   .navegacao-temas .segmentos { width: 100%; gap: 0; padding: 3px; }
   .navegacao-temas :is(button, a) { flex: 1; min-height: 38px; padding-inline: 6px; font-size: 11px; }
+  .navegacao-temas .divisor-temas { margin: 10px 2px; }
   .mandato-faixa { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "pessoa contagem" "grafico grafico"; gap: 6px 16px; padding-top: 10px; }
   .mandato-identidade { grid-area: pessoa; }
   .mandato-grafico { grid-area: grafico; padding-top: 4px; }
@@ -1479,7 +1488,7 @@ body {
   background: color-mix(in srgb, var(--ouro, var(--serie)) 15%, transparent);
   box-shadow: inset 2px 0 0 var(--ouro-forte, var(--serie));
 }
-.painel-governo:is([data-aba="economia"], [data-aba="ambiente"]) .linha-escolhida {
+.painel-governo:is([data-aba="economia"], [data-aba="ambiente"], [data-aba="congresso"]) .linha-escolhida {
   background: var(--faixa-ativa);
   box-shadow: none;
 }
