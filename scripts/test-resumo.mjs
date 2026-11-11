@@ -116,8 +116,8 @@ test('Resumo anuncia uma imagem própria válida e oferece o seletor municipal',
   const r=await fetch(`${base}/resumo?uf=SP&mandato=lula_3`,{headers:{'user-agent':'WhatsApp/2.23'}});
   assert.equal(r.status,200);const html=await r.text();
   const imagem=html.match(/property="og:image" content="([^"]+)"/)?.[1].replaceAll('&amp;','&');
-  assert(imagem);const url=new URL(imagem);assert.equal(url.pathname,'/compartilhar');assert.equal(url.searchParams.get('pagina'),'/resumo');
-  assert.equal(url.searchParams.get('v'),'20261110');
+  assert(imagem);const url=new URL(imagem);assert.equal(url.pathname,'/capas/inicio-20261111.png');
+  assert.equal(url.searchParams.get('v'),'20261111');
   assert(html.includes('aria-label="Escolher um município"'));
   const png=await fetch(base+url.pathname+url.search);assert.equal(png.status,200);assert.equal(png.headers.get('content-type'),'image/png');
   const bytes=Buffer.from(await png.arrayBuffer());assert.equal(bytes.subarray(1,4).toString(),'PNG');

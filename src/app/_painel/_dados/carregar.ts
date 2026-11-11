@@ -1,5 +1,6 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
+import { cache } from "react";
 
 import { carregarDados } from "@/lib/dados";
 import { sql } from "@/lib/db";
@@ -121,10 +122,11 @@ async function carregarPainelSemCache(): Promise<{ painel: Omit<DadosPainel, "go
   ]);
 
   const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-  const complemento = await carregarEconomiaAmpliada(hoje);
   const presidente = dados.presidentes.find((p) => p.emCurso);
   if (!presidente) throw new Error("Nenhum mandato presidencial em curso no Neon.");
-  const marcosPorMandato = await carregarMarcos(dados.presidentes, hoje);
+  const [complemento, marcosPorMandato] = await Promise.all([
+    carregarEconomiaAmpliada(hoje), carregarMarcos(dados.presidentes, hoje),
+  ]);
 
   const populacao = new Map(
     (populacaoRaw as Record<string, unknown>[]).map((r) => [
@@ -484,8 +486,8 @@ async function carregarPainelSemCache(): Promise<{ painel: Omit<DadosPainel, "go
 
 const carregarPainelDoCache = unstable_cache(carregarPainelSemCache, ["painel-v11-fontes-publicas"], { revalidate: 3600, tags: ["painel-economia"] });
 
-/** Quem governou vem de um arquivo do repositório: fica fora do cache, que é para o banco. */
-export async function carregarPainel(): Promise<{ painel: DadosPainel; presidente: Presidente }> {
+/** Metadados e conteúdo compartilham a leitura na mesma renderização; a revalidação horária permanece. */
+export const carregarPainel = cache(async function carregarPainel(): Promise<{ painel: DadosPainel; presidente: Presidente }> {
   const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
   const [{ painel, presidente }, ibovespa] = await Promise.all([carregarPainelDoCache(), carregarIbovespa(hoje)]);
   // A bolsa entra como mais uma série nacional, logo depois do dólar.
@@ -494,4 +496,4 @@ export async function carregarPainel(): Promise<{ painel: DadosPainel; president
   if (bolsa) series.splice(series.findIndex((s) => s.id === "cambio") + 1 || series.length, 0, bolsa);
   return { painel: { ...painel, governos: governos as Governos, economia: { ...painel.economia, series,
     complemento: { ...painel.economia.complemento, ibovespa } } }, presidente };
-}
+});

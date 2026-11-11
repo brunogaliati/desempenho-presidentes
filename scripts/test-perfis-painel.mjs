@@ -25,9 +25,7 @@ test('narrativa e comparação são traduzidas; mandato explícito válido tem p
  assert.equal(migrarLinkPerfil(new URL('https://site.test/?r.serie=cambio#de-perto'),mandatos,series),null);
  assert.equal(migrarLinkPerfil(new URL('https://site.test/presidente/lula#%E0%A4%A'),mandatos,series),null);
 });
-test('só o catálogo exato muda de endereço; descendentes preservam suas URLs',async()=>{
+test('Economia e indicadores preservam suas URLs; o catálogo está em /explorar',async()=>{
  const redirects=await nextConfig.redirects();
- const r=redirects.find(r=>r.source==='/economia');
- assert.deepEqual(r,{source:'/economia',destination:'/explorar',permanent:true});
- assert(!redirects.some(r=>r.source.startsWith('/economia/')));
+ assert(!redirects.some(r=>r.source==='/economia'||r.source.startsWith('/economia/')));
 });

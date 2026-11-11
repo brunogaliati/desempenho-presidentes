@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useMemo, useRef } from "react";
+import dynamic from "next/dynamic";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { destinoPainel } from "@/lib/rotasPainel";
@@ -12,21 +13,24 @@ import estilosPerfil from "./PerfilPresidente.module.css";
 import { Compartilhar } from "@/components/Compartilhar";
 import { RecortesCompartilhaveis } from "@/components/RecortesCompartilhaveis";
 import { fraseDoPlacar } from "@/lib/fraseCompartilhamento";
-import { placarDaEconomia } from "./Placar";
+import { placarDaEconomia } from "./placarModelo";
 
 import { mandatoDoEndereco, recortarAoMandato, TERMO_2015 } from "../_dados/mandatoRecorte";
 import { capaDoLink } from "./capaRecorte";
 import type { AbaId, DadosPainel } from "../_dados/tipos";
-import { AbaDinheiro } from "./AbaDinheiro";
-import { AbaAmbiente } from "./AbaAmbiente";
-import { AbaEconomia } from "./AbaEconomia";
-import { AbaCongresso } from "./AbaCongresso";
-import { AbaResumo } from "./AbaResumo";
-import { ResumoMunicipal } from "./ResumoMunicipal";
+import CarregandoPainel from "./CarregandoPainel";
 import { gestaoEmCurso, gestaoValida } from "../_dados/resumoMunicipalModelo";
 import { PosseContext } from "./GraficoLinha";
 import { BarraMandato, Cabecalho } from "./Topo";
 import { FiltroRefracao, useVidro } from "./Vidro";
+
+// SSR preservado: só o código da aba exibida entra no carregamento inicial.
+const AbaResumo = dynamic(() => import("./AbaResumo").then(m => m.AbaResumo), { loading: () => <CarregandoPainel aba="resumo" embutido /> });
+const AbaEconomia = dynamic(() => import("./AbaEconomia").then(m => m.AbaEconomia), { loading: () => <CarregandoPainel aba="economia" embutido /> });
+const AbaAmbiente = dynamic(() => import("./AbaAmbiente").then(m => m.AbaAmbiente), { loading: () => <CarregandoPainel aba="ambiente" embutido /> });
+const AbaDinheiro = dynamic(() => import("./AbaDinheiro").then(m => m.AbaDinheiro), { loading: () => <CarregandoPainel aba="dinheiro" embutido /> });
+const AbaCongresso = dynamic(() => import("./AbaCongresso").then(m => m.AbaCongresso), { loading: () => <CarregandoPainel aba="congresso" embutido /> });
+const ResumoMunicipal = dynamic(() => import("./ResumoMunicipal").then(m => m.ResumoMunicipal), { loading: () => <CarregandoPainel aba="resumo" embutido /> });
 
 /**
  * O governo atual, um tema por aba, numa página só.

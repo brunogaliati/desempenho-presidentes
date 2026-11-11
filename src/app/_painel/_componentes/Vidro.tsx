@@ -138,12 +138,21 @@ export function useVidro() {
   useEffect(() => {
     if (!window.matchMedia("(hover: hover)").matches) return;
     let ultimo: HTMLElement | null = null;
+    let quadro = 0;
+    let ponteiro: PointerEvent | null = null;
     const soltar = () => {
+      cancelAnimationFrame(quadro);
+      quadro = 0;
+      ponteiro = null;
       ultimo?.style.removeProperty("--mx");
       ultimo?.style.removeProperty("--my");
       ultimo = null;
     };
-    const mover = (e: PointerEvent) => {
+    const pintar = () => {
+      quadro = 0;
+      const e = ponteiro;
+      ponteiro = null;
+      if (!e) return;
       const vidro = e.target instanceof Element ? e.target.closest<HTMLElement>(".vidro") : null;
       // `data-lustro="fixo"`: painel grande demais para redesenhar o reflexo a cada movimento.
       const alvo = vidro?.dataset.lustro === "fixo" ? null : vidro;
@@ -153,6 +162,11 @@ export function useVidro() {
       const b = alvo.getBoundingClientRect();
       alvo.style.setProperty("--mx", `${e.clientX - b.left}px`);
       alvo.style.setProperty("--my", `${e.clientY - b.top}px`);
+    };
+    // O navegador só exibe um reflexo por quadro, mesmo que o mouse envie centenas de eventos.
+    const mover = (e: PointerEvent) => {
+      ponteiro = e;
+      if (!quadro) quadro = requestAnimationFrame(pintar);
     };
     document.addEventListener("pointermove", mover, { passive: true });
     document.documentElement.addEventListener("pointerleave", soltar);
