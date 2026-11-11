@@ -1432,6 +1432,14 @@ body {
   --mapa-opacidade-inativa: 0.3;
 }
 
+/* O brilho que atravessa o mapa no passeio do Resumo: só luz, não muda dado. */
+.mapa-brilho { transform: translateX(var(--brilho-de)); animation: mapa-brilho 8s cubic-bezier(.4, 0, .6, 1) 1.2s infinite backwards; }
+@keyframes mapa-brilho { 0% { transform: translateX(var(--brilho-de)); } 44%, 100% { transform: translateX(var(--brilho-ate)); } }
+.mapa-brilho-camada { transition: opacity .4s ease-out; }
+.mapa-brilho-camada[data-parado] { opacity: 0; }
+.mapa-brilho-camada[data-parado] .mapa-brilho { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .mapa-brilho-camada { display: none; } }
+
 .mapa-atlas .mapa-rotulos text {
   fill: var(--atlas-rotulo-tinta);
   stroke: var(--atlas-rotulo-contorno);

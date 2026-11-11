@@ -1,0 +1,14 @@
+.contexto { max-width:72ch; margin:32px auto 0; min-width:0; font-size:14px; line-height:1.65; }
+.contexto h2 { margin-bottom:12px; font-size:22px; line-height:1.25; font-weight:650; letter-spacing:-.02em; text-wrap:balance; }
+.contexto h3 { margin:24px 0 8px; font-size:16px; font-weight:600; line-height:1.4; }
+.contexto table { width:100%; margin:20px 0 12px; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; }
+.contexto caption { padding-bottom:8px; text-align:left; color:var(--tinta-2); }
+.contexto th,.contexto td { padding:10px 6px; border-bottom:1px solid var(--borda); text-align:right; vertical-align:top; }
+.contexto th:first-child { padding-left:0; text-align:left; }
+.contexto th { font-weight:600; }
+.contexto small { display:block; font-size:11px; font-weight:400; color:var(--tinta-2); }
+.fonte { font-size:12px; color:var(--tinta-2); }
+.contexto a { color:var(--serie); text-decoration:underline; text-underline-offset:3px; }
+.contexto a:focus-visible { outline:2px solid var(--serie); outline-offset:3px; }
+.contexto nav { display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:20px; }
+@media (max-width:480px) { .contexto { font-size:13px; } .contexto table { font-size:12px; } }

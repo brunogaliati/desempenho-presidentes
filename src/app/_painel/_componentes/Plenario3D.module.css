@@ -32,6 +32,8 @@
 .tela[data-arrastando="true"] { cursor: grabbing; }
 
 .vistas { position: absolute; top: 0; right: 0; z-index: 2; }
+.palco[data-compacta] .vistas,
+.palco[data-compacta] .dica { display: none; }
 .dica { position: absolute; left: 0; bottom: 2px; z-index: 2; display: flex; align-items: center; gap: 8px; max-width: 45%; font-size: 11px; line-height: 1.4; color: var(--tinta-2); transition: opacity 400ms ease-out; pointer-events: none; }
 .dica svg { flex-shrink: 0; }
 .dica[data-escondida="true"] { opacity: 0; }

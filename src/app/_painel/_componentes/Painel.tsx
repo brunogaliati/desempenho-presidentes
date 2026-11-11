@@ -113,6 +113,8 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
     navegar(destinoPainel({aba:a,uf:sigla??undefined,mandato:mandatoId}));
   };
 
+  const compartilharPagina = <Compartilhar {...(fraseDoPainel?{contexto:"",mensagem:fraseDoPainel}:{mensagem:perfil?`${aba==="economia"?"Economia":TEMAS_PAINEL[aba].titulo} no governo ${perfil.nomeCurto}`:TEMAS_PAINEL[aba].titulo})} compacto/>;
+
   return (
     <RecortesCompartilhaveis capaDoLink={aba==="congresso"?undefined:(link)=>capaDoLink(link,inteiros)} titulo={aba==="congresso"?"Congresso Nacional":`${sigla ? 'Governo de '+(dados.ufs.find(u=>u.sigla===sigla)?.nome??sigla) : mandatos.find(m=>m.id===mandatoId)?.nomeCurto??'Governo'} · ${dados.foco.posse.slice(0,4)}–${dados.foco.fim.slice(0,4)}`} filtros={aba==="congresso"?{uf:sigla}:{uf:sigla,mandato:mandatoId}}>
     <PosseContext.Provider value={dados.foco.posse}>
@@ -130,15 +132,15 @@ export function Painel({ dados: inteiros, retrato, children }: Props) {
 
       {/* Antes dos painéis de propósito: ao entrar numa rota, o Next rola até o primeiro elemento dela. Depois deles, o perfil abria no rodapé. */}
       {children}
-      {/* No Congresso o botão mora no cabeçalho da aba, sem uma faixa só para ele. */}
-      {aba!=="congresso"&&<div className={`relative z-[2] mx-auto flex items-center justify-end gap-4 py-1 text-xs text-[var(--tinta-2)] ${perfil?`px-3 ${estilosPerfil.barra}`:"painel-acoes-pagina max-w-6xl px-2"}`}>
+      {/* Economia, Congresso e Resumo têm o compartilhar dentro da própria aba. */}
+      {aba!=="congresso"&&(perfil||(aba!=="resumo"&&aba!=="economia"))&&<div className={`relative z-[2] mx-auto flex items-center justify-end gap-4 py-1 text-xs text-[var(--tinta-2)] ${perfil?`px-3 ${estilosPerfil.barra}`:"painel-acoes-pagina max-w-6xl px-2"}`}>
         {perfil&&<TrilhaPerfil proprios={mandatos.filter(m=>m.pessoaId===perfil.pessoaId).sort((a,b)=>a.inicio.localeCompare(b.inicio))} atual={perfil.id} aoEscolher={setMandatoId}/>}
-        <Compartilhar {...(fraseDoPainel?{contexto:"",mensagem:fraseDoPainel}:{mensagem:perfil?`${aba==="economia"?"Economia":TEMAS_PAINEL[aba].titulo} no governo ${perfil.nomeCurto}`:TEMAS_PAINEL[aba].titulo})} compacto/>
+        {aba!=="economia"&&compartilharPagina}
       </div>}
       <main>
       {aba === "resumo" && (municipio ? <ResumoMunicipal key={municipio} dados={atual} codigo={municipio} gestao={gestao} setSigla={setSigla} /> : <AbaResumo dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} aoEscolherMandato={setMandatoId} />)}
       {aba === "economia" && (
-        <AbaEconomia dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} aoTrocarAba={trocarAba} />
+        <AbaEconomia dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} aoTrocarAba={trocarAba} acoes={compartilharPagina} />
       )}
       {aba === "ambiente" && <AbaAmbiente dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} />}
       {aba === "dinheiro" && <AbaDinheiro dados={dados} atual={atual} sigla={sigla} setSigla={setSigla} aoEscolherMandato={setMandatoId} />}

@@ -113,15 +113,20 @@ button.barra:hover,a.barra:hover { background:var(--faixa-a); }
 /* Quem é destacado fica cheio; os outros, claros, para a comparação aparecer sem cor nova. */
 .barra[data-destaque],a.barra[data-destaque]:hover { background:var(--faixa-ativa); }
 .barra[data-destaque] .barraNome { font-weight:650; }
-.barras[data-com-destaque] .barra:not([data-destaque]) .trilho > span { background:color-mix(in oklab,var(--serie) 40%,transparent); }
+.barras[data-com-destaque] .barra:not([data-destaque]) .trilho > span { background:color-mix(in oklab,var(--cor-barra,var(--serie)) 40%,transparent); }
 .reticencia { padding:0 8px; font-size:14px; line-height:1; letter-spacing:.1em; color:var(--tinta-3); }
 .posicaoBarra { min-width:2.4ch; font-size:12px; font-weight:600; color:var(--tinta-2); }
 .barraTopo { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .barraNome { min-width:0; font-size:13px; line-height:1.35; overflow-wrap:anywhere; }
+/* Nome numa linha: as trilhas da grade não podem crescer até o nome inteiro, senão o valor sai pela direita. */
+.barras[data-uma-linha], .barras[data-uma-linha] .barra { grid-template-columns:minmax(0,1fr); }
+.barras[data-uma-linha] :is(li,.barra,.barraTopo) { min-width:0; }
+.barras[data-uma-linha] .barraNome { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
 .barraValor { flex:none; font-size:12.5px; font-weight:600; white-space:nowrap; }
 .barraValor > span { font-weight:400; color:var(--tinta-2); }
-.trilho { display:block; height:8px; border-radius:0 4px 4px 0; background:color-mix(in oklab,var(--serie) 10%,transparent); }
-.trilho > span { display:block; height:100%; border-radius:0 4px 4px 0; background:var(--serie); }
+/* `--cor-barra` vem de cada barra (família da categoria, partido); sem ela, a cor da série. */
+.trilho { display:block; height:8px; border-radius:0 4px 4px 0; background:color-mix(in oklab,var(--cor-barra,var(--serie)) 10%,transparent); }
+.trilho > span { display:block; height:100%; border-radius:0 4px 4px 0; background:var(--cor-barra,var(--serie)); }
 .pessoaBarra { display:inline-flex; align-items:center; gap:8px; font-weight:550; }
 .partidoMini { display:inline-flex; align-items:center; gap:4px; vertical-align:middle; }
 .verTodos { justify-self:start; margin-top:4px; }
@@ -131,7 +136,8 @@ button.barra:hover,a.barra:hover { background:var(--faixa-a); }
 
 /* Crachá: a faixa leva a cor da bancada, como na maquete. */
 .cracha { position:relative; }
-.crachaTopo { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:start; gap:20px; padding:20px; border:1px solid color-mix(in oklab,var(--cor-partido,var(--serie)) 26%,var(--borda)); border-radius:20px; background:linear-gradient(135deg,color-mix(in oklab,var(--cor-partido,var(--serie)) 16%,transparent),color-mix(in oklab,var(--cor-partido,var(--serie)) 3%,transparent) 62%); }
+/* Sem degradê na cor do partido (o dono achou com cara de feito às pressas): o símbolo e a sigla dizem o partido. */
+.crachaTopo { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:start; gap:20px; padding:20px; border:1px solid var(--borda); border-radius:20px; }
 .crachaIdentidade { display:grid; align-content:start; gap:6px; min-width:0; }
 .crachaIdentidade :is(h1,h3) { font-size:clamp(24px,2.6vw,34px); font-weight:650; letter-spacing:-.025em; line-height:1.1; overflow-wrap:anywhere; }
 .nomeCivil { font-size:13px; color:var(--tinta-2); }

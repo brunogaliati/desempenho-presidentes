@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, type KeyboardEvent, type ReactNode } from "react";
+import { useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
 
 import {
   type CasaCongresso, type CotaDoAno, type IndiceCota, type MesDaCota, type PeriodoCota, type SituacaoMes,
   LEGISLATURA, MESES, MESES_POR_EXTENSO, reaisCompactos, reaisInteiros, situacaoDaCota, textoPercentual,
 } from "../_dados/congressoModelo";
-import { Segmentos } from "./Vidro";
+import { Segmentos, useEscolhaImediata } from "./Vidro";
 import estilos from "./Parlamentares.module.css";
 
 /** Topo do eixo num número redondo: 45.200 vira 50.000. */
@@ -97,10 +97,12 @@ export function AnoAAno({ anos, valores, medias, ativo, aoEscolher, rotuloMedia,
   parcial: number | null;
 }) {
   const escala = topoDoEixo(Math.max(0, ...valores.map(v => v ?? 0), ...medias));
-  return <ul className={estilos.anos} data-todos={ativo === null || undefined}>
+  // O ano acende no clique; o resto da página vem depois (ver `useEscolhaImediata`).
+  const [mostrado, escolher] = useEscolhaImediata(ativo, (ano: number | null) => { if (ano !== null) aoEscolher(ano); });
+  return <ul className={estilos.anos} data-todos={mostrado === null || undefined}>
     {anos.map((ano, i) => {
       const v = valores[i];
-      return <li key={ano}><button type="button" aria-pressed={ano === ativo} onClick={() => aoEscolher(ano)}
+      return <li key={ano}><button type="button" aria-pressed={ano === mostrado} onClick={() => escolher(ano)}
         aria-label={`${ano}${ano === parcial ? ", até agora" : ""}: ${v === null ? "sem notas" : reaisInteiros(v)}; ${rotuloMedia}: ${reaisInteiros(medias[i])}`}>
         <span className={`tabular ${estilos.anoRotulo}`}>{ano}{ano === parcial ? "*" : ""}</span>
         <span className={estilos.trilhoAno} aria-hidden="true">
@@ -119,11 +121,17 @@ export type ItemBarra = {
   href?: string;
   /** Fica à vista mesmo além do limite, com as outras barras mais claras. */
   destaque?: boolean;
+  /** Cor da barra (a família da categoria, o partido); sem ela, a da lista ou a da série. */
+  cor?: string;
 };
 
 /** Barras horizontais em ordem, com o valor na ponta e a parte do total. */
-export function Barras({ itens, total, limite = 6, rotuloLista, nomeDoMais, feminino = false, valor = reaisCompactos, escala }: {
+export function Barras({ itens, total, limite = 6, rotuloLista, nomeDoMais, feminino = false, valor = reaisCompactos, escala, cor, umaLinha = false }: {
   itens: ItemBarra[];
+  /** Nome numa linha só, cortado com reticências (inteiro no `title`): todas as barras com a mesma altura, para alinhar com o painel vizinho. */
+  umaLinha?: boolean;
+  /** Cor de todas as barras que não trazem a sua; sem ela, a da série. */
+  cor?: string;
   total: number;
   limite?: number;
   rotuloLista: string;
@@ -140,22 +148,24 @@ export function Barras({ itens, total, limite = 6, rotuloLista, nomeDoMais, femi
   // Quem está em destaque além do limite aparece depois de uma reticência, na posição que tem.
   const visiveis = todos || destacado < limite ? itens.slice(0, todos ? undefined : limite) : [...itens.slice(0, limite - 1), null, itens[destacado]];
   return <>
-    <ol className={estilos.barras} aria-label={rotuloLista} data-com-destaque={destacado >= 0 || undefined}>
+    <ol className={estilos.barras} aria-label={rotuloLista} data-com-destaque={destacado >= 0 || undefined} data-uma-linha={umaLinha || undefined}>
       {visiveis.map(item => {
         if (!item) return <li key="reticencia" className={estilos.reticencia} aria-hidden="true">…</li>;
         const conteudo = <>
           <span className={estilos.barraTopo}>
-            <span className={estilos.barraNome}>{item.nome}</span>
+            <span className={estilos.barraNome} title={umaLinha && typeof item.nome === "string" ? item.nome : undefined}>{item.nome}</span>
             <span className={`tabular ${estilos.barraValor}`}>{valor(item.valor)}<span> · {item.detalhe ?? textoPercentual(item.valor, total)}</span></span>
           </span>
           <span className={estilos.trilho} aria-hidden="true"><span style={{ width: `${(Math.max(0, item.valor) / maximo) * 100}%` }} /></span>
         </>;
         const destaque = item.destaque || undefined;
+        const corBarra = item.cor ?? cor;
+        const estilo = corBarra ? { "--cor-barra": corBarra } as CSSProperties : undefined;
         return <li key={item.chave}>{item.href
-          ? <Link href={item.href} className={estilos.barra} data-destaque={destaque} aria-current={item.destaque ? "page" : undefined} aria-label={item.rotulo}>{conteudo}</Link>
+          ? <Link href={item.href} className={estilos.barra} style={estilo} data-destaque={destaque} aria-current={item.destaque ? "page" : undefined} aria-label={item.rotulo}>{conteudo}</Link>
           : item.aoEscolher
-          ? <button type="button" className={estilos.barra} data-destaque={destaque} onClick={item.aoEscolher} aria-label={item.rotulo}>{conteudo}</button>
-          : <div className={estilos.barra} data-destaque={destaque}>{conteudo}</div>}</li>;
+          ? <button type="button" className={estilos.barra} style={estilo} data-destaque={destaque} onClick={item.aoEscolher} aria-label={item.rotulo}>{conteudo}</button>
+          : <div className={estilos.barra} style={estilo} data-destaque={destaque}>{conteudo}</div>}</li>;
       })}
     </ol>
     {itens.length > limite && <button type="button" className={estilos.verTodos} aria-expanded={todos} onClick={() => setTodos(t => !t)}>{todos ? "Mostrar menos" : `Ver ${feminino ? "todas as" : "todos os"} ${itens.length} ${nomeDoMais}`}</button>}

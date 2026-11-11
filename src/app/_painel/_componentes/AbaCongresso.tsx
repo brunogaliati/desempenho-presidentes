@@ -14,7 +14,7 @@ import { Bloco } from "./Bloco";
 import { DiretorioCongresso, mostrarCracha } from "./DiretorioCongresso";
 import { FotoParlamentar } from "./FotoParlamentar";
 import { Segmentos } from "./Vidro";
-import { corDoPartido } from "./governos";
+import { corDaBancada, partidoDe } from "./bancada";
 import { IdentidadePartido } from "./PainelEconomia";
 import { PaginaParlamentar } from "./PaginaParlamentar";
 import { Plenario3D, type Assento } from "./Plenario3D";
@@ -27,11 +27,8 @@ const casas: { id: Casa; rotulo: string }[] = [
 ];
 const normalizar = (texto: string) => texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR").trim();
 const referencia = new Date(fotografia.coletadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
-const partidoDe = (p: { partido: string | null }) => p.partido ?? "Sem informação";
-const coresComplementares: Record<string, string> = { PV: "var(--partido-pv)", PSOL: "var(--congresso-psol)", REDE: "var(--congresso-rede)", AVANTE: "var(--congresso-avante)", PRD: "var(--congresso-prd)", "MISSÃO": "var(--congresso-missao)" };
 /** Até quantos parlamentares em destaque a maquete mostra os retratos sobre as cadeiras. */
 const limiteRetratos = 90;
-const corDaBancada = (governos: DadosPainel["governos"], sigla: string | null) => coresComplementares[sigla ?? ""] ?? corDoPartido(governos, sigla === "S/Partido" ? "SEM" : sigla);
 type PropsAba = { dados: DadosPainel; sigla: string | null; setSigla: (sigla: string | null) => void };
 
 /** Em /congresso, a maquete e o diretório; em /congresso/deputados/nome-id, a página da pessoa. */

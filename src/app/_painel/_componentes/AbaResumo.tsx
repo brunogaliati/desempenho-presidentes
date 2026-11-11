@@ -63,7 +63,8 @@ import {
   termosDoGoverno,
   type TermoGoverno,
 } from "./governos";
-import { Detalhe, PilulaVeredito, placarDaEconomia, type ItemPlacar } from "./Placar";
+import { PilulaVeredito, Placar, placarDaEconomia } from "./Placar";
+import { Ladrilhos, PalcoResumo, type EstadoNoPalco } from "./PalcoResumo";
 import { RetratoGovernador } from "./RetratoGovernador";
 import { SeletorMunicipio } from "./SeletorMunicipio";
 import { tituloVotacoes, VotacoesAssembleia } from "./VotacoesAssembleia";
@@ -99,8 +100,29 @@ const CONTEXTO_ESTADO: { id: string; aba: "economia" | "ambiente"; nome?: string
   { id: "desmatamento", aba: "ambiente" },
   { id: "focos_12m", aba: "ambiente", nome: "Queimadas" },
 ];
+/** Os nomes curtos na legenda do mapa do palco. */
+const NOME_CURTO: Record<string, string> = { desocupacao: "Desemprego", desmatamento: "Desmatamento" };
 /** No Brasil, a economia já está no placar: o território é o meio ambiente. */
 const CONTEXTO_BRASIL = CONTEXTO_ESTADO.filter((c) => c.aba === "ambiente");
+
+/**
+ * Uma área do placar do topo. `propria`: do governo na tela; senão, ele divide com a
+ * outra esfera (no Brasil, com os estados; num estado, com a União).
+ */
+interface AreaResumo {
+  id: "economia" | "ambiente" | "seguranca" | "educacao";
+  nome: string;
+  propria: boolean;
+  /** `null` enquanto carrega. */
+  contas: ReturnType<typeof contarLinhas> | null;
+  /** O que a barra da direita mostra; a economia do Brasil usa o placar da aba. */
+  linhas: LinhaResumo[] | null;
+}
+const IDS_AREA: AreaResumo["id"][] = ["economia", "ambiente", "seguranca", "educacao"];
+const doTerritorio = (linhas: LinhaResumo[], aba: "economia" | "ambiente") =>
+  linhas.filter((l) => l.id.startsWith(`${aba}-`));
+/** "8 melhoraram", "1 piorou", "nenhuma melhorou". */
+const quantas = (n: number, um: string, varios: string) => (n === 0 ? `nenhuma ${um}` : `${n} ${n === 1 ? um : varios}`);
 
 const validarId = (v: unknown) => v === null || (typeof v === "string" && /^[\w.-]{1,80}$/.test(v));
 /** Sigla de partido como o TSE e a Câmara escrevem: "PT", "PCdoB", "UNIÃO", "S/Partido". */
@@ -216,12 +238,49 @@ export function AbaResumo({ dados, atual, sigla, setSigla, aoEscolherMandato }: 
     [dados, uf],
   );
   const placar = useMemo(() => (uf ? [] : placarDaEconomia(dados).grupos.filter((x) => x.itens.length)), [dados, uf]);
+  // O placar do topo, por área: o que é do governo na tela e, à parte, o que ele divide com a outra esfera.
+  const areas = useMemo<AreaResumo[]>(() => {
+    const com = (linhas: LinhaResumo[] | null) => ({ linhas, contas: linhas ? contarLinhas(linhas) : null });
+    if (uf)
+      return [
+        { id: "seguranca", nome: "Segurança", propria: true, ...com(r ? seguranca : null) },
+        { id: "educacao", nome: "Educação", propria: true, ...com(r ? ideb : null) },
+        { id: "economia", nome: "Economia", propria: false, ...com(doTerritorio(contexto, "economia")) },
+        { id: "ambiente", nome: "Meio ambiente", propria: false, ...com(doTerritorio(contexto, "ambiente")) },
+      ];
+    const itens = placar.flatMap((x) => x.itens).map((i) => ({ sentido: i.sentido, comparacao: null, mudanca: i.mudanca }));
+    return [
+      { id: "economia", nome: "Economia", propria: true, contas: contarLinhas(itens), linhas: null },
+      { id: "ambiente", nome: "Meio ambiente", propria: false, ...com(contexto) },
+      { id: "seguranca", nome: "Segurança", propria: false, ...com(r ? seguranca : null) },
+      { id: "educacao", nome: "Educação", propria: false, ...com(r ? ideb : null) },
+    ];
+  }, [uf, r, seguranca, ideb, contexto, placar]);
+  // A área que a barra da direita mostra vai no link, como a linha aberta.
+  const [areaFixa, setAreaFixa] = useEstadoCompartilhavel<string | null>("resumo.area", null, (v) => v === null || IDS_AREA.includes(v as AreaResumo["id"]));
+  const area = areas.find((a) => a.id === areaFixa) ?? areas[0];
+  const propria = areas
+    .filter((a) => a.propria)
+    .reduce((s, a) => ({ bons: s.bons + (a.contas?.bons ?? 0), ruins: s.ruins + (a.contas?.ruins ?? 0), iguais: s.iguais + (a.contas?.iguais ?? 0) }), { bons: 0, ruins: 0, iguais: 0 });
+  const orcamento = useMemo(() => (dinheiro.dado ? orcamentoDoMandato(dinheiro.dado, uf, foco, dados, mandatos) : null), [dinheiro.dado, uf, foco, dados, mandatos]);
+  // O mapa do palco: cada estado pelo saldo das medidas que existem para os 27, sempre no período do mandato na tela.
+  const porEstado = useMemo(
+    () =>
+      new Map<string, EstadoNoPalco>(
+        dados.ufs.map((u) => {
+          const linhas = linhasDasLeituras(dados, CONTEXTO_ESTADO, u.codigo, (v, l) => formatar(v, l.formato), u.sigla);
+          return [u.sigla, { linhas, ...contarLinhas(linhas) }];
+        }),
+      ),
+    [dados],
+  );
+  const medidasUf = useMemo(
+    () => CONTEXTO_ESTADO.flatMap(({ id, aba, nome }) => (dados.leituras[aba]?.some((x) => x.id === id) ? [nome ?? NOME_CURTO[id] ?? id] : [])),
+    [dados],
+  );
 
-  // O placar do cabeçalho conta só o que é do governo: no estado, segurança e educação; no Brasil, a economia.
-  const contas = uf
-    ? contarLinhas([...seguranca, ...ideb])
-    : contarLinhas(placar.flatMap((x) => x.itens).map((i) => ({ sentido: i.sentido, comparacao: null, mudanca: i.mudanca })));
-  const julgadas = contas.bons + contas.ruins + contas.iguais;
+  // Num estado, o que é do governador contra o Brasil no mesmo período (vai na frase de compartilhar).
+  const contas = contarLinhas(uf ? [...seguranca, ...ideb] : []);
 
   const periodo = `${foco.posse.slice(0, 4)}–${foco.fim.slice(0, 4)}`;
   const quem = uf ? (termo?.nomes.join(" e ") ?? `Governo ${uf.deNome}`) : (presidente?.nome ?? "Governo federal");
@@ -230,20 +289,24 @@ export function AbaResumo({ dados, atual, sigla, setSigla, aoEscolherMandato }: 
   );
   const frase = useMemo(() => {
     const onde = uf ? `${quem} ${uf.emNome}` : quem;
-    if (!julgadas) return `${onde}, ${periodo}: o resumo do governo, com cada número na régua do placar.`;
-    const doque = uf ? "do que é do governo do estado" : "da economia";
+    const prontas = areas.filter((a) => a.contas && a.contas.bons + a.contas.ruins + a.contas.iguais);
+    if (!prontas.length) return `${onde}, ${periodo}: o resumo do governo, com cada número na régua do placar.`;
+    const proprias = prontas
+      .filter((a) => a.propria)
+      .map((a) => `${a.nome}: ${quantas(a.contas!.bons, "melhorou", "melhoraram")} e ${quantas(a.contas!.ruins, "piorou", "pioraram")}.`);
+    const divididas = prontas.filter((a) => !a.propria).map((a) => `${a.nome.toLocaleLowerCase("pt-BR")} ${a.contas!.bons}/${a.contas!.ruins}`);
+    const outra = divididas.length ? ` ${uf ? "Com a União" : "Com os estados"} (melhoraram/pioraram): ${divididas.join(", ")}.` : "";
     const brasil = uf && contas.melhor + contas.igual + contas.pior
       ? ` Contra o Brasil no mesmo período: ${contas.melhor} melhor, ${contas.igual} igual, ${contas.pior} pior.`
       : "";
-    return `${onde}, ${periodo}: das ${julgadas} medidas ${doque}, ${contas.bons} melhoraram e ${contas.ruins} pioraram desde a posse.${brasil}`;
-  }, [uf, quem, periodo, julgadas, contas]);
+    return `${onde}, ${periodo}, desde a posse. ${proprias.join(" ")}${outra}${brasil}`;
+  }, [uf, quem, periodo, areas, contas]);
 
   // O card para redes: os mesmos números da tela, no mesmo molde para todo governo.
   const principal = termo ? principalDoTermo(termo) : null;
   const partidoCartao = uf ? ([...(termo?.trechos ?? [])].reverse().find((t) => t.nome === principal)?.partido ?? null) : (presidente?.partido ?? null);
-  const comparadasCartao = contas.melhor + contas.igual + contas.pior;
   const dadosCartao = useMemo<DadosCartao>(() => {
-    const orc = dinheiro.dado ? orcamentoDoMandato(dinheiro.dado, uf, foco, dados, mandatos) : null;
+    const orc = orcamento;
     const fichaOrc: FichaCartao | null = orc && {
       rotulo: uf ? "Gasto do estado" : "Gasto da União",
       valor: reais(orc.total),
@@ -252,9 +315,17 @@ export function AbaResumo({ dados, atual, sigla, setSigla, aoEscolherMandato }: 
       sentido: "neutro",
       nota: `em ${orc.ano}${orc.parcial ? ` até ${orc.parcial}` : ""}${orc.base ? ` · contra ${orc.base}` : ""}`,
     };
+    // No Brasil, um pouco de cada área, numa ordem fixa (a mesma para todo governo): o
+    // primeiro item de cada tema do placar da economia, depois ambiente, segurança e educação.
+    const de = (linhas: LinhaResumo[] | null, n: number) => (linhas ?? []).flatMap((l) => fichaDaLinha(l) ?? []).slice(0, n);
     const itens = uf
       ? [...seguranca, ...ideb].flatMap((l) => fichaDaLinha(l) ?? [])
-      : placar.flatMap((x) => x.itens).slice(0, fichaOrc ? 9 : 10).map(fichaDoItem);
+      : [
+          ...placar.flatMap((x) => x.itens.slice(0, 1)).slice(0, 5).map(fichaDoItem),
+          ...de(contexto, 2),
+          ...de(r ? seguranca : null, 1),
+          ...de(r ? ideb : null, 1),
+        ];
     return {
       esfera: uf ? `Governo ${uf.deNome}` : "Governo federal",
       periodo: `${foco.posse.slice(0, 4)}–${foco.fim.slice(0, 4)}${foco.emCurso ? " · em curso" : ""}`,
@@ -264,15 +335,17 @@ export function AbaResumo({ dados, atual, sigla, setSigla, aoEscolherMandato }: 
       foto: uf ? (principal ? ((fotosGovernadores as Record<string, string>)[`${uf.sigla}|${principal}`] ?? null) : null) : presidente ? caminhoFoto(presidente.id) : null,
       bandeira: uf ? `/painel/bandeiras/${uf.sigla.toLowerCase()}.svg` : null,
       placarRotulo: uf ? "O que é do estado, desde a posse" : "A economia, desde a posse",
-      bons: contas.bons,
-      ruins: contas.ruins,
-      iguais: contas.iguais,
-      contraBrasil: uf && comparadasCartao ? `Contra o Brasil: ${contas.melhor} melhor · ${contas.igual} igual · ${contas.pior} pior` : null,
+      ...propria,
+      contraBrasil: uf && contas.melhor + contas.igual + contas.pior ? `Contra o Brasil: ${contas.melhor} melhor · ${contas.igual} igual · ${contas.pior} pior` : null,
+      divididas: {
+        titulo: uf ? "Com a União" : "Com os estados",
+        itens: areas.filter((a) => !a.propria && a.contas).map((a) => ({ nome: a.nome, ...a.contas! })),
+      },
       fichas: fichaOrc ? [...itens, fichaOrc] : itens,
-      fontes: uf ? "Sinesp/MJSP, Inep e Tesouro Nacional (Siconfi)" : "IBGE, Banco Central e Tesouro Nacional (Siconfi)",
+      fontes: "IBGE, Banco Central, Inpe, Sinesp/MJSP, Inep e Tesouro Nacional (Siconfi)",
       arquivo: `${uf?.sigla.toLowerCase() ?? "brasil"}-${foco.posse.slice(0, 4)}-${foco.fim.slice(0, 4)}`,
     };
-  }, [dinheiro.dado, uf, foco, dados, mandatos, seguranca, ideb, placar, quem, partidoCartao, g, principal, presidente, contas, comparadasCartao]);
+  }, [orcamento, uf, foco, seguranca, ideb, placar, contexto, r, areas, propria, contas, quem, partidoCartao, g, principal, presidente]);
   // A dívida e o pessoal vêm do Tesouro na hora: só quando o diálogo abre.
   const fiscalDoCartao = useCallback(async (): Promise<FichaCartao[]> => {
     if (!uf) return [];
@@ -314,22 +387,47 @@ export function AbaResumo({ dados, atual, sigla, setSigla, aoEscolherMandato }: 
       <NavTerminal secoes={secoes} rotulo="Seções do resumo" />
       <h1 className="sr-only">Resumo do governo{uf ? ` ${uf.deNome}` : " federal"}, {periodo}</h1>
 
-      <Cabeca
+      <PalcoResumo
         dados={dados}
         uf={uf}
         setSigla={setSigla}
-        termo={termo}
-        termos={termos}
-        presidente={presidente}
-        mandatos={mandatos}
-        presidentesNoPeriodo={presidentesNoPeriodo}
-        foco={foco}
-        contas={contas}
-        julgadas={julgadas}
-        frase={frase}
-        aoEscolherMandato={aoEscolherMandato}
-        verPresidente={verPresidente}
-        cartao={<CartaoResumo dados={dadosCartao} caminho={caminhoCartao} frase={frase} extras={uf ? fiscalDoCartao : undefined} />}
+        porEstado={porEstado}
+        medidas={medidasUf}
+        coluna={
+          <Cabeca
+            dados={dados}
+            uf={uf}
+            setSigla={setSigla}
+            termo={termo}
+            presidente={presidente}
+            presidentesNoPeriodo={presidentesNoPeriodo}
+            foco={foco}
+            areas={areas}
+            area={area.id}
+            aoEscolherArea={setAreaFixa}
+            propria={propria}
+            contraBrasil={uf && contas.melhor + contas.igual + contas.pior ? contas : null}
+            orcamento={orcamento}
+            verOrcamento={() => verAba("dinheiro")}
+            frase={frase}
+            verPresidente={verPresidente}
+            cartao={<CartaoResumo dados={dadosCartao} caminho={caminhoCartao} frase={frase} extras={uf ? fiscalDoCartao : undefined} />}
+          />
+        }
+        barra={
+          <>
+            <p className={s.barraTitulo}>
+              {area.nome}
+              {area.propria ? "" : uf ? " · com a União" : " · com os estados"}, desde a posse
+              {!uf && area.id === "economia" ? " · toque para abrir" : ""}
+            </p>
+            {!uf && area.id === "economia" ? (
+              <Placar cabecalho={false} grupos={placar} fileiras={[]} aoFocar={() => {}} aoVerHistorico={() => verAba("economia")} />
+            ) : (
+              <Ladrilhos grupos={[{ titulo: area.nome, linhas: area.linhas }]} />
+            )}
+          </>
+        }
       />
 
       <div className={s.comoLer}>
@@ -350,9 +448,9 @@ export function AbaResumo({ dados, atual, sigla, setSigla, aoEscolherMandato }: 
       <section className={s.secao} aria-labelledby="resumo-do-governo">
         <div className={s.secaoTitulo}>
           <h2 id="resumo-do-governo">{uf ? "O que é do governo do estado" : "O que é do governo federal"}</h2>
-          <span>{uf ? "Polícias, rede estadual de ensino e o orçamento do estado." : "Política econômica e o orçamento da União."}</span>
+          <span>{uf ? "Polícias, rede estadual de ensino e o orçamento do estado." : "O orçamento da União. A política econômica está no placar do alto."}</span>
         </div>
-        <div className={s.grade}>
+        <div className={uf ? s.grade : s.gradeUnica}>
           {uf ? (
             <>
               <BlocoLinhas titulo="Segurança" detalhe="polícias estaduais · Sinesp" linhas={r ? seguranca : null} aberta={aberta} alternar={alternar} foco={foco} />
@@ -362,9 +460,7 @@ export function AbaResumo({ dados, atual, sigla, setSigla, aoEscolherMandato }: 
                 <BlocoFiscalResumo uf={uf} foco={foco} aberta={aberta} alternar={alternar} />
               </div>
             </>
-          ) : (
-            <BlocoEconomia grupos={placar} aberta={aberta} alternar={alternar} aoVerHistorico={() => verAba("economia")} />
-          )}
+          ) : null}
           <BlocoDinheiro
             painel={dinheiro.dado}
             erro={dinheiro.erro}
@@ -531,20 +627,124 @@ function BlocoSaude({
 
 // --- Cabeçalho -------------------------------------------------------------------
 
+/**
+ * O placar do topo: o número grande é o que é do governo na tela (no Brasil, a
+ * economia; num estado, segurança e educação). Embaixo, leve, o que ele divide com a
+ * outra esfera: uma linha por área, um quadradinho por medida (a marca do mapa). Tocar
+ * num deles mostra a área na barra da direita.
+ */
+function PlacarPorArea({
+  uf,
+  areas,
+  area,
+  aoEscolher,
+  propria,
+  contraBrasil,
+  orcamento,
+  verOrcamento,
+}: {
+  uf: UF | null;
+  areas: AreaResumo[];
+  area: AreaResumo["id"];
+  aoEscolher: (id: AreaResumo["id"]) => void;
+  propria: { bons: number; ruins: number; iguais: number };
+  contraBrasil: { melhor: number; igual: number; pior: number } | null;
+  orcamento: ReturnType<typeof orcamentoDoMandato>;
+  verOrcamento: () => void;
+}) {
+  const proprias = areas.filter((a) => a.propria);
+  const julgadas = propria.bons + propria.ruins + propria.iguais;
+  const carregando = proprias.some((a) => !a.contas);
+  const linha = (a: AreaResumo) => {
+    const c = a.contas;
+    const n = c ? c.bons + c.ruins + c.iguais : 0;
+    const resumo = c ? `${quantas(c.bons, "melhorou", "melhoraram")}, ${quantas(c.ruins, "piorou", "pioraram")}` : "carregando";
+    return (
+      <button key={a.id} type="button" className={s.linhaArea} aria-pressed={a.id === area} aria-label={`${a.nome}: ${resumo}`} title={resumo} onClick={() => aoEscolher(a.id)}>
+        <span className={s.linhaNome}>{a.nome}</span>
+        {!c ? (
+          <i className={s.linhaOsso} aria-hidden />
+        ) : n ? (
+          <span className={s.quadros} aria-hidden>
+            {[...Array<string>(c.bons).fill("var(--bom)"), ...Array<string>(c.iguais).fill("var(--grade)"), ...Array<string>(c.ruins).fill("var(--ruim)")].map((cor, k) => (
+              <i key={k} style={{ background: cor }} />
+            ))}
+          </span>
+        ) : (
+          <span className={s.linhaSem}>sem dado</span>
+        )}
+      </button>
+    );
+  };
+  return (
+    <>
+      <button type="button" className={s.placarArea} aria-pressed={proprias.some((a) => a.id === area)} onClick={() => aoEscolher(proprias[0].id)}>
+        <span className={s.placarRotulo}>{uf ? "O que é do estado, desde a posse" : "A economia, desde a posse"}</span>
+        {julgadas ? (
+          <>
+            <span className={s.placarNumeros}>
+              <span style={{ color: "var(--bom)" }}>
+                {propria.bons}
+                <small>melhoraram</small>
+              </span>
+              <span style={{ color: "var(--ruim)" }}>
+                {propria.ruins}
+                <small>pioraram</small>
+              </span>
+              {propria.iguais > 0 && (
+                <span style={{ color: "var(--tinta-3)" }}>
+                  {propria.iguais}
+                  <small>iguais</small>
+                </span>
+              )}
+            </span>
+            <span className={s.placarBarra} aria-hidden>
+              {propria.bons > 0 && <i style={{ flex: propria.bons, background: "var(--bom)" }} />}
+              {propria.iguais > 0 && <i style={{ flex: propria.iguais, background: "var(--grade)" }} />}
+              {propria.ruins > 0 && <i style={{ flex: propria.ruins, background: "var(--ruim)" }} />}
+            </span>
+          </>
+        ) : (
+          <span className={s.contraBrasil}>{carregando ? "Carregando…" : "Ainda sem medida com dado antes e depois da posse."}</span>
+        )}
+      </button>
+      {contraBrasil && (
+        <span className={s.contraBrasil}>
+          Contra o Brasil: <b style={{ color: "var(--bom)" }}>{contraBrasil.melhor} melhor</b> · {contraBrasil.igual} igual ·{" "}
+          <b style={{ color: "var(--ruim)" }}>{contraBrasil.pior} pior</b>
+        </span>
+      )}
+      <div className={s.divididas}>
+        {proprias.length > 1 && proprias.map(linha)}
+        <span className={s.divididasTitulo}>{uf ? "Com a União" : "Com os estados"}</span>
+        {areas.filter((a) => !a.propria).map(linha)}
+        {orcamento && (
+          <button type="button" className={s.linhaOrcamento} onClick={verOrcamento}>
+            {uf ? "Orçamento do estado" : "Orçamento da União"} em {orcamento.ano}: {reais(orcamento.total)}
+            {orcamento.mudanca !== null && `, ${orcamento.mudanca >= 0 ? "+" : "−"}${numero(Math.abs(orcamento.mudanca), 0)}% real`} →
+          </button>
+        )}
+      </div>
+    </>
+  );
+}
+
 function Cabeca({
   dados,
   uf,
   setSigla,
   termo,
-  termos,
   presidente,
-  mandatos,
   presidentesNoPeriodo,
   foco,
-  contas,
-  julgadas,
+  areas,
+  area,
+  aoEscolherArea,
+  propria,
+  contraBrasil,
+  orcamento,
+  verOrcamento,
   frase,
-  aoEscolherMandato,
   verPresidente,
   cartao,
 }: {
@@ -552,45 +752,25 @@ function Cabeca({
   uf: UF | null;
   setSigla: (s: string | null) => void;
   termo: TermoGoverno | null;
-  termos: TermoGoverno[];
   presidente: MandatoVisual | null;
-  mandatos: MandatoVisual[];
   presidentesNoPeriodo: MandatoVisual[];
   foco: FocoMandato;
-  contas: ReturnType<typeof contarLinhas>;
-  julgadas: number;
+  areas: AreaResumo[];
+  area: AreaResumo["id"];
+  aoEscolherArea: (id: AreaResumo["id"]) => void;
+  propria: { bons: number; ruins: number; iguais: number };
+  contraBrasil: { melhor: number; igual: number; pior: number } | null;
+  orcamento: ReturnType<typeof orcamentoDoMandato>;
+  verOrcamento: () => void;
   frase: string;
-  aoEscolherMandato: (id: string) => void;
   verPresidente: (id: string) => void;
   cartao: ReactNode;
 }) {
   const g = dados.governos;
   const pessoas = termo ? [...new Map(termo.trechos.map((t) => [t.nome, t])).values()] : [];
   const previsto = uf && foco.emCurso ? g.previstos?.[uf.sigla] : undefined;
-  const comparadas = contas.melhor + contas.igual + contas.pior;
-  // O trilho rola até o governo na tela, sem mexer na rolagem da página. Sem barra de
-  // rolagem: as bordas esmaecem e as setas aparecem só do lado em que há mais governos.
-  const trilho = useRef<HTMLElement>(null);
-  const [bordas, setBordas] = useState({ esq: false, dir: false });
-  const medirBordas = useCallback(() => {
-    const n = trilho.current;
-    if (!n) return;
-    const esq = n.scrollLeft > 4;
-    const dir = n.scrollLeft + n.clientWidth < n.scrollWidth - 4;
-    setBordas((b) => (b.esq === esq && b.dir === dir ? b : { esq, dir }));
-  }, []);
-  useEffect(() => {
-    const nav = trilho.current;
-    const atual = nav?.querySelector<HTMLElement>('[aria-current="true"]');
-    if (nav && atual) nav.scrollLeft = atual.offsetLeft - nav.clientWidth / 2 + atual.offsetWidth / 2;
-    medirBordas();
-    window.addEventListener("resize", medirBordas);
-    return () => window.removeEventListener("resize", medirBordas);
-  }, [foco.id, uf, medirBordas]);
-  const rolar = (lado: 1 | -1) => trilho.current?.scrollBy({ left: lado * trilho.current.clientWidth * 0.7, behavior: "smooth" });
-
   return (
-    <header className={`vidro ${s.cabeca}`}>
+    <>
       <div className={s.topoCabeca}>
         <div className={s.esferas} role="group" aria-label="Esfera de governo">
           <button type="button" className={s.esfera} aria-pressed={!uf} onClick={() => setSigla(null)}>
@@ -669,42 +849,16 @@ function Cabeca({
         </div>
 
         <div className={s.placar} aria-label="Placar do resumo">
-          <span className={s.placarRotulo}>
-            {uf ? "O que é do estado, desde a posse" : "A economia, desde a posse"}
-          </span>
-          {julgadas ? (
-            <>
-              <div className={s.placarNumeros}>
-                <span style={{ color: "var(--bom)" }}>
-                  {contas.bons}
-                  <small>melhoraram</small>
-                </span>
-                <span style={{ color: "var(--ruim)" }}>
-                  {contas.ruins}
-                  <small>pioraram</small>
-                </span>
-                {contas.iguais > 0 && (
-                  <span style={{ color: "var(--tinta-3)" }}>
-                    {contas.iguais}
-                    <small>iguais</small>
-                  </span>
-                )}
-              </div>
-              <div className={s.placarBarra} aria-hidden>
-                {contas.bons > 0 && <i style={{ flex: contas.bons, background: "var(--bom)" }} />}
-                {contas.iguais > 0 && <i style={{ flex: contas.iguais, background: "var(--grade)" }} />}
-                {contas.ruins > 0 && <i style={{ flex: contas.ruins, background: "var(--ruim)" }} />}
-              </div>
-              {uf && comparadas > 0 && (
-                <span className={s.contraBrasil}>
-                  Contra o Brasil: <b style={{ color: "var(--bom)" }}>{contas.melhor} melhor</b> · {contas.igual} igual ·{" "}
-                  <b style={{ color: "var(--ruim)" }}>{contas.pior} pior</b>
-                </span>
-              )}
-            </>
-          ) : (
-            <span className={s.contraBrasil}>Ainda sem medida com dado antes e depois da posse.</span>
-          )}
+          <PlacarPorArea
+            uf={uf}
+            areas={areas}
+            area={area}
+            aoEscolher={aoEscolherArea}
+            propria={propria}
+            contraBrasil={contraBrasil}
+            orcamento={orcamento}
+            verOrcamento={verOrcamento}
+          />
           <div className={s.compartilhar}>
             <Compartilhar mensagem={frase} />
             {cartao}
@@ -712,44 +866,7 @@ function Cabeca({
         </div>
       </div>
 
-      <div className={s.trilhoCaixa} data-esq={bordas.esq || undefined} data-dir={bordas.dir || undefined}>
-      <button type="button" className={s.setaTrilho} data-lado="esq" onClick={() => rolar(-1)} aria-label="Governos anteriores" hidden={!bordas.esq}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m15 6-6 6 6 6" /></svg>
-      </button>
-      <nav ref={trilho} className={s.trilho} aria-label={uf ? `Governos ${uf.deNome}` : "Presidentes"} onScroll={medirBordas}>
-        {uf
-          ? termos.map((t) => {
-              const quem = principalDoTermo(t);
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={s.termo}
-                  aria-current={t.id === foco.id}
-                  onClick={() => aoEscolherMandato(t.id)}
-                  title={`${t.ano}–${t.ano + 3}: ${t.nomes.join(", ")}`}
-                >
-                  <RetratoGovernador uf={uf.sigla} nome={quem} tamanho={32} />
-                  {t.ano}–{t.ano + 3} · {quem.split(" ")[0]}
-                  {t.nomes.length > 1 ? ` +${t.nomes.length - 1}` : ""}
-                </button>
-              );
-            })
-          : [...mandatos]
-              .sort((a, b) => a.inicio.localeCompare(b.inicio))
-              .map((m) => (
-                <button key={m.id} type="button" className={s.termo} aria-current={m.id === foco.id} onClick={() => aoEscolherMandato(m.id)}>
-                  <Retrato presidente={m} tamanho="p" />
-                  {m.nomeCurto}
-                  {m.mandato > 1 ? ` ${m.mandato}` : ""} · {m.inicio.slice(0, 4)}
-                </button>
-              ))}
-      </nav>
-      <button type="button" className={s.setaTrilho} data-lado="dir" onClick={() => rolar(1)} aria-label="Governos seguintes" hidden={!bordas.dir}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m9 6 6 6-6 6" /></svg>
-      </button>
-      </div>
-    </header>
+    </>
   );
 }
 
@@ -1043,54 +1160,6 @@ export function Mosaico({
         </div>
       )}
     </>
-  );
-}
-
-// --- Economia federal --------------------------------------------------------------
-
-function BlocoEconomia({
-  grupos,
-  aberta,
-  alternar,
-  aoVerHistorico,
-}: {
-  grupos: { titulo: string; itens: ItemPlacar[] }[];
-  aberta: string | null;
-  alternar: (id: string) => void;
-  aoVerHistorico: () => void;
-}) {
-  return (
-    <Bloco titulo="Economia" detalhe="o placar da aba Economia" className={s.largo}>
-      <div className={s.colunas}>
-      {grupos.map((grupo) => (
-        <div key={grupo.titulo}>
-          <div className={s.grupo}>{grupo.titulo}</div>
-          <ul className={s.linhas}>
-            {grupo.itens.map((x) => {
-              const id = `eco-${x.id}`;
-              const estaAberta = aberta === id;
-              return (
-                <li key={id}>
-                  <button type="button" className={s.linha} aria-expanded={estaAberta} onClick={() => alternar(id)}>
-                    <span className={s.linhaNome}>
-                      <b>{x.rotulo}</b>
-                    </span>
-                    <span className={s.linhaValores}>
-                      <b>{x.agora}</b>
-                    </span>
-                    <PilulaVeredito texto={x.mudanca} sentido={x.sentido} className={s.pilula} />
-                    <i className={s.seta} aria-hidden />
-                  </button>
-                  {estaAberta && <Detalhe x={x} aoVerHistorico={aoVerHistorico} />}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ))}
-      </div>
-      {!grupos.length && <p className={s.tileQuando}>Sem placar para este mandato.</p>}
-    </Bloco>
   );
 }
 

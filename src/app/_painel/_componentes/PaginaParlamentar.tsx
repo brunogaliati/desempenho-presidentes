@@ -3,8 +3,9 @@
 import Link from "next/link";
 
 import { Compartilhar } from "@/components/Compartilhar";
+import { ContextoParlamentar } from "./ContextoParlamentar";
 
-import { type CasaCongresso, NOME_UF } from "../_dados/congressoModelo";
+import { type CasaCongresso, NOME_UF, caminhoParlamentar } from "../_dados/congressoModelo";
 import fotografia from "../_dados/fotografia.json";
 import type { DadosPainel } from "../_dados/tipos";
 import { useCotaDoAno } from "../_dados/useCota";
@@ -43,11 +44,12 @@ export function PaginaParlamentar({ casa, id, dados, corDe }: {
         <li aria-current="page">{pessoa.nome}</li>
       </ol>
     </nav>
-    <TerminalParlamentar casa={casa} pessoa={pessoa} governos={dados.governos} ufs={dados.ufs} cor={corDe(pessoa.partido)}
+    <TerminalParlamentar casa={casa} pessoa={pessoa} governos={dados.governos} ufs={dados.ufs} cor={corDe(pessoa.partido)} corDe={corDe}
       indice={indice} cota={cota} erroCota={erro} periodo={periodo} anos={anos} aoEscolherPeriodo={setPeriodo}
       acoes={<>
         <Link href={maquete}>Ver na maquete</Link>
         <Compartilhar mensagem={`${pessoa.nome}: votações, cota parlamentar e perfil`} compacto />
       </>} />
+    <ContextoParlamentar parlamentar={{ casa, pessoa, caminho: caminhoParlamentar(casa, pessoa) }} />
   </div>;
 }

@@ -1,4 +1,5 @@
 "use client";
+import type { ReactNode } from "react";
 import { opcaoCompartilhada } from "@/lib/compartilhamento";
 import { useEstadoCompartilhavel } from "@/components/RecortesCompartilhaveis";
 
@@ -32,6 +33,7 @@ export function AbaEconomia({
   sigla,
   setSigla,
   aoTrocarAba,
+  acoes,
 }: {
   dados: DadosPainel;
   /** O governo atual inteiro, para o que compara todos os governos. */
@@ -39,6 +41,7 @@ export function AbaEconomia({
   sigla: string | null;
   setSigla: (s: string | null) => void;
   aoTrocarAba: (a: AbaId) => void;
+  acoes?: ReactNode;
 }) {
   const series = dados.economia.series.filter((s) => ultimoDado(s));
   const [foco, setFoco] = useEstadoCompartilhavel("serie", series[0]?.id, opcaoCompartilhada(series.map(s=>s.id)));
@@ -78,6 +81,7 @@ export function AbaEconomia({
         aoTrocarAba={aoTrocarAba}
         aoEscolherSerie={escolher}
         aoFocarSerie={focar}
+        acoes={acoes}
       />
       <TerminalEconomia
         dados={dados}

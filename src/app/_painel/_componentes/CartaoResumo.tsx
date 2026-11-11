@@ -51,6 +51,11 @@ export interface DadosCartao {
   ruins: number;
   iguais: number;
   contraBrasil: string | null;
+  /**
+   * Embaixo do placar, o que o governo divide com a outra esfera ("Com os estados",
+   * "Com a União"): uma linha por área, um quadradinho por medida, como no site.
+   */
+  divididas?: { titulo: string; itens: { nome: string; bons: number; ruins: number; iguais: number }[] } | null;
   fichas: FichaCartao[];
   fontes: string;
   /** Parte do nome do arquivo: "sp-2023-2026". */
@@ -267,7 +272,10 @@ export function desenharCartao(canvas: HTMLCanvasElement, d: DadosCartao, format
   y += hMarca + (stories ? 16 : 20);
 
   // Cabeça: retrato, quem é e o placar.
-  const hCab = stories ? 362 : 206;
+  const divididas = (d.divididas?.itens ?? []).filter((a) => a.bons + a.ruins + a.iguais);
+  // O placar (100) e o "contra o Brasil" (26), o título das divididas (42) e uma linha de 30 por área.
+  const hPlacar = divididas.length ? 100 + (d.contraBrasil ? 26 : 0) + 42 + divididas.length * 30 + 20 : 0;
+  const hCab = divididas.length ? (stories ? 212 + hPlacar : Math.max(206, 24 + hPlacar)) : stories ? 362 : 206;
   vidro(ctx, M, y, larguraUtil, hCab, 30);
   const pad = 26;
   const diam = stories ? 150 : 138;
@@ -336,7 +344,7 @@ export function desenharCartao(canvas: HTMLCanvasElement, d: DadosCartao, format
   }
 
   const xPlacar = stories ? M + pad : M + larguraUtil - pad - larguraPlacar;
-  const yPlacar = stories ? y + 212 : y + (hCab - 140) / 2;
+  const yPlacar = stories ? y + 212 : divididas.length ? y + 24 : y + (hCab - 140) / 2;
   if (!stories) {
     ctx.beginPath();
     ctx.moveTo(xPlacar - 26, y + 26);
@@ -392,6 +400,28 @@ export function desenharCartao(canvas: HTMLCanvasElement, d: DadosCartao, format
   } else {
     fonte(500, 20);
     quebrar("Ainda sem medida com dado antes e depois da posse.", larguraPlacar, 2).forEach((l, i) => texto(l, xPlacar, yPlacar + 56 + i * 26, COR.tinta2));
+  }
+  if (divididas.length) {
+    let yd = yPlacar + (julgadas ? 88 + 12 + (d.contraBrasil ? 26 : 0) : 110) + 34;
+    fonte(600, 15);
+    texto((d.divididas?.titulo ?? "").toUpperCase(), xPlacar, yd, COR.tinta3);
+    yd += 8;
+    const lado = 14;
+    const vaoQ = 4;
+    for (const a of divididas) {
+      const cores = [...Array(a.bons).fill(COR.bom), ...Array(a.iguais).fill(COR.grade), ...Array(a.ruins).fill(COR.ruim)] as string[];
+      const larguraQ = cores.length * (lado + vaoQ) - vaoQ;
+      let xq = xPlacar + larguraPlacar - larguraQ;
+      for (const cor of cores) {
+        retangulo(ctx, xq, yd + 9, lado, lado, 3);
+        ctx.fillStyle = cor;
+        ctx.fill();
+        xq += lado + vaoQ;
+      }
+      caber(a.nome, 500, 20, 16, larguraPlacar - larguraQ - 14);
+      texto(a.nome, xPlacar, yd + 22, COR.tinta2);
+      yd += 30;
+    }
   }
   y += hCab + (stories ? 16 : 20);
 

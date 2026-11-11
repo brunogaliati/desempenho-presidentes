@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 /**
  * Peças do vidro líquido (os estilos estão em `globals.css`, em `.vidro`).
@@ -17,10 +17,31 @@ interface Opcao<T extends string> {
 }
 
 /**
+ * A escolha acende no clique, antes de a página terminar de reagir a ela.
+ *
+ * Sem isto, o botão só muda junto com tudo o que depende da escolha (no parlamentar, a
+ * página inteira depende do período): numa máquina lenta ou no modo dev, o toggle parecia
+ * não responder e acendia só "quando a página carregava". Aqui o destaque é um estado local
+ * e urgente, e o `aoEscolher` vai numa transição, que o React renderiza depois de pintar o
+ * botão. Quando a transição termina, vale de novo o `ativo` de fora (se a escolha não pegou,
+ * o destaque volta sozinho).
+ */
+export function useEscolhaImediata<T>(ativo: T, aoEscolher: (valor: T) => void): [T, (valor: T) => void] {
+  const [pendente, iniciar] = useTransition();
+  const [escolhida, setEscolhida] = useState<{ valor: T } | null>(null);
+  const escolher = (valor: T) => {
+    setEscolhida({ valor });
+    iniciar(() => aoEscolher(valor));
+  };
+  return [pendente && escolhida ? escolhida.valor : ativo, escolher];
+}
+
+/**
  * Seletor de opções. `papel="radio"` para escolher o que o mapa desenha;
  * `papel="pagina"` para navegação, com `aria-current`.
  *
- * A opção escolhida é marcada pelo estado acessível, sem medição ou camada móvel.
+ * A opção escolhida é marcada pelo estado acessível, sem medição ou camada móvel, e acende
+ * no clique (`useEscolhaImediata`).
  */
 export function Segmentos<T extends string>({
   opcoes,
@@ -39,6 +60,7 @@ export function Segmentos<T extends string>({
   className?: string;
   classeBotao?: string;
 }) {
+  const [mostrado, escolher] = useEscolhaImediata(ativo, aoEscolher);
   return (
     <div
       className={`segmentos vidro relative flex gap-1 overflow-x-auto p-1 ${className}`}
@@ -47,14 +69,14 @@ export function Segmentos<T extends string>({
       style={{ scrollbarWidth: "none" }}
     >
       {opcoes.map((o) => {
-        const escolhida = o.id === ativo;
+        const escolhida = o.id === mostrado;
         return (
           <button
             key={o.id}
             type="button"
             data-opcao={o.id}
             disabled={o.indisponivel}
-            onClick={() => aoEscolher(o.id)}
+            onClick={() => escolher(o.id)}
             {...(papel === "radio"
               ? { role: "radio", "aria-checked": escolhida }
               : { "aria-current": escolhida ? ("page" as const) : undefined })}

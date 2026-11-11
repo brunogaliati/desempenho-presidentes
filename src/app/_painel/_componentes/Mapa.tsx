@@ -88,6 +88,15 @@ interface Props {
   marca?: (u: UF) => Marca | null;
   /** Estados em destaque; os outros apagam. `null`, nenhum destaque. */
   realce?: Set<string> | null;
+  /** O estado sob o ponteiro (ou `null`), para outra peça da tela acompanhar. */
+  aoApontar?: (sigla: string | null) => void;
+  /** No balão, no lugar do valor da leitura: o que a tela mostra no estado. */
+  balao?: (u: UF) => React.ReactNode;
+  /**
+   * Um brilho que atravessa o país de tempos em tempos, só luz: não muda cor nem
+   * escolhe estado. "parado" esmaece e segura o brilho onde está.
+   */
+  brilho?: "rodando" | "parado" | null;
 }
 
 /** Estados que viram etiqueta lateral, de cima para baixo no litoral. */
@@ -247,9 +256,13 @@ export function Mapa({
   detalhe,
   marca,
   realce = null,
+  aoApontar,
+  balao,
+  brilho = null,
 }: Props) {
   const contornoId = useId();
   const sombraId = useId();
+  const brilhoId = useId();
   const [foco, setFoco] = useState<Foco>(null);
   const [ponteiro, setPonteiro] = useState<{ x: number; y: number } | null>(null);
   const caixa = useRef<HTMLDivElement>(null);
@@ -326,6 +339,10 @@ export function Mapa({
   }, [ufs]);
 
   const ufFoco = foco?.tipo === "uf" ? ufs.find((u) => u.sigla === foco.sigla) ?? null : null;
+  const siglaFoco = ufFoco?.sigla ?? null;
+  const apontar = useRef(aoApontar);
+  useEffect(() => { apontar.current = aoApontar; });
+  useEffect(() => { apontar.current?.(siglaFoco); }, [siglaFoco]);
   const munFoco =
     foco?.tipo === "municipio" ? dadosMunicipais?.get(foco.codigo) ?? null : null;
 
@@ -662,6 +679,50 @@ export function Mapa({
           })}
       </svg>
 
+      {/* Fora do svg do mapa: a sombra dele não é refeita a cada quadro do brilho. */}
+      {brilho && nacional && parado && (() => {
+        const faixa = vb[2] * 0.22;
+        // A faixa é inclinada: no alto e embaixo do país ela anda tanto a mais para os lados.
+        const inclinada = vb[3] * 0.16;
+        return (
+          <svg
+            viewBox={vb.join(" ")}
+            preserveAspectRatio="xMidYMid meet"
+            className="mapa-brilho-camada pointer-events-none absolute inset-0 block h-full w-full overflow-visible"
+            data-parado={brilho === "parado" || undefined}
+            aria-hidden
+          >
+            <defs>
+              <clipPath id={`${brilhoId}-pais`}>
+                {ufs.map((u) => (
+                  <path key={u.sigla} d={u.d} />
+                ))}
+              </clipPath>
+              <linearGradient id={`${brilhoId}-luz`}>
+                <stop offset="0" stopColor="#fff" stopOpacity="0" />
+                <stop offset="0.5" stopColor="#fff" stopOpacity="0.34" />
+                <stop offset="1" stopColor="#fff" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <g clipPath={`url(#${brilhoId}-pais)`}>
+              <g
+                className="mapa-brilho"
+                style={{ "--brilho-de": `${-(faixa + inclinada)}px`, "--brilho-ate": `${vb[2] + faixa + inclinada}px` } as React.CSSProperties}
+              >
+                <rect
+                  x={-faixa / 2}
+                  y={-vb[3] * 0.6}
+                  width={faixa}
+                  height={vb[3] * 1.2}
+                  fill={`url(#${brilhoId}-luz)`}
+                  transform={`translate(${vb[0]} ${vb[1] + vb[3] / 2}) rotate(16)`}
+                />
+              </g>
+            </g>
+          </svg>
+        );
+      })()}
+
       {ponteiro && (ufFoco || munFoco) && (
         <div
           role="status"
@@ -673,7 +734,13 @@ export function Mapa({
             borderColor: "var(--borda)",
           }}
         >
-          {ufFoco && !munFoco && (
+          {ufFoco && !munFoco && balao && (
+            <>
+              <p className="font-semibold">{ufFoco.nome}</p>
+              {balao(ufFoco)}
+            </>
+          )}
+          {ufFoco && !munFoco && !balao && (
             <>
               <p className="font-semibold">{ufFoco.nome}</p>
               <p className="tabular mt-0.5">

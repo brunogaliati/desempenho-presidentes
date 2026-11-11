@@ -1,15 +1,33 @@
 /*
  * A página do parlamentar como terminal (`TerminalParlamentar.tsx`): a faixa do crachá com a
- * fita de números e, embaixo, duas colunas de painéis (8/4). Abaixo de 1100px as colunas se
- * desfazem (`display: contents`) e a ordem dos painéis vem de `.o1`…`.o9`, do mais importante
- * para o menos. Mesmo vidro, mesmas cores e mesmo cabeçalho de painel (`Bloco`) do terminal
- * da Economia; nada de degradê.
+ * fita de números e, embaixo, uma grade de painéis de altura fixa (ver `.grade`): a cota em
+ * cima, o plenário embaixo. Abaixo de 1100px, uma coluna só, na ordem do HTML. Mesmo vidro e
+ * mesmo cabeçalho de painel (`Bloco`) do terminal da Economia; nada de degradê nem de fio
+ * colorido.
  */
 
-.pagina { display:grid; gap:12px; width:100%; max-width:1400px; margin:0 auto; min-width:0; }
+/*
+ * Cores dos gráficos, uma por trabalho (ver o comentário de `TerminalParlamentar.tsx`).
+ * Famílias de gasto: magenta, laranja e violeta passam o validador de daltonismo da skill de
+ * dataviz em todos os pares, no claro (sobre #fff) e no escuro (sobre #17232d); escritório e
+ * "outros" são cinzas, para não disputar. As Emendas usam o verde-azulado das
+ * transferências do Orçamento. Os fornecedores ficam neutros.
+ */
+.pagina {
+  --familia-divulgacao: light-dark(#b0397a, #c4479a);
+  --familia-carro: light-dark(#eb6834, #d95926);
+  --familia-viagem: light-dark(#6250d6, #9085e9);
+  --familia-gabinete: light-dark(#56687a, #8d9caa);
+  --familia-outros: light-dark(#aab5be, #4a5763);
+  --cor-emendas: light-dark(#1c8f97, #2ba99a);
+  --cor-fornecedores: light-dark(#7c8a97, #96a4b0);
+  --cor-fornecedores-outros: light-dark(#c9d1d8, #46525d);
+  display:grid; gap:12px; width:100%; max-width:1400px; margin:0 auto; min-width:0;
+}
 
 /* --- Faixa do crachá ------------------------------------------------------- */
-.cabeca { display:grid; gap:16px; min-width:0; padding:18px 20px 16px; border-radius:1.6rem; box-shadow:inset 4px 0 0 var(--cor-partido, var(--serie)); }
+/* Sem fio nem degradê na cor do partido: a sigla e o símbolo ao lado do nome já dizem o partido. */
+.cabeca { display:grid; gap:16px; min-width:0; padding:18px 20px 16px; border-radius:1.6rem; }
 .identidade { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:start; gap:18px; }
 .identidade > :first-child { border-radius:12px; }
 .quem { display:grid; align-content:start; gap:4px; min-width:0; }
@@ -22,8 +40,8 @@
 .periodo { display:grid; justify-items:end; gap:6px; min-width:0; }
 .periodo > span { font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--tinta-3); }
 
-/* A fita: três grupos (plenário, cota, emendas) com um fio entre eles. */
-.fita { display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr) minmax(0,1fr); padding-top:14px; border-top:1px solid var(--borda); }
+/* A fita: três grupos (cota, plenário, emendas) com um fio entre eles. */
+.fita { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,3fr) minmax(0,1fr); padding-top:14px; border-top:1px solid var(--borda); }
 .grupo { display:grid; align-content:start; gap:8px; min-width:0; }
 .grupo + .grupo { margin-left:20px; padding-left:20px; border-left:1px solid var(--borda); }
 .grupoNome { font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--tinta-3); }
@@ -34,10 +52,59 @@
 .celula dd span { display:block; margin-top:4px; font-size:11.5px; line-height:1.4; color:var(--tinta-2); }
 
 /* --- Grade de painéis ------------------------------------------------------ */
-.grade { display:grid; grid-template-columns:minmax(0,8fr) minmax(0,4fr); align-items:start; gap:12px; }
-.coluna { display:grid; align-content:start; gap:12px; min-width:0; }
-.par { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:12px; min-width:0; }
-.o1 { order:1; } .o2 { order:2; } .o3 { order:3; } .o4 { order:4; } .o5 { order:5; } .o6 { order:6; } .o7 { order:7; } .o8 { order:8; } .o9 { order:9; }
+/*
+ * Uma grade de linhas de altura fixa, em três colunas iguais:
+ *   mês a mês (2 colunas)          | ano a ano
+ *   categorias | fornecedores      | plenário ano a ano (a presença)
+ *   como votou (2 colunas, 2 linhas) | bancada do estado
+ *                                  | bancada do partido
+ *   fontes (2 colunas)             | emendas
+ * Painéis da mesma linha têm a altura da linha, então as bordas sempre batem. Cada painel
+ * (`.painel`) tem o cabeçalho fixo e o miolo rolando quando não cabe: "ver todos" abre uma
+ * rolagem e não estica nada. As alturas foram medidas para o conteúdo padrão caber a 1440px.
+ * Sem cota (ou sem a bancada do partido), a área fica vazia e o resto não se mexe.
+ */
+.grade {
+  --linha-cota: 330px;
+  --linha-listas: 490px;
+  --linha-bancada: 512px;
+  --linha-fim: 320px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-rows:var(--linha-cota) var(--linha-listas) var(--linha-bancada) var(--linha-bancada) var(--linha-fim);
+  grid-template-areas:"mes mes ano" "cat for ple" "vot vot uf" "vot vot par" "fon fon eme";
+  gap:12px;
+}
+.aMes { grid-area:mes; } .aAno { grid-area:ano; } .aCat { grid-area:cat; } .aFor { grid-area:for; } .aPle { grid-area:ple; }
+.aVot { grid-area:vot; } .aUf { grid-area:uf; } .aPar { grid-area:par; } .aEme { grid-area:eme; } .aFon { grid-area:fon; }
+/* Só uma bancada (sem partido, ou sozinho no partido): ela ocupa o lugar das duas. */
+.aBancada { grid-area:uf / uf / par / par; }
+
+/* O painel: cabeçalho fixo, miolo com rolagem. O respiro de 2px é para o anel de foco não ser cortado pela borda da rolagem. */
+.painel { display:flex; flex-direction:column; min-height:0; }
+.painel > :last-child { flex:1 1 auto; min-height:0; padding:2px; margin-inline:-2px; margin-bottom:-2px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--eixo) transparent; }
+/* Painel que sobra altura (o plenário, ao lado das listas): a nota desce para a base, como rodapé. */
+.notaNaBase { display:flex; flex-direction:column; }
+.notaNaBase > .nota { margin-top:auto; padding-top:10px; }
+
+/* Entre 1100 e 1300px os cabeçalhos das bancadas quebram em duas linhas: a linha delas cresce para a lista caber sem rolar. */
+@media (min-width:1101px) and (max-width:1300px) {
+  .grade { --linha-bancada:540px; }
+}
+
+/*
+ * A faixa do todo (por família de gasto; os maiores fornecedores e o resto) e a legenda com
+ * a parte de cada pedaço. A legenda guarda sempre duas linhas, para as listas de categorias
+ * e de fornecedores, lado a lado, começarem na mesma altura; com um nome por linha
+ * (`umaLinha`), as barras andam juntas.
+ */
+.composicao { display:grid; gap:8px; margin:0 0 10px; padding:0 8px; }
+.faixaComposicao { display:flex; gap:2px; height:10px; }
+.faixaComposicao > span { flex-basis:0; min-width:0; border-radius:3px; background:var(--cor); }
+.legendaComposicao { display:flex; flex-wrap:wrap; align-content:flex-start; gap:4px 14px; min-height:calc(2 * 1.4em + 4px); font-size:11.5px; line-height:1.4; color:var(--tinta-2); }
+.legendaComposicao span { display:inline-flex; align-items:center; gap:6px; }
+.legendaComposicao i { flex:none; width:10px; height:10px; border-radius:3px; background:var(--cor); }
+.legendaComposicao b { font-weight:600; color:var(--tinta); }
 
 .nota { margin-top:10px; font-size:11.5px; line-height:1.5; color:var(--tinta-2); }
 .apagado { color:var(--tinta-3); }
@@ -75,21 +142,25 @@
 .anos td b { display:block; font-size:15px; font-weight:650; line-height:1.2; }
 .anos td small { display:block; margin-top:1px; font-size:11px; color:var(--tinta-3); }
 
+/*
+ * Numa coluna só, na ordem do HTML: a cota, o plenário (presença antes das bancadas), as
+ * bancadas, as emendas e as fontes. Sem vizinho para alinhar, cada painel tem a altura do
+ * conteúdo até um teto; o que passa disso (e o que se expande) rola dentro dele.
+ */
 @media (max-width:1100px) {
-  .grade { grid-template-columns:minmax(0,1fr); }
-  .coluna { display:contents; }
+  .grade { grid-template-columns:minmax(0,1fr); grid-template-rows:none; grid-template-areas:none; }
+  .grade > .painel { grid-area:auto; max-height:640px; }
   .fita { grid-template-columns:minmax(0,1fr); gap:14px; }
   .grupo + .grupo { margin-left:0; padding-left:0; padding-top:12px; border-left:0; border-top:1px solid var(--borda); }
 }
 
 @media (max-width:700px) {
-  .cabeca { padding:14px 14px 12px; box-shadow:inset 0 4px 0 var(--cor-partido, var(--serie)); }
+  .cabeca { padding:14px 14px 12px; }
   .identidade { grid-template-columns:auto minmax(0,1fr); gap:12px; }
   .identidade > :first-child { width:64px !important; height:86px !important; }
   .periodo { grid-column:1 / -1; justify-items:start; min-width:0; max-width:100%; }
   .celulas { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .celula dd strong { font-size:24px; }
-  .par { grid-template-columns:minmax(0,1fr); }
   /* A tabela de votações vira uma ficha por votação. */
   .votos thead { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
   .votos tr { display:grid; grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"data resultado voto" "proposicao proposicao proposicao" "governo governo governo"; align-items:center; gap:4px 10px; padding:10px 2px; border-bottom:1px solid var(--borda); }

@@ -57,6 +57,7 @@ try {
   await send('Page.enable');
   await send('Emulation.setFocusEmulationEnabled', { enabled: true });
   await viewport(1280, 800);
+  const compartilharPlacar = 'aside[aria-label="Indicadores da economia"] > div:first-child .compartilhar-gatilho';
 
   // Antes o perfil abria rolado até "Como ler os mandatos", no fim da página.
   for (const pessoa of ['fhc', 'lula', 'dilma', 'temer', 'bolsonaro']) {
@@ -72,11 +73,11 @@ try {
   // A sala do mapa sobe por trás da linha da trilha e não pode tomar os cliques dela.
   await abrir('/presidente/lula', 'nav[aria-label^="Mandatos de"]');
   assert(await evaluate(naFrente('nav[aria-label^="Mandatos de"] a[aria-label^="1º"]')), 'O mapa não cobre os mandatos');
-  assert(await evaluate(naFrente('.compartilhar-gatilho')), 'O mapa não cobre o compartilhar do perfil');
+  assert(await evaluate(naFrente(compartilharPlacar)), 'O mapa não cobre o compartilhar do perfil');
   await evaluate(`document.querySelector('nav[aria-label^="Mandatos de"] a[aria-label^="1º"]').click()`);
   await until(() => evaluate(`location.search.includes('mandato=lula_1')`), 'troca de mandato');
-  await abrir('/economia', '.compartilhar-gatilho');
-  assert(await evaluate(naFrente('.compartilhar-gatilho')), 'O mapa não cobre o compartilhar da Economia');
+  await abrir('/economia', compartilharPlacar);
+  assert(await evaluate(naFrente(compartilharPlacar)), 'O mapa não cobre o compartilhar da Economia');
   console.log('PASSOU: a linha acima do mapa recebe os cliques e o mandato troca sem sair do perfil.');
 
   // O expansor: sem triângulo nativo, e fechar não deixa rastro no endereço.
@@ -156,7 +157,7 @@ try {
   };
   const dividaNaPrevia = await conferirPrevia('série', '/economia?mandato=lula_3', '.grupo-cotacao .compartilhar-gatilho', `[...document.querySelectorAll('.grupo-cotacao')].find(c => c.textContent.includes('Dívida bruta')).querySelector('.compartilhar-gatilho').click()`);
   assert.match(dividaNaPrevia.imagem, /serie=divida_bruta_pib/);
-  const placarNaPrevia = await conferirPrevia('placar', '/economia?mandato=bolsonaro', '.compartilhar-gatilho', `document.querySelector('.compartilhar-gatilho').click()`);
+  const placarNaPrevia = await conferirPrevia('placar', '/economia?mandato=bolsonaro', compartilharPlacar, `document.querySelector(${JSON.stringify(compartilharPlacar)}).click()`);
   assert.match(placarNaPrevia.imagem, /recorte\?mandato=bolsonaro&d=/);
   // Quem abriu um recorte e compartilha outro bloco vê o cartão desse outro, e não o da página aberta.
   const outra = await conferirPrevia('outro bloco', '/economia?mandato=lula_3&r.serie=selic&painel=de-perto', '.grupo-cotacao .compartilhar-gatilho', `[...document.querySelectorAll('.grupo-cotacao')].find(c => c.textContent.includes('Dívida bruta')).querySelector('.compartilhar-gatilho').click()`);

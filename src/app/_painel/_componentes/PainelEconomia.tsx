@@ -176,6 +176,7 @@ interface Props {
   sigla: string | null;
   setSigla: (s: string | null) => void;
   aoTrocarAba: (a: AbaId) => void;
+  acoes?: React.ReactNode;
 }
 
 /** Largura da barra da direita: fechada, só a lista; aberta, com o detalhe. */
@@ -225,7 +226,7 @@ export function PainelEconomia({
   );
 }
 
-export function SalaDoTema({ dados, tema, sigla, setSigla, aoTrocarAba }: Props) {
+export function SalaDoTema({ dados, tema, sigla, setSigla, aoTrocarAba, acoes }: Props) {
   const leituras = tema.leituras;
   // A medida que a manchete mostra no passeio não é escolha de ninguém: não vai para o link.
   const passeio = useRef(false);
@@ -695,16 +696,19 @@ export function SalaDoTema({ dados, tema, sigla, setSigla, aoTrocarAba }: Props)
                 </button>
               ))}
             </div>
+            <div className="ml-auto flex shrink-0 items-center gap-1">
+            {acoes}
             <button
               onClick={fechar}
               aria-label="Fechar o detalhe"
               tabIndex={aberta ? 0 : -1}
               aria-hidden={!aberta}
-              className={`ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-opacity duration-300 hover:bg-[var(--faixa-a)] ${aberta ? "opacity-100" : "pointer-events-none opacity-0"}`}
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-opacity duration-300 hover:bg-[var(--faixa-a)] ${aberta ? "opacity-100" : "pointer-events-none opacity-0"}`}
               style={{ color: "var(--tinta-2)" }}
             >
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden><path d="m6 6 12 12M6 18 18 6" /></svg>
             </button>
+            </div>
           </div>
 
           <div

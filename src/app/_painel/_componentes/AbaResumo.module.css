@@ -15,9 +15,7 @@
 }
 
 /* --- Cabeçalho ----------------------------------------------------------- */
-.cabeca { border-radius: 1.6rem; padding: 1.1rem 1.25rem 0.9rem; display: flex; flex-direction: column; gap: 1rem; }
-/* Só com a lista aberta o cabeçalho sobe de camada: fechado, o botão de compartilhar da página (no celular, no canto dele) fica por cima. */
-.cabeca:has([aria-haspopup][aria-expanded="true"]) { z-index: 4; }
+/* A coluna do palco (`PalcoResumo`): a esfera, quem governa e o placar grande, de cima para baixo. */
 .topoCabeca { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
 
 /* A esfera: o mesmo seletor em cápsula do resto do painel (`.seletor`), com a lista de estados presa a ele. */
@@ -56,46 +54,52 @@
 .opcaoUf small { font-size: 10.5px; color: var(--tinta-3); font-variant-numeric: tabular-nums; }
 .opcaoUf[aria-selected="true"] { font-weight: 600; }
 
-.quem { display: flex; flex-wrap: wrap; gap: 1.25rem 2rem; align-items: stretch; }
-.identidade { flex: 999 1 26rem; min-width: 0; display: flex; gap: 1rem; align-items: center; }
+.quem { display: flex; flex-direction: column; gap: 1.4rem; }
+.identidade { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 0.85rem; }
+/* Fora do palco largo (celular e tablet), a foto ao lado do nome: a coluna vira a primeira faixa da página. */
+@media (max-width: 1099px) { .identidade { flex-direction: row; align-items: center; gap: 1rem; } }
 .retratos { display: flex; flex: none; }
 .retratos > * + * { margin-left: -14px; }
 /* Caixa do tamanho exato da foto: como linha de texto, ganhava a folga de baixo da linha e o anel virava oval. */
 .retratoGrande { display: flex; line-height: 0; border-radius: 50%; box-shadow: 0 0 0 3px var(--superficie), 0 0 0 4.5px var(--ouro); }
 .sobretitulo { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tinta-3); font-weight: 600; }
-.titulo { margin: 2px 0 0; font-size: clamp(1.6rem, 3.2vw, 2.2rem); line-height: 1.08; font-weight: 700; letter-spacing: -0.01em; }
+.titulo { margin: 2px 0 0; font-size: clamp(1.6rem, 2.3vw, 2.1rem); line-height: 1.08; font-weight: 700; letter-spacing: -0.01em; }
 .linhaPartido { margin-top: 0.45rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.6rem; font-size: 13px; color: var(--tinta-2); }
 .logo { width: 24px; height: 20px; flex: none; object-fit: contain; }
 .partidoComLogo { display: inline-flex; align-items: center; gap: 6px; color: var(--tinta); font-weight: 600; }
 .nota { margin-top: 0.4rem; font-size: 12.5px; color: var(--tinta-2); line-height: 1.45; }
 .nota b { color: var(--tinta); font-weight: 600; }
 
-.placar { flex: 1 1 18rem; min-width: 0; border-left: 1px solid var(--borda); padding-left: 1.5rem; display: flex; flex-direction: column; justify-content: center; gap: 0.55rem; }
+.placar { min-width: 0; border-top: 1px solid var(--borda); padding-top: 1.1rem; display: flex; flex-direction: column; gap: 0.6rem; }
 .placarRotulo { font-size: 12.5px; color: var(--tinta-2); }
 .placarBarra { display: flex; height: 12px; border-radius: 999px; overflow: hidden; gap: 3px; background: var(--faixa-a); }
 .placarBarra i { display: block; }
 .placarNumeros { display: flex; gap: 1.1rem; align-items: baseline; flex-wrap: wrap; }
-.placarNumeros span { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+.placarNumeros span { font-size: 2.6rem; font-weight: 700; line-height: 1; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
 .placarNumeros small { font-size: 14px; font-weight: 500; margin-left: 4px; }
 .contraBrasil { font-size: 12.5px; color: var(--tinta-2); }
 
-/* O trilho sem barra de rolagem: as bordas esmaecem do lado em que há mais governos, com uma seta. */
-.trilhoCaixa { position: relative; --m-esq: 0px; --m-dir: 0px; }
-.trilhoCaixa[data-esq] { --m-esq: 56px; }
-.trilhoCaixa[data-dir] { --m-dir: 56px; }
-.trilho { display: flex; gap: 6px; overflow-x: auto; padding: 2px; scrollbar-width: none; overscroll-behavior-x: contain; -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--m-esq), #000 calc(100% - var(--m-dir)), transparent); mask-image: linear-gradient(to right, transparent, #000 var(--m-esq), #000 calc(100% - var(--m-dir)), transparent); }
-.trilho::-webkit-scrollbar { display: none; }
-.setaTrilho { position: absolute; top: 50%; z-index: 1; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 1px solid var(--borda); border-radius: 50%; background: var(--superficie); color: var(--tinta-2); box-shadow: 0 1px 3px rgb(0 0 0 / 0.12); cursor: pointer; transform: translateY(-50%); }
-.setaTrilho[data-lado="esq"] { left: 0; }
-.setaTrilho[data-lado="dir"] { right: 0; }
-.setaTrilho:hover { color: var(--tinta); }
-.setaTrilho:focus-visible { outline: 2px solid var(--ouro-forte, var(--serie)); outline-offset: 1px; }
-.setaTrilho[hidden] { display: none; }
-@media (hover: none) { .setaTrilho { display: none; } }
-.termo { flex: none; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--borda); background: transparent; color: var(--tinta-2); font: inherit; font-size: 12px; line-height: 1; white-space: nowrap; padding: 3px 12px 3px 3px; border-radius: 999px; cursor: pointer; min-height: 40px; }
-.termo:hover { background: var(--faixa-a); }
-.termo[aria-current="true"] { border-color: var(--ouro); box-shadow: inset 0 0 0 1px var(--ouro); color: var(--tinta); font-weight: 600; background: var(--faixa-a); }
-.termo:focus-visible { outline: 2px solid var(--ouro-forte, var(--ouro)); outline-offset: -2px; }
+/* O número grande é um botão (mostra a área na barra), sem cara de botão. */
+.placarArea { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.placarArea:hover .placarRotulo { color: var(--tinta); }
+.placarArea:focus-visible, .linhaArea:focus-visible, .linhaOrcamento:focus-visible { outline: 2px solid var(--ouro-forte, var(--serie)); outline-offset: 3px; border-radius: 6px; }
+
+/* O que o governo divide com a outra esfera: leve, uma linha por área, um quadradinho por medida. */
+.divididas { display: flex; flex-direction: column; margin-top: 0.3rem; }
+.divididasTitulo { margin-bottom: 2px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tinta-3); }
+.linhaArea { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 30px; padding: 0; border: 0; border-bottom: 1px solid var(--borda); background: none; color: var(--tinta-2); font: inherit; font-size: 13.5px; text-align: left; cursor: pointer; }
+.linhaArea:hover { color: var(--tinta); }
+.linhaArea[aria-pressed="true"] { color: var(--tinta); font-weight: 600; }
+.linhaArea[aria-pressed="true"] .linhaNome { text-decoration: underline 2px var(--ouro); text-underline-offset: 5px; }
+.quadros { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 3px; }
+.quadros i { display: block; width: 10px; height: 10px; border-radius: 2.5px; }
+.linhaOsso { display: block; width: 3.5rem; height: 10px; border-radius: 3px; background: var(--faixa-a); }
+.linhaSem { font-size: 11.5px; color: var(--tinta-3); }
+.linhaOrcamento { margin-top: 8px; padding: 0; border: 0; background: none; color: var(--tinta-3); font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.linhaOrcamento:hover { color: var(--tinta); }
+
+/* O título da barra de vidro do palco, em cima dos blocos do placar. */
+.barraTitulo { margin: 0.35rem 0.75rem 0.1rem; font-size: 12px; font-weight: 600; color: var(--tinta-2); }
 
 .comoLer { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; align-items: center; font-size: 12.5px; color: var(--tinta-2); padding: 0 0.25rem; }
 .comoLer b { color: var(--tinta); }
@@ -107,6 +111,8 @@
 .secaoTitulo h2 { margin: 0; font-size: 1.3rem; font-weight: 700; letter-spacing: -0.005em; }
 .secaoTitulo span { font-size: 12.5px; color: var(--tinta-3); }
 .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 0.9rem; align-items: start; }
+/* Um bloco só (no Brasil, o orçamento; a economia subiu para o palco). */
+.gradeUnica { display: grid; gap: 0.9rem; }
 
 /* --- Linhas -------------------------------------------------------------- */
 .linhas { list-style: none; margin: 0; padding: 0; }
@@ -247,14 +253,9 @@
 :global(.painel-governo) .raiz [id] { scroll-margin-top: calc(var(--altura-cabecalho-visivel, var(--altura-cabecalho, 112px)) + 56px); }
 .compartilhar { margin-top: 0.2rem; }
 @media (max-width: 600px) {
-  .cabeca { padding: 1rem 0.9rem 0.8rem; }
-  .identidade { flex-direction: column; align-items: flex-start; gap: 0.7rem; }
-  .placar { border-left: 0; padding-left: 0; border-top: 1px solid var(--borda); padding-top: 0.9rem; }
   .esfera { padding: 4px 11px; }
   .nomeUf { display: none; }
   .siglaUf { display: inline; }
-  /* O canto direito é do botão de compartilhar da página, que flutua sobre o primeiro bloco. */
-  .topoCabeca { padding-right: 46px; }
   .opcaoUf { align-items: flex-start; }
   .opcaoUf span { white-space: normal; line-height: 1.25; }
   .opcaoUf small { display: none; }

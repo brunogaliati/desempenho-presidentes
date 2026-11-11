@@ -2,7 +2,7 @@ import indiceDeputados from "../../../../public/painel/congresso/cota-deputados.
 import indiceSenadores from "../../../../public/painel/congresso/cota-senadores.json";
 import {
   type CasaCongresso, type IndiceCota, MESES_POR_EXTENSO, NOME_UF,
-  caminhoParlamentar, comparadoAMedia, posicaoNoAno, reaisInteiros, rotaParlamentar, situacaoDosMeses,
+  caminhoParlamentar, comparadoAMedia, posicaoNoAno, reaisInteiros, rotaParlamentar,
 } from "./congressoModelo";
 import fotografia from "./fotografia.json";
 
@@ -19,6 +19,10 @@ export const CODIGO_UF: Record<string, string> = {
 
 export type ParlamentarDaPagina = { casa: CasaCongresso; pessoa: { id: number; nome: string; partido: string | null; uf: string }; caminho: string };
 
+export function paginasParlamentares(): ParlamentarDaPagina[] {
+  return (["deputados", "senadores"] as const).flatMap(casa => fotografia[casa].map(pessoa => ({ casa, pessoa, caminho: caminhoParlamentar(casa, pessoa) })));
+}
+
 export function acharParlamentar(casa: string, pessoa: string): ParlamentarDaPagina | null {
   const rota = rotaParlamentar(`/congresso/${casa}/${pessoa}`);
   if (!rota) return null;
@@ -28,6 +32,25 @@ export function acharParlamentar(casa: string, pessoa: string): ParlamentarDaPag
 
 export const siglaParlamentar = (p: ParlamentarDaPagina["pessoa"]) => `${!p.partido || p.partido === "S/Partido" ? "sem partido" : p.partido}-${p.uf}`;
 export const nomeDaCasa = (casa: CasaCongresso) => (casa === "deputados" ? "Câmara dos Deputados" : "Senado Federal");
+export const perfilOficialParlamentar = ({ casa, pessoa }: ParlamentarDaPagina) => casa === "deputados"
+  ? `https://www.camara.leg.br/deputados/${pessoa.id}`
+  : `https://www25.senado.leg.br/web/senadores/senador/-/perfil/${pessoa.id}`;
+
+/** A mesma referência e os mesmos totais usados pelo painel; ausência de nota não vira zero. */
+export function historicoDaCota({ casa, pessoa }: ParlamentarDaPagina) {
+  const indice = INDICES[casa];
+  return {
+    coletadoEm: indice.coletadoEm,
+    fontes: indice.fontes,
+    anos: indice.anos.map((ano, i) => ({
+      ano,
+      total: indice.totais[pessoa.id]?.[i] ?? null,
+      media: indice.media[ano]?.media ?? null,
+      mes: indice.ultimoMes[ano] ?? null,
+      parcial: ano >= new Date(indice.coletadoEm).getUTCFullYear(),
+    })),
+  };
+}
 
 /** O último ano da cota: total, até que mês, comparação com a média e posição. */
 export function resumoDaCota({ casa, pessoa }: ParlamentarDaPagina) {
@@ -37,12 +60,11 @@ export function resumoDaCota({ casa, pessoa }: ParlamentarDaPagina) {
   const total = indice.totais[pessoa.id]?.[indice.anos.indexOf(ano)];
   const media = indice.media[ano]?.media;
   if (total === null || total === undefined || !media) return null;
-  const situacao = situacaoDosMeses(ano, indice.coletadoEm);
-  const ultimoParcial = situacao.lastIndexOf("parcial");
+  const mes = indice.ultimoMes[ano];
   return {
     ano,
     total,
-    ate: ultimoParcial >= 0 ? MESES_POR_EXTENSO[ultimoParcial] : null,
+    ate: mes && ano >= new Date(indice.coletadoEm).getUTCFullYear() ? MESES_POR_EXTENSO[mes - 1] : null,
     comparacao: comparadoAMedia(total, media),
     posicao: posicaoNoAno(indice, pessoa.id, ano),
   };
@@ -53,9 +75,9 @@ export function metaParlamentar(achado: ParlamentarDaPagina) {
   const r = resumoDaCota(achado);
   const lugar = `${nomeDaCasa(casa)}, ${NOME_UF[pessoa.uf] ?? pessoa.uf}`;
   return {
-    titulo: `${pessoa.nome} (${siglaParlamentar(pessoa)}): cota parlamentar e perfil`,
+    titulo: `${pessoa.nome} (${siglaParlamentar(pessoa)}): cota e votações`,
     descricao: r
-      ? `${lugar}. Em ${r.ano}${r.ate ? `, até ${r.ate}` : ""}, gastou ${reaisInteiros(r.total)} da cota parlamentar${r.comparacao ? `, ${r.comparacao.texto} dos ${casa}` : ""}. Veja mês a mês, com o que gastou e quem recebeu.`
-      : `${lugar}. Perfil, trajetória e cota parlamentar mês a mês, com as fontes oficiais.`,
+      ? `${lugar}. Cota parlamentar de ${r.ano}${r.ate ? ` até ${r.ate}` : ""}: ${reaisInteiros(r.total)}. Consulte gastos, fornecedores, votações e emendas, com fontes oficiais.`
+      : `${lugar}. Consulte o perfil, os gastos da cota parlamentar, as votações e as emendas, com fontes oficiais.`,
   };
 }

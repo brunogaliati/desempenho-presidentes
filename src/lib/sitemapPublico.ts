@@ -8,6 +8,7 @@ import { rotaMunicipal } from "@/lib/indicadoresMunicipais";
 import { hubsEconomia } from "@/lib/hubsEconomia";
 import { revisoesPublicadas } from "@/lib/revisoesPublicadas";
 import { caminhoResumoMunicipal } from "@/lib/resumoMunicipalModelo";
+import { paginasParlamentares } from "@/app/_painel/_dados/paginaParlamentar";
 
 export async function sitemapPublico(): Promise<MetadataRoute.Sitemap> {
   if (!podeIndexar()) return [];
@@ -33,6 +34,6 @@ export async function sitemapPublico(): Promise<MetadataRoute.Sitemap> {
   datas.set('/',revisoes.get('site:resumo')!);
   datas.set('/economia',revisoes.get('site:principal')!);
   const resumos=[...new Map(municipais.map(p=>[p.municipio.codigo,p.municipio])).values()].map(caminhoResumoMunicipal);
-  return ["/",'/economia',...institucionais.map(n=>'/'+n),'/meio-ambiente','/dinheiro','/resumo/municipios',...[...ufs.keys()].map(uf=>`/resumo/municipios/${uf}`),...resumos, ...paginas.map(rotaEconomia),...hubs.map(h=>`/economia/${h.slug}`),...municipais.map(p=>rotaMunicipal(p.id,p.municipio)),...diretorios, ...pessoas.map((p) => `/presidente/${encodeURIComponent(String(p.pessoa_id))}`)]
+  return ["/",'/economia',...institucionais.map(n=>'/'+n),'/meio-ambiente','/dinheiro','/congresso',...paginasParlamentares().map(p=>p.caminho),'/resumo/municipios',...[...ufs.keys()].map(uf=>`/resumo/municipios/${uf}`),...resumos, ...paginas.map(rotaEconomia),...hubs.map(h=>`/economia/${h.slug}`),...municipais.map(p=>rotaMunicipal(p.id,p.municipio)),...diretorios, ...pessoas.map((p) => `/presidente/${encodeURIComponent(String(p.pessoa_id))}`)]
     .map((caminho) => ({ url: `${URL_SITE}${caminho}`, ...(datas.get(caminho)?{lastModified:datas.get(caminho)}:{}) }));
 }

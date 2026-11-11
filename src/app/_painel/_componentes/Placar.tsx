@@ -46,6 +46,7 @@ export function Placar({
   fileiras,
   aoFocar,
   aoVerHistorico,
+  cabecalho = true,
 }: {
   /** Contam no "melhoraram · pioraram". */
   grupos: GrupoPlacar[];
@@ -55,6 +56,8 @@ export function Placar({
   aoFocar: (id: string) => void;
   /** "Histórico completo": desce até o gráfico dele. */
   aoVerHistorico: (id: string) => void;
+  /** Falso onde a contagem já aparece grande ao lado (o palco do Resumo). */
+  cabecalho?: boolean;
 }) {
   const [aberto, setAberto] = useState<string | null>(null);
   const todos = grupos.flatMap((g) => g.itens);
@@ -72,6 +75,7 @@ export function Placar({
 
   return (
     <section aria-label="Placar do mandato" className="px-3 pb-1 pt-2">
+      {cabecalho && (<>
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="text-base font-semibold" title="O último dado contra o que o governo recebeu">
           Desde a posse
@@ -97,8 +101,9 @@ export function Placar({
           <span key={x.id} className="flex-1 rounded-full" style={{ background: FUNDO[x.sentido] }} />
         ))}
       </div>
+      </>)}
 
-      <div className="mt-2.5 space-y-1">
+      <div className={cabecalho ? "mt-2.5 space-y-1" : "space-y-1"}>
         {grupos.map((g) => {
           const aberta = g.itens.find((x) => x.id === aberto) ?? null;
           return (

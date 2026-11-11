@@ -62,7 +62,7 @@ const iniciais = (nome: string) => nome.trim().split(/\s+/).slice(0, 2).map(p =>
 const LUZ = (() => { const v = [0.32, 0.58, 0.86]; const m = Math.hypot(...v); return v.map(x => x / m); })();
 const sombreado = (nx: number, ny: number, nz: number) => 0.6 + 0.44 * Math.max(0, nx * LUZ[0] + ny * LUZ[1] + nz * LUZ[2]);
 
-export function Plenario3D({ casa, assentos, destaque, realce, escolhido, fotos, cartaoId, cartaoFixo, cartao, rotulo, aoApontar, aoEscolher }: {
+export function Plenario3D({ casa, assentos, destaque, realce, escolhido, fotos, cartaoId, cartaoFixo, cartao, rotulo, aoApontar, aoEscolher, compacta = false, camera = null }: {
   casa: "deputados" | "senadores";
   /** Na ordem das cadeiras: da esquerda para a direita de quem olha da galeria. */
   assentos: Assento[];
@@ -79,6 +79,10 @@ export function Plenario3D({ casa, assentos, destaque, realce, escolhido, fotos,
   rotulo: string;
   aoApontar: (id: number | null) => void;
   aoEscolher: (id: number | null) => void;
+  /** Miniatura (o palco do Resumo): sem os botões de ângulo e sem a dica de girar. */
+  compacta?: boolean;
+  /** Para onde a câmera vai, quando quem usa conduz um passeio; `null` deixa onde está. */
+  camera?: Angulos | null;
 }) {
   const palco = useRef<HTMLDivElement>(null);
   const tela = useRef<HTMLCanvasElement>(null);
@@ -734,6 +738,13 @@ export function Plenario3D({ casa, assentos, destaque, realce, escolhido, fotos,
     };
   }, [modelo]);
 
+  // O passeio de fora: a câmera desliza até o ângulo pedido (sem movimento, salta).
+  const camAz = camera?.az, camEl = camera?.el;
+  useEffect(() => {
+    if (camAz === undefined || camEl === undefined) return;
+    motor.current?.irPara({ az: camAz, el: camEl }, 1700);
+  }, [camAz, camEl]);
+
   const escolherVista = (v: Vista | "livre") => {
     if (v === "livre") return;
     setVista(v);
@@ -750,7 +761,7 @@ export function Plenario3D({ casa, assentos, destaque, realce, escolhido, fotos,
     if (e.key === "Escape" && escolhido != null) { e.preventDefault(); aoEscolher(null); }
   };
 
-  return <div ref={palco} className={estilos.palco} data-casa={casa} tabIndex={0} role="group" aria-roledescription="maquete 3D" aria-label={`${rotulo} Use as setas do teclado para girar.`} onKeyDown={teclas}>
+  return <div ref={palco} className={estilos.palco} data-casa={casa} data-compacta={compacta || undefined} tabIndex={0} role="group" aria-roledescription="maquete 3D" aria-label={`${rotulo} Use as setas do teclado para girar.`} onKeyDown={teclas}>
     <span ref={sonda} className={estilos.sonda} aria-hidden="true" />
     <canvas ref={tela} className={estilos.tela} aria-hidden="true" />
     <div className={estilos.vistas}>

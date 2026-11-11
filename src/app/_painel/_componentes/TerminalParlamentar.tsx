@@ -5,11 +5,12 @@ import Link from "next/link";
 
 import {
   type CasaCongresso, type CotaDoAno, type IndiceCota, type PeriodoCota,
-  LEGISLATURA, MESES_POR_EXTENSO, VOTO_POR_LETRA, caminhoParlamentar, inteiro, noPeriodo, porcento, posicaoEntre, reaisCompactos,
+  LEGISLATURA, MESES_POR_EXTENSO, VOTO_POR_LETRA, caminhoParlamentar, inteiro, noPeriodo, porcento, posicaoEntre, reaisCompactos, textoPercentual,
 } from "../_dados/congressoModelo";
 import fotografia from "../_dados/fotografia.json";
 import type { DadosPainel } from "../_dados/tipos";
 import { Bloco } from "./Bloco";
+import { useEscolhaImediata } from "./Vidro";
 import { useFichaParlamentar } from "./CrachaParlamentar";
 import type { Parlamentar } from "./DiretorioCongresso";
 import { FotoParlamentar } from "./FotoParlamentar";
@@ -21,12 +22,39 @@ import t from "./TerminalParlamentar.module.css";
 
 /**
  * A página de um deputado ou senador como terminal: o crachá numa faixa, uma fita com os
- * números do período e, embaixo, painéis lado a lado (como votou, o plenário ano a ano, a
- * cota, as emendas e as bancadas). Cada número aparece uma vez; o período do topo vale
- * para tudo o que tem período. "Votou com o governo" não leva cor: não é melhor nem pior.
+ * números do período e, embaixo, painéis lado a lado. A cota vem primeiro (mês a mês, ano a
+ * ano, categorias e fornecedores); depois o plenário (a presença ano a ano e como votou),
+ * as bancadas, as emendas e as fontes. Cada número aparece uma vez; o período do topo vale para tudo o que
+ * tem período. "Votou com o governo" não leva cor: não é melhor nem pior.
+ *
+ * Os painéis têm altura fixa por linha da grade; "ver todos" não estica o painel, abre uma
+ * rolagem dentro dele.
+ *
+ * Cada cor tem um trabalho: o azul da série é a cota da pessoa; as categorias levam a cor da
+ * família de gasto; as bancadas, a cor do partido de cada um (a da maquete); as Emendas Pix,
+ * o verde-azulado das transferências no Orçamento; os fornecedores ficam neutros.
  */
 
-const VOTOS_VISIVEIS = 10;
+/**
+ * Famílias de gasto da cota, pelo nome da categoria (os índices mudam de arquivo para
+ * arquivo). Três cores conferidas no validador de daltonismo da skill de dataviz, todos os
+ * pares, nos dois temas; o gabinete e o resto ficam em cinza. Nada de verde nem vermelho:
+ * gastar não é bom nem ruim por si só. A ordem importa: "Locomoção, hospedagem e
+ * alimentação", do Senado, é viagem, e não carro.
+ */
+const FAMILIAS = [
+  { chave: "divulgacao", nome: "Divulgação", teste: /divulga/i },
+  { chave: "carro", nome: "Carro", teste: /veícul|combust|táxi/i },
+  { chave: "viagem", nome: "Viagens", teste: /passage|fretamento|hospedagem|alimenta|locomo/i },
+  { chave: "gabinete", nome: "Escritório", teste: /escrit|telefon|correio|assinatura|certificad|consultori|curso/i },
+  { chave: "outros", nome: "Outros", teste: /./ },
+] as const;
+type Familia = (typeof FAMILIAS)[number];
+const familiaDe = (categoria: string): Familia => FAMILIAS.find(f => f.teste.test(categoria)) ?? FAMILIAS[FAMILIAS.length - 1];
+const corDaFamilia = (f: Familia) => `var(--familia-${f.chave})`;
+
+/** Quantas cabem em "Como votou" sem rolar, na altura das duas bancadas ao lado. */
+const VOTOS_VISIVEIS = 12;
 /** Junta as partes que existem com " · ". */
 const junta = (...partes: (string | null | undefined | false)[]) => partes.filter(Boolean).join(" · ");
 const notas = (n: number) => `${inteiro(n)} ${n === 1 ? "nota" : "notas"}`;
@@ -40,12 +68,14 @@ export function linkCongresso(casa: CasaCongresso, extra: [string, string][] = [
   return `/congresso${consulta.size ? `?${consulta}` : ""}`;
 }
 
-export function TerminalParlamentar({ casa, pessoa, governos, ufs, cor, indice, cota, erroCota, periodo, anos, aoEscolherPeriodo, acoes }: {
+export function TerminalParlamentar({ casa, pessoa, governos, ufs, cor, corDe, indice, cota, erroCota, periodo, anos, aoEscolherPeriodo, acoes }: {
   casa: CasaCongresso;
   pessoa: Parlamentar;
   governos: DadosPainel["governos"];
   ufs: DadosPainel["ufs"];
   cor: string;
+  /** A cor de cada bancada, a mesma da maquete. */
+  corDe: (partido: string | null) => string;
   indice: IndiceCota | null;
   cota: CotaDoAno | null;
   erroCota: boolean;
@@ -91,10 +121,13 @@ export function TerminalParlamentar({ casa, pessoa, governos, ufs, cor, indice, 
       <Fita casa={casa} pessoa={pessoa} periodo={periodo} ficha={ficha} cota={cota} erroCota={erroCota} />
     </header>
 
+    {/*
+      Uma grade de linhas de altura fixa (ver `.grade` no CSS): painéis da mesma linha têm a
+      mesma altura, e o que não cabe (ou o que se expande) rola dentro do painel. A ordem do
+      HTML é a do celular: cota, plenário (a presença antes das bancadas), bancadas, emendas, fontes.
+    */}
     <div className={t.grade}>
-      <div className={t.coluna}>
-        <PainelVotacoes casa={casa} pessoa={pessoa} className={t.o1} />
-        <Bloco titulo="Cota mês a mês" detalhe={gasto ? `${notas(gasto.n)} ${quando}` : quando} lustroFixo className={t.o3}>
+        <Bloco titulo="Cota mês a mês" detalhe={gasto ? `${notas(gasto.n)} ${quando}` : quando} lustroFixo className={`${t.painel} ${t.aMes}`}>
           {erroCota ? <Aviso>Não deu para carregar a cota agora.</Aviso> : !cota || !indice ? <EsqueletoDetalhe />
             : !gasto ? <Aviso>Nenhuma nota de cota {quando}. Quem assumiu depois, se licenciou ou não usou a cota no período não aparece no arquivo.</Aviso>
             : <>
@@ -102,39 +135,79 @@ export function TerminalParlamentar({ casa, pessoa, governos, ufs, cor, indice, 
               {ficha.chegouDepois && <p className={t.nota}>As notas começam em {MESES_POR_EXTENSO[ficha.chegouDepois.mes]} de {ficha.chegouDepois.ano}: a comparação com quem está desde 2023 é desigual.</p>}
             </>}
         </Bloco>
-        <div className={`${t.par} ${t.o5}`}>
-          <Bloco titulo="Com o que gastou" detalhe={quando} lustroFixo>
-            {!cota ? <EsqueletoDetalhe /> : !gasto ? <Aviso>Sem notas {quando}.</Aviso>
-              : <Barras rotuloLista={`Categorias de gasto de ${pessoa.nome} ${quando}`} nomeDoMais="categorias" feminino total={gasto.t}
-                itens={gasto.c.map(([c, v]) => ({ chave: String(c), nome: cota.categorias[c], valor: v }))} />}
-          </Bloco>
-          <Bloco titulo="Quem mais recebeu" detalhe={quando} lustroFixo>
-            {!cota ? <EsqueletoDetalhe /> : !gasto ? <Aviso>Sem notas {quando}.</Aviso>
-              : <Barras rotuloLista={`Fornecedores que mais receberam de ${pessoa.nome} ${quando}`} nomeDoMais="fornecedores" total={gasto.t}
-                itens={gasto.f.map(([nome, v, n]) => ({ chave: nome, nome: nome === "Pessoa física" ? "Pessoas físicas (nomes omitidos)" : nome, valor: v, detalhe: notas(n) }))} />}
-          </Bloco>
-        </div>
-        <PainelFontes casa={casa} indice={indice} cota={cota} linkNotas={ficha.linkNotas} className={t.o9} />
-      </div>
-
-      <div className={t.coluna}>
-        <PainelPlenarioAnos casa={casa} pessoa={pessoa} periodo={periodo} aoEscolher={aoEscolherPeriodo} className={t.o2} />
-        <Bloco titulo="Cota ano a ano" detalhe="clique num ano para ver tudo nele" lustroFixo className={t.o4}>
+        <Bloco titulo="Cota ano a ano" detalhe="clique num ano para ver tudo nele" lustroFixo className={`${t.painel} ${t.aAno}`}>
           {erroCota ? <Aviso>Não deu para carregar a cota agora.</Aviso> : !indice ? <EsqueletoDetalhe /> : <>
             <p className={estilos.legendaGrafico}><span><i className={estilos.chaveSerie} />{pessoa.nome}</span><span><i className={estilos.chaveMedia} />média dos {ficha.rotuloCasa}</span>{ficha.anoParcial !== null && <span>* ano em curso</span>}</p>
             <AnoAAno anos={indice.anos} valores={indice.totais[pessoa.id] ?? indice.anos.map(() => null)} medias={indice.anos.map(a => indice.media[a]?.media ?? 0)}
               ativo={typeof periodo === "number" ? periodo : null} aoEscolher={aoEscolherPeriodo} rotuloMedia={`média dos ${ficha.rotuloCasa}`} parcial={ficha.anoParcial} />
           </>}
         </Bloco>
-        <PainelEmendas ficha={ficha} carregando={perfil.carregando} erro={perfil.erro} className={t.o6} />
-        {cota && <PainelBancadas casa={casa} pessoa={pessoa} cota={cota} deEstado={uf?.deNome ?? `de ${uf?.nome ?? pessoa.uf}`} classes={[t.o7, t.o8]} />}
-      </div>
+        {/* Categorias e fornecedores lado a lado: a faixa com a mesma altura e um nome por linha, para as barras andarem juntas. */}
+        <Bloco titulo="Com o que gastou" detalhe={quando} lustroFixo className={`${t.painel} ${t.aCat}`}>
+          {!cota ? <EsqueletoDetalhe /> : !gasto ? <Aviso>Sem notas {quando}.</Aviso>
+            : (() => {
+              const categorias = gasto.c.map(([c, v]) => ({ chave: String(c), nome: cota.categorias[c] ?? "Sem categoria", valor: v }));
+              return <>
+                <Faixa partes={partesPorFamilia(categorias)} />
+                <Barras rotuloLista={`Categorias de gasto de ${pessoa.nome} ${quando}`} nomeDoMais="categorias" feminino total={gasto.t} umaLinha
+                  itens={categorias.map(c => ({ ...c, cor: corDaFamilia(familiaDe(c.nome)) }))} />
+              </>;
+            })()}
+        </Bloco>
+        <Bloco titulo="Quem mais recebeu" detalhe={quando} lustroFixo className={`${t.painel} ${t.aFor}`}>
+          {!cota ? <EsqueletoDetalhe /> : !gasto ? <Aviso>Sem notas {quando}.</Aviso>
+            : <>
+              <Faixa partes={partesDosFornecedores(gasto.f, gasto.t)} />
+              <Barras rotuloLista={`Fornecedores que mais receberam de ${pessoa.nome} ${quando}`} nomeDoMais="fornecedores" total={gasto.t} cor="var(--cor-fornecedores)" umaLinha
+                itens={gasto.f.map(([nome, v, n]) => ({ chave: nome, nome: nome === "Pessoa física" ? "Pessoas físicas (nomes omitidos)" : nome, valor: v, detalhe: notas(n) }))} />
+            </>}
+        </Bloco>
+        <PainelPlenarioAnos casa={casa} pessoa={pessoa} periodo={periodo} aoEscolher={aoEscolherPeriodo} className={`${t.painel} ${t.aPle}`} />
+        <PainelVotacoes casa={casa} pessoa={pessoa} className={`${t.painel} ${t.aVot}`} />
+        {cota && <PainelBancadas casa={casa} pessoa={pessoa} cota={cota} corDe={corDe} deEstado={uf?.deNome ?? `de ${uf?.nome ?? pessoa.uf}`}
+          classes={[`${t.painel} ${t.aUf}`, `${t.painel} ${t.aPar}`]} classeSozinha={`${t.painel} ${t.aBancada}`} />}
+        <PainelEmendas ficha={ficha} carregando={perfil.carregando} erro={perfil.erro} className={`${t.painel} ${t.aEme}`} />
+        <PainelFontes casa={casa} indice={indice} cota={cota} linkNotas={ficha.linkNotas} className={`${t.painel} ${t.aFon}`} />
     </div>
   </article>;
 }
 
 function Aviso({ children }: { children: ReactNode }) {
   return <p className={estilos.aviso}>{children}</p>;
+}
+
+type Parte = { chave: string; nome: string; valor: number; cor: string };
+
+/** A cota do período por família de gasto, da maior para a menor. */
+function partesPorFamilia(categorias: { nome: string; valor: number }[]): Parte[] {
+  return FAMILIAS
+    .map(f => ({ chave: f.chave, nome: f.nome, cor: corDaFamilia(f), valor: categorias.filter(c => familiaDe(c.nome) === f).reduce((s, c) => s + Math.max(0, c.valor), 0) }))
+    .sort((a, b) => b.valor - a.valor);
+}
+
+/** Quanto da cota foi para os fornecedores da lista (o arquivo guarda os 6 maiores) e quanto para os outros. */
+function partesDosFornecedores(fornecedores: [string, number, number][], total: number): Parte[] {
+  const maiores = fornecedores.reduce((s, [, v]) => s + Math.max(0, v), 0);
+  return [
+    { chave: "maiores", nome: fornecedores.length === 1 ? "O maior" : `Os ${fornecedores.length} maiores`, valor: maiores, cor: "var(--cor-fornecedores)" },
+    { chave: "demais", nome: "Todos os outros", valor: Math.max(0, total - maiores), cor: "var(--cor-fornecedores-outros)" },
+  ];
+}
+
+/** Um todo numa faixa, com a legenda dizendo a parte de cada pedaço. */
+function Faixa({ partes }: { partes: Parte[] }) {
+  const visiveis = partes.filter(p => p.valor > 0);
+  const soma = visiveis.reduce((s, p) => s + p.valor, 0);
+  if (!(soma > 0)) return null;
+  return <figure className={t.composicao}>
+    <div className={t.faixaComposicao} aria-hidden="true">
+      {visiveis.map(p => <span key={p.chave} style={{ flexGrow: p.valor, "--cor": p.cor } as CSSProperties}
+        title={`${p.nome}: ${reaisCompactos(p.valor)} (${textoPercentual(p.valor, soma)})`} />)}
+    </div>
+    <figcaption className={t.legendaComposicao}>
+      {visiveis.map(p => <span key={p.chave}><i style={{ "--cor": p.cor } as CSSProperties} />{p.nome} <b className="tabular">{textoPercentual(p.valor, soma)}</b></span>)}
+    </figcaption>
+  </figure>;
 }
 
 type Ficha = ReturnType<typeof useFichaParlamentar>;
@@ -182,8 +255,8 @@ function Fita({ casa, pessoa, periodo, ficha, cota, erroCota }: {
   }];
 
   return <div className={t.fita}>
-    <Grupo nome={`No plenário · ${noPeriodo(periodo)}`} celulas={plenarios} />
     <Grupo nome={`Cota parlamentar · ${quando}`} celulas={cotas} />
+    <Grupo nome={`No plenário · ${noPeriodo(periodo)}`} celulas={plenarios} />
     <Grupo nome="Emendas Pix · legislatura" celulas={emendas} />
   </div>;
 }
@@ -254,6 +327,8 @@ function PainelPlenarioAnos({ casa, pessoa, periodo, aoEscolher, className }: {
   className: string;
 }) {
   const plenario = usePlenario(casa);
+  // O ano acende no clique; o resto da página vem depois (ver `useEscolhaImediata`).
+  const [escolhido, escolher] = useEscolhaImediata(periodo, aoEscolher);
   const p = plenario.dados;
   const camara = casa === "deputados";
   const titulo = "Plenário ano a ano";
@@ -269,14 +344,14 @@ function PainelPlenarioAnos({ casa, pessoa, periodo, aoEscolher, className }: {
     { chave: "v", rotulo: "Votou", valor: a => porcento(taxaComBase(daPessoa[a]?.v)), mediana: a => porcento(p.totais[a]?.mediana.v) },
     { chave: "g", rotulo: "Com o governo", valor: a => porcento(taxaComBase(daPessoa[a]?.g)), mediana: a => porcento(p.totais[a]?.mediana.g) },
   ];
-  return <Bloco titulo={titulo} detalhe={`embaixo, a mediana ${camara ? "da Câmara" : "do Senado"}`} lustroFixo className={className}>
+  return <Bloco titulo={titulo} detalhe={`embaixo, a mediana ${camara ? "da Câmara" : "do Senado"}`} lustroFixo className={className} corpo={t.notaNaBase}>
     <table className={t.anos}>
       <thead>
         <tr>
           <th scope="col"><span className="sr-only">Medida</span></th>
           {anos.map(a => <th key={a} scope="col">
-            <button type="button" aria-pressed={periodo === a} onClick={() => aoEscolher(periodo === a ? LEGISLATURA : a)}
-              aria-label={periodo === a ? `${a}, escolhido; tocar volta à legislatura` : `Ver ${a}`}>{a}</button>
+            <button type="button" aria-pressed={escolhido === a} onClick={() => escolher(escolhido === a ? LEGISLATURA : a)}
+              aria-label={escolhido === a ? `${a}, escolhido; tocar volta à legislatura` : `Ver ${a}`}>{a}</button>
           </th>)}
         </tr>
       </thead>
@@ -285,7 +360,7 @@ function PainelPlenarioAnos({ casa, pessoa, periodo, aoEscolher, className }: {
           <th scope="row">{m.rotulo}</th>
           {anos.map(a => {
             const mediana = m.mediana(a);
-            return <td key={a} data-ativo={periodo === a || undefined}>
+            return <td key={a} data-ativo={escolhido === a || undefined}>
               <b className="tabular">{m.valor(a)}</b>
               {mediana && <small className="tabular">{mediana}</small>}
             </td>;
@@ -307,15 +382,19 @@ function PainelEmendas({ ficha, carregando, erro, className }: { ficha: Ficha; c
     {carregando ? <EsqueletoDetalhe /> : erro ? <Aviso>As emendas não carregaram agora.</Aviso>
       : !e || !e.anos.length ? <Aviso>Nenhum plano de Emenda Pix com este nome desde 2023.</Aviso>
       : <>
-        <Barras rotuloLista="Emendas Pix por ano" nomeDoMais="anos" total={ficha.totalEmendas} limite={8}
+        <Barras rotuloLista="Emendas Pix por ano" nomeDoMais="anos" total={ficha.totalEmendas} limite={8} cor="var(--cor-emendas)"
           itens={[...e.anos].sort((a, b) => a.ano - b.ano).map(a => ({ chave: String(a.ano), nome: String(a.ano), valor: a.valor, detalhe: `${inteiro(a.planos)} ${a.planos === 1 ? "plano" : "planos"}` }))} />
         {ficha.linkEmendas && <Link href={ficha.linkEmendas} className={t.linkPainel}>Ver os planos na aba Orçamento</Link>}
       </>}
   </Bloco>;
 }
 
-/** A posição na bancada do estado e na do partido, um painel para cada, do maior gasto ao menor. */
-function PainelBancadas({ casa, pessoa, cota, deEstado, classes }: { casa: CasaCongresso; pessoa: Parlamentar; cota: CotaDoAno; deEstado: string; classes: [string, string] }) {
+/** A posição na bancada do estado e na do partido, um painel para cada, do maior gasto ao menor; cada barra na cor do partido. */
+function PainelBancadas({ casa, pessoa, cota, corDe, deEstado, classes, classeSozinha }: {
+  casa: CasaCongresso; pessoa: Parlamentar; cota: CotaDoAno; corDe: (partido: string | null) => string; deEstado: string;
+  /** Uma classe para cada painel (estado, partido) e uma para quando só há um: ele ocupa o lugar dos dois. */
+  classes: [string, string]; classeSozinha: string;
+}) {
   const cadastro: Parlamentar[] = fotografia[casa];
   const singular = casa === "deputados" ? "deputado" : "senador";
   const quando = noPeriodo(cota.ano);
@@ -337,14 +416,14 @@ function PainelBancadas({ casa, pessoa, cota, deEstado, classes }: { casa: CasaC
       if (j === 0 || v !== cota.pessoas[comNotas[j - 1].id].t) rank = j + 1;
       const eu = m.id === pessoa.id;
       return {
-        chave: String(m.id), valor: v, destaque: eu, href: `${caminhoParlamentar(casa, m)}${sufixoAno}`,
+        chave: String(m.id), valor: v, destaque: eu, href: `${caminhoParlamentar(casa, m)}${sufixoAno}`, cor: corDe(m.partido),
         detalhe: b.chave === "uf" ? (!m.partido || m.partido === "S/Partido" ? "sem partido" : m.partido) : m.uf,
         nome: <span className={estilos.pessoaBarra}><span className={`tabular ${estilos.posicaoBarra}`}>{rank}º</span><FotoParlamentar casa={casa} id={m.id} nome={m.nome} tamanho={24} /><span>{m.nome}</span></span>,
         rotulo: `${rank}º, ${m.nome}${eu ? " (esta página)" : ""}: ${reaisCompactos(v)} ${quando}`,
       };
     });
     const detalhe = posicao ? `${posicao.posicao}º de ${posicao.de} no gasto ${quando}` : `cota ${quando}`;
-    return <Bloco key={b.chave} titulo={b.titulo} detalhe={detalhe} lustroFixo className={classes[i]}>
+    return <Bloco key={b.chave} titulo={b.titulo} detalhe={detalhe} lustroFixo className={bancadas.length === 1 ? classeSozinha : classes[i]}>
       {itens.length ? <Barras rotuloLista={`${b.titulo}, do maior para o menor gasto ${quando}`} nomeDoMais={casa} total={soma} itens={itens} limite={6} />
         : <Aviso>Ninguém desta bancada apresentou nota {quando}.</Aviso>}
       <div className={t.rodape}>
