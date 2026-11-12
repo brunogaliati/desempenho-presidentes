@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { ImageResponse } from "next/og";
 import { fonteCompartilhamento } from "@/lib/fonteCompartilhamento";
 import malha from "@/app/_painel/_dados/ufs.json";
+import { CONTORNO_MARCA, FUNDO_MARCA, TINTA_MARCA } from "@/lib/marca";
 
 export const tamanhoCompartilhamento = { width: 1200, height: 630 };
 
@@ -20,7 +21,7 @@ export async function respostaDaCapa(corpo: ReactNode, fonte?: string) {
       <path d="M745 0H1200V180C1060 208 882 151 745 0Z" fill="#c8d8e6" />
     </svg>
     <div style={{ display: "flex", alignItems: "center", gap: 16, height: 76, padding: "12px 22px", border: "1px solid #ffffff", borderRadius: 26, background: "rgba(255,255,255,0.72)" }}>
-      <svg width="54" height="46" viewBox="0 0 64 54"><rect width="64" height="54" rx="13" fill="#15934d" /><path d="M6 27 32 6 58 27 32 48Z" fill="#f3cb38" /><circle cx="32" cy="27" r="13" fill="#285c84" /><defs><clipPath id="marca-disco"><circle cx="32" cy="27" r="13" /></clipPath></defs><path clipPath="url(#marca-disco)" d="M20 23Q33 21 44 32" fill="none" stroke="#fff" strokeWidth="4" /></svg>
+      <svg width="54" height="46" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill={FUNDO_MARCA} /><path d={CONTORNO_MARCA} fill={TINTA_MARCA} fillRule="evenodd" /></svg>
       <div style={{ display: "flex", fontSize: 29, fontWeight: 600, letterSpacing: -0.7 }}>Desempenho do Governo</div>
       <div style={{ display: "flex", marginLeft: "auto", color: TINTA_2, fontSize: 17 }}>Dados públicos. Critérios claros.</div>
     </div>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { VERSAO_MARCA } from "./marca.ts";
 
 export const NOME_SITE = "Desempenho do Governo";
 export const URL_SITE = new URL(process.env.SITE_URL || "https://desempenhodogoverno.com.br").origin;
@@ -11,7 +12,7 @@ export function podeIndexar(env: NodeJS.ProcessEnv = process.env): boolean {
 export function imagemDaPagina(caminho: string, imagem?: string): string {
   const propria = caminho === '/economia/inflacao' || caminho === '/economia/salario-minimo' || /^\/presidente\/[^/]+$/.test(caminho) || /^\/congresso\/(deputados|senadores)\/[^/]+$/.test(caminho);
   const capa = imagem ?? (caminho === '/' ? '/capas/inicio-20261111.png' : propria ? `${caminho}/opengraph-image` : `/compartilhar?pagina=${encodeURIComponent(caminho.split('?')[0])}`);
-  return `${capa}${capa.includes('?')?'&':'?'}v=${caminho === '/' || caminho === '/dinheiro' ? '20261111' : caminho === '/resumo' ? '20261110' : '20261104'}`;
+  return `${capa}${capa.includes('?')?'&':'?'}v=${VERSAO_MARCA}`;
 }
 
 export function metadataPagina(titulo: string, descricao: string, caminho: string, imagem?: string): Metadata {

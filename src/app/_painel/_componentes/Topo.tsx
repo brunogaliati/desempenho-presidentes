@@ -5,6 +5,7 @@ import styles from "./Topo.module.css";
 import Link from "next/link";
 import { LinkTema } from "./LinkTema";
 import { destinoPainel } from "@/lib/rotasPainel";
+import { CONTORNO_MARCA, FUNDO_MARCA, TINTA_MARCA } from "@/lib/marca";
 import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 
 import { numero } from "@/lib/formatar";
@@ -178,35 +179,18 @@ export function Cabecalho({
   );
 }
 
-/** 48 quadros da bandeira; a escrita mantém a arte original. */
+/** Símbolo sólido da marca; a escrita acompanha o tema claro/escuro. */
 function Marca() {
-  const logo = useRef<SVGSVGElement>(null);
   const recorteEscrita = useId();
 
-  useEffect(() => {
-    const elemento = logo.current;
-    if (!elemento) return;
-    let visivel = false;
-    const atualizar = () => { elemento.dataset.animando = String(visivel && !document.hidden); };
-    const observador = new IntersectionObserver(([entrada]) => {
-      visivel = entrada.isIntersecting;
-      atualizar();
-    });
-    observador.observe(elemento);
-    document.addEventListener("visibilitychange", atualizar);
-    return () => {
-      observador.disconnect();
-      document.removeEventListener("visibilitychange", atualizar);
-    };
-  }, []);
-
   return (
-    <svg ref={logo} className="marca-logo" width="2068" height="414" viewBox="56 150 2068 414" role="img" aria-label="Desempenho do governo">
+    <svg className="marca-logo" width="2068" height="414" viewBox="56 150 2068 414" role="img" aria-label="Desempenho do governo">
       <defs>
         <clipPath id={recorteEscrita}><rect x="580" width="1592" height="724" /></clipPath>
       </defs>
-      <svg className="marca-bandeira" x="56" y="150" width="524" height="414" viewBox="0 0 256 200" overflow="hidden" aria-hidden="true">
-        <image className="marca-bandeira-quadros" href="/marca/bandeira-vento.webp?v=tecido-fluido-48" width="12288" height="200" />
+      <svg className="marca-simbolo" x="56" y="150" width="414" height="414" viewBox="0 0 64 64" aria-hidden="true">
+        <rect width="64" height="64" rx="14" fill={FUNDO_MARCA} />
+        <path d={CONTORNO_MARCA} fill={TINTA_MARCA} fillRule="evenodd" />
       </svg>
       <g className="marca-escrita" clipPath={`url(#${recorteEscrita})`}>
         <image href="/marca/desempenho-do-governo.png" width="2172" height="724" />

@@ -120,50 +120,39 @@ try {
     }
     console.log('PASSOU: abertura, abas alinhadas, recolhimento/retorno sem saltos, oscilação, interrupção, movimento reduzido e desktop preservado na home e na página municipal (320, 390, 760, 1024 e 1440px).');
   } else if (process.env.TESTE_MARCA) {
-    const sprite = await fetch(new URL('/marca/bandeira-vento.webp', url));
-    assert.equal(sprite.status, 200, 'Sprite disponível');
-    await until(() => evaluate(`document.querySelector('.marca-logo')?.dataset.animando === 'true'`), 'animação visível');
-    const movimento = await evaluate(`(() => { const e = document.querySelector('.marca-bandeira-quadros'); const s = getComputedStyle(e); return { nome:s.animationName, passos:s.animationTimingFunction, estado:s.animationPlayState, duracao:s.animationDuration }; })()`);
-    assert.deepEqual(movimento, { nome:'marca-bandeira-vento', passos:'steps(48)', estado:'running', duracao:'1.6s' });
-    const antes = await evaluate(`getComputedStyle(document.querySelector('.marca-bandeira-quadros')).transform`);
-    await delay(250);
-    assert.notEqual(await evaluate(`getComputedStyle(document.querySelector('.marca-bandeira-quadros')).transform`), antes, 'Bandeira troca de quadro');
-    if (process.argv[2]) {
-      const clip = await evaluate(`(() => { const r = document.querySelector('.marca-logo').getBoundingClientRect(); return { x:r.x, y:r.y, width:r.width, height:r.height, scale:2 }; })()`);
-      const poses = [];
-      for (let i = 0; i < 48; i++) {
-        await evaluate(`(() => { const a = document.querySelector('.marca-bandeira-quadros').getAnimations()[0]; a.pause(); a.currentTime = ${(i + .5) * 1600 / 48}; })()`);
-        await delay(30);
-        poses.push(await capture('logo-quadro-'+i+'.png', clip));
-      }
-      assert.equal(new Set(poses).size, 48, 'O navegador deve mostrar 48 poses visualmente distintas');
-      await evaluate(`document.querySelector('.marca-bandeira-quadros').getAnimations()[0].play()`);
+    for (const [arquivo, tamanho] of [['icone-32.png',32],['icone-192.png',192],['icone-512.png',512],['apple-touch-icon.png',180]]) {
+      const resposta = await fetch(new URL('/'+arquivo, url));
+      assert.equal(resposta.status, 200, arquivo+' disponível');
+      const png = Buffer.from(await resposta.arrayBuffer());
+      assert.equal(png.readUInt32BE(16), tamanho, arquivo+' largura');
+      assert.equal(png.readUInt32BE(20), tamanho, arquivo+' altura');
     }
-    await capture('marca-desktop-claro.png');
+    const ico = Buffer.from(await (await fetch(new URL('/favicon.ico',url))).arrayBuffer());
+    assert.equal(ico.readUInt16LE(2),1,'ICO válido');
+    assert.equal(ico.readUInt16LE(4),3,'ICO com três tamanhos');
+    await until(() => evaluate(`!!document.querySelector('.marca-simbolo path')`), 'símbolo sólido');
+    for (const tema of ['claro','escuro']) {
+      if (tema==='escuro') await click('.tema-interruptor');
+      const cores = await evaluate(`(() => { const e=document.querySelector('.marca-simbolo');return { fundo:e.querySelector('rect').getAttribute('fill'),tinta:e.querySelector('path').getAttribute('fill'),regra:e.querySelector('path').getAttribute('fill-rule') }; })()`);
+      assert.deepEqual(cores,{fundo:'#EFFF00',tinta:'#0B0B0B',regra:'evenodd'},'Amarelo e preto no tema '+tema);
+      await capture('marca-desktop-'+tema+'.png');
+    }
     await click('.tema-interruptor');
-    await capture('marca-desktop-escuro.png');
-    await click('.tema-interruptor');
-    await evaluate(`Object.defineProperty(document, 'hidden', { configurable:true, value:true }); document.dispatchEvent(new Event('visibilitychange'));`);
-    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.marca-bandeira-quadros')).animationPlayState`), 'paused', 'Pausa na aba oculta');
-    await evaluate(`delete document.hidden; document.dispatchEvent(new Event('visibilitychange'));`);
-    await until(() => evaluate(`document.querySelector('.marca-logo').dataset.animando === 'true'`), 'retomada');
-    await evaluate(`document.querySelector('.marca-logo').style.visibility = 'hidden'; document.querySelector('.marca-painel').style.transform = 'translateX(-200vw)'`);
-    await until(() => evaluate(`document.querySelector('.marca-logo').dataset.animando === 'false'`), 'pausa fora da tela');
-    await evaluate(`document.querySelector('.marca-logo').style.visibility = ''; document.querySelector('.marca-painel').style.transform = ''`);
-    await until(() => evaluate(`document.querySelector('.marca-logo').dataset.animando === 'true'`), 'retomada visível');
     await send('Emulation.setEmulatedMedia', { features:[{ name:'prefers-reduced-motion', value:'reduce' }] });
-    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.marca-bandeira-quadros')).animationName`), 'none', 'Preferência de movimento reduzido');
-    assert.equal(await evaluate(`getComputedStyle(document.querySelector('.marca-bandeira-quadros')).transform`), 'none', 'Primeiro quadro estático');
-    await capture('marca-movimento-reduzido.png');
-    await send('Emulation.setEmulatedMedia', { features:[] });
     for (const width of [1440, 390, 320]) {
       await viewport(width, 900);
-      const layout = await evaluate(`(() => { const e = document.querySelector('.marca-logo'), r = e.getBoundingClientRect(); return { esquerda:r.left, direita:r.right, largura:r.width, altura:r.height, nome:e.closest('a').getAttribute('aria-label') }; })()`);
-      assert(layout.esquerda >= 0 && layout.direita <= width && layout.largura > 0 && layout.altura > 0, 'Logo íntegra em '+width+'px');
-      assert.equal(layout.nome, 'Desempenho do Governo — início');
-      if (width === 390) await capture('marca-celular.png');
+      const layout = await evaluate(`(() => { const e=document.querySelector('.marca-logo'),r=e.getBoundingClientRect();return {esquerda:r.left,direita:r.right,largura:r.width,altura:r.height,nome:e.closest('a').getAttribute('aria-label'),destino:new URL(e.closest('a').href).pathname,overflow:document.documentElement.scrollWidth>innerWidth}; })()`);
+      assert(layout.esquerda>=0&&layout.direita<=width&&layout.altura>0,'Logo íntegra em '+width+'px');
+      assert.equal(layout.nome,'Desempenho do Governo — início');
+      assert.equal(layout.destino,'/','Marca leva à home');
+      assert.equal(layout.overflow,false,'Sem overflow em '+width+'px');
+      if(width===390)await capture('marca-celular.png');
+      if(width===1440){
+        const clip=await evaluate(`(() => {const r=document.querySelector('.marca-painel').getBoundingClientRect();return {x:r.x-8,y:r.y-8,width:r.width+16,height:r.height+16,scale:2};})()`);
+        await capture('marca-cabecalho.png',clip);
+      }
     }
-    console.log('PASSOU: logo com 48 quadros em 1,6s, poses distintas, pausa oculta/fora da tela, movimento reduzido e encaixe em 1440, 390 e 320px.');
+    console.log('PASSOU: marca sólida em claro/escuro, link da home, encaixe em1440/390/320px, PNG32/192/512, Apple180 e ICO16/32/48.');
   } else {
   await capture('navbar-desktop.png');
   const overlay = await evaluate(`(() => { const h = document.querySelector('.painel-cabecalho'), mapa = document.querySelector('.sala-tema'), painel = h.parentElement; return { background: getComputedStyle(h).backgroundColor, position: getComputedStyle(h).position, mapTop: mapa.getBoundingClientRect().top, padding: parseFloat(getComputedStyle(painel).paddingTop), height: h.offsetHeight, mapBehind: !!document.elementFromPoint(8, 6)?.closest('.sala-tema') }; })()`);

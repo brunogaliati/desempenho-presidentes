@@ -1,7 +1,9 @@
 // Gráficos de interface derivados da marca vetorial, sem fontes ou serviços externos.
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import sharp from 'sharp';
-const svg = await readFile(new URL('../public/icone.svg', import.meta.url));
+import { CONTORNO_MARCA, FUNDO_MARCA, TINTA_MARCA } from '../src/lib/marca.ts';
+const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="${FUNDO_MARCA}"/><path d="${CONTORNO_MARCA}" fill="${TINTA_MARCA}" fill-rule="evenodd"/></svg>\n`);
+await writeFile(new URL('../public/icone.svg', import.meta.url), svg);
 for (const [nome, tamanho] of [['icone-32.png',32],['icone-192.png',192],['icone-512.png',512],['apple-touch-icon.png',180]]) {
   await writeFile(new URL('../public/'+nome,import.meta.url),await sharp(svg).resize(tamanho,tamanho).png().toBuffer());
 }

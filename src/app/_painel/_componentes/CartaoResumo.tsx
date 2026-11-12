@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, type ChangeEvent, type CSSPropertie
 import { createPortal } from "react-dom";
 
 import { DESTINOS } from "@/components/Compartilhar";
+import { CONTORNO_MARCA, FUNDO_MARCA, TINTA_MARCA } from "@/lib/marca";
 import type { Sentido } from "@/lib/formatar";
 
 import type { LinhaResumo } from "../_dados/resumoModelo";
@@ -157,18 +158,11 @@ function marca(ctx: CanvasRenderingContext2D, x: number, y: number, escala: numb
   ctx.translate(x, y);
   ctx.scale(escala, escala);
   retangulo(ctx, 0, 0, 64, 54, 13);
-  ctx.fillStyle = "#15934d";
+  ctx.fillStyle = FUNDO_MARCA;
   ctx.fill();
-  ctx.fillStyle = "#f3cb38";
-  ctx.fill(new Path2D("M6 27 32 6 58 27 32 48Z"));
-  ctx.beginPath();
-  ctx.arc(32, 27, 13, 0, Math.PI * 2);
-  ctx.fillStyle = "#285c84";
-  ctx.fill();
-  ctx.clip();
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 4;
-  ctx.stroke(new Path2D("M20 23Q33 21 44 32"));
+  ctx.translate(0, -5);
+  ctx.fillStyle = TINTA_MARCA;
+  ctx.fill(new Path2D(CONTORNO_MARCA), "evenodd");
   ctx.restore();
 }
 

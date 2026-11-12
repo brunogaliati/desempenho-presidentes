@@ -886,29 +886,15 @@ body {
   transition: transform 220ms ease-out;
 }
 
-.marca-bandeira-quadros {
-  transform-box: fill-box;
-  animation: marca-bandeira-vento 1.6s steps(48) infinite;
-  animation-play-state: paused;
-}
-
-.marca-logo[data-animando="true"] .marca-bandeira-quadros {
-  animation-play-state: running;
-}
-
 :root:not([data-theme="dark"]) .painel-governo .painel-cabecalho .marca-escrita {
   filter: brightness(0);
   opacity: 0.86;
 }
 
-/* No escuro a escrita fica branca: as cores da arte original brigavam com a paleta. A bandeira fica como é. */
+/* A escrita acompanha o tema; o símbolo mantém amarelo e preto. */
 :root[data-theme="dark"] .painel-governo .painel-cabecalho .marca-escrita {
   filter: brightness(0) invert(1);
   opacity: 0.92;
-}
-
-@keyframes marca-bandeira-vento {
-  to { transform: translateX(-100%); }
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -916,7 +902,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .marca-bandeira-quadros { animation: none; }
   .marca-logo { transition: none; }
   .marca-painel:hover .marca-logo { transform: none; }
 }

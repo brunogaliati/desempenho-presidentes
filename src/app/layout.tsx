@@ -4,6 +4,7 @@ import "./globals.css";
 import { MetricasWeb } from "./MetricasWeb";
 import { Analytics } from "@/components/Analytics";
 import { jsonLd, NOME_SITE, podeIndexar, URL_SITE } from "@/lib/seo";
+import { VERSAO_MARCA } from "@/lib/marca";
 
 const geistSans = Geist({
   variable: "--fonte-sans",
@@ -42,9 +43,9 @@ export const metadata: Metadata = {
     description: DESCRICAO,
   },
   icons: {
-    icon: [{ url: "/icone.svg", type: "image/svg+xml", sizes: "any" }, { url: "/icone-32.png", type: "image/png", sizes: "32x32" }, { url: "/icone-192.png", type: "image/png", sizes: "192x192" }],
-    shortcut: "/favicon.ico",
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    icon: [{ url: `/icone.svg?v=${VERSAO_MARCA}`, type: "image/svg+xml", sizes: "any" }, { url: `/icone-32.png?v=${VERSAO_MARCA}`, type: "image/png", sizes: "32x32" }, { url: `/icone-192.png?v=${VERSAO_MARCA}`, type: "image/png", sizes: "192x192" }],
+    shortcut: `/favicon.ico?v=${VERSAO_MARCA}`,
+    apple: [{ url: `/apple-touch-icon.png?v=${VERSAO_MARCA}`, sizes: "180x180", type: "image/png" }],
   },
 };
 
