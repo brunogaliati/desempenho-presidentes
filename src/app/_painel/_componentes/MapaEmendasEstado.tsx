@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
+import { useVisivel } from "@/lib/useVisivel";
 import type { MunicipioEmenda } from "../_dados/emendasParlamentarModelo";
-import { useMalhaMunicipal } from "./municipiosAmbiente";
+import type { MunicipioNacional } from "../_dados/tipos";
+import { useJson } from "../_dados/useJson";
 import { formatar, titulo } from "./formatos";
 import t from "./TerminalParlamentar.module.css";
 
@@ -55,14 +57,24 @@ function posicionarRotulos(centros: Ponto[], r: number, fonte: number) {
  * escuro, mais dinheiro) e os maiores destinos pulsando, numerados como na tabela. Passar o
  * ponteiro numa linha da tabela ou no mapa acende o mesmo município nos dois.
  */
-export function MapaEmendasEstado({ uf, linhas, medida, foco, aoFocar }: {
+type Props = {
   uf: string;
   linhas: MunicipioEmenda[];
   medida: "destinado" | "pago" | "previsto";
   foco: string | null;
   aoFocar: (codigo: string | null) => void;
-}) {
-  const malha = useMalhaMunicipal();
+};
+
+export function MapaEmendasEstado(props: Props) {
+  const { ref, visivel } = useVisivel<HTMLElement>("400px");
+  return <figure ref={ref} className={t.mapaEmendas}>
+    {visivel ? <ConteudoMapa {...props} /> : <div className={t.mapaEmendasVazio} aria-label="Mapa dos municípios" />}
+  </figure>;
+}
+
+function ConteudoMapa({ uf, linhas, medida, foco, aoFocar }: Props) {
+  const { dados, erro } = useJson<{ municipios: MunicipioNacional[] }>(`/api/painel/congresso/malha?uf=${encodeURIComponent(uf)}`);
+  const malha = dados?.municipios;
   const valor = (m: MunicipioEmenda) => m[medida] ?? 0;
   const previsao = medida === "previsto";
 
@@ -82,31 +94,33 @@ export function MapaEmendasEstado({ uf, linhas, medida, foco, aoFocar }: {
   const maximo = ranking.length ? valor(ranking[0]) : 0;
   const total = ranking.reduce((s, m) => s + valor(m), 0);
 
-  if (!desenho) return <div className={t.mapaEmendas} aria-busy={!malha}><div className={t.mapaEmendasVazio}>{malha ? "Mapa indisponível para este estado." : ""}</div></div>;
+  // O foco muda a leitura e o contorno, sem reconstruir centenas de caminhos e títulos.
+  const base = useMemo(() => desenho?.formas.map(f => {
+    const m = porCodigo.get(f.codigo);
+    const v = m?.[medida] ?? 0;
+    const i = posicao.get(f.codigo);
+    return <path key={f.codigo} d={f.d} data-recebeu={v > 0 ? "" : undefined}
+      style={v > 0 ? { fill: corDoValor(v, maximo), animationDelay: `${Math.min(i ?? 0, 30) * 40}ms` } : undefined}
+      onMouseEnter={m ? () => aoFocar(f.codigo) : undefined}><title>{titulo(f.nome)}{m ? ` · ${m[medida] == null ? "Valor não informado" : formatar(v, "reaiscurto")}${previsao ? " previsto" : ""}` : ""}</title></path>;
+  }), [desenho, porCodigo, posicao, medida, maximo, previsao, aoFocar]);
+
+  if (!desenho) return <div className={t.mapaEmendasVazio} aria-busy={!malha && !erro}>{erro || malha ? "Mapa indisponível para este estado." : ""}</div>;
 
   const { formas, caixa, folga, escala } = desenho;
   const viewBox = `${caixa.x - folga} ${caixa.y - folga} ${caixa.w + 2 * folga} ${caixa.h + 2 * folga}`;
   const destaques = ranking.slice(0, DESTAQUES).map(m => ({ m, f: formas.find(f => f.codigo === m.codigo) })).filter(d => d.f);
   const focado = foco ? porCodigo.get(foco) : undefined;
   const leitura = focado ?? ranking[0];
-  const cor = (v: number) => `color-mix(in srgb, var(--cor-emendas) ${Math.round(28 + 72 * Math.sqrt(v / (maximo || 1)))}%, var(--superficie))`;
   const r = escala * 1.1;
   const rotulos = posicionarRotulos(destaques.map(d => d.f!.centro), r, escala * 3.6);
 
-  return <figure className={t.mapaEmendas}>
-    <svg viewBox={viewBox} role="img" aria-label={`Mapa de valores ${previsao ? "previstos em planos aprovados ou legados" : medida === "destinado" ? "destinados" : "pagos"} por município. ${ranking.slice(0, 3).map((m, i) => `${i + 1}º ${titulo(m.nome)}`).join(", ")}.`}
+  return <>
+    <svg viewBox={viewBox} role="img" data-com-foco={!!focado || undefined} aria-label={`Mapa de valores ${previsao ? "previstos em planos aprovados ou legados" : medida === "destinado" ? "destinados" : "pagos"} por município. ${ranking.slice(0, 3).map((m, i) => `${i + 1}º ${titulo(m.nome)}`).join(", ")}.`}
       onMouseLeave={() => aoFocar(null)}>
       <g className={t.mapaEmendasBase}>
-        {formas.map(f => {
-          const m = porCodigo.get(f.codigo);
-          const v = m ? valor(m) : 0;
-          const i = posicao.get(f.codigo);
-          return <path key={f.codigo} d={f.d} data-recebeu={v > 0 ? "" : undefined} data-foco={foco === f.codigo ? "" : undefined}
-            style={v > 0 ? { fill: cor(v), animationDelay: `${Math.min(i ?? 0, 30) * 40}ms` } : undefined}
-            onMouseEnter={m ? () => aoFocar(f.codigo) : undefined}><title>{titulo(f.nome)}{m ? ` · ${m[medida] == null ? "Valor não informado" : formatar(v, "reaiscurto")}${previsao ? " previsto" : ""}` : ""}</title></path>;
-        })}
+        {base}
       </g>
-      {focado && (() => { const f = formas.find(x => x.codigo === focado.codigo); return f ? <path className={t.mapaEmendasContorno} d={f.d} /> : null; })()}
+      {focado && (() => { const f = formas.find(x => x.codigo === focado.codigo); return f ? <path className={t.mapaEmendasContorno} d={f.d} style={{ fill: valor(focado) > 0 ? corDoValor(valor(focado), maximo) : undefined }} /> : null; })()}
       <g aria-hidden="true">
         {destaques.map(({ m, f }, i) => <g key={m.codigo} transform={`translate(${f!.centro.x} ${f!.centro.y})`} className={t.mapaEmendasPulso}
           style={{ "--atraso": `${i * 0.45}s` } as React.CSSProperties}>
@@ -126,5 +140,7 @@ export function MapaEmendasEstado({ uf, linhas, medida, foco, aoFocar }: {
       {previsao && <p className={t.nota}>{ranking.length ? "Previsão de planos aprovados ou legados, por município citado no objeto ou beneficiário municipal. Totais compartilhados e meros endereços ficam fora do mapa. Não comprova aplicação financeira no município nem entrega."
         : "Nenhuma parcela prevista de plano aprovado ou legado tem município identificável neste recorte. Isso não significa valor zero destinado."}</p>}
     </figcaption>}
-  </figure>;
+  </>;
 }
+
+const corDoValor = (valor: number, maximo: number) => `color-mix(in srgb, var(--cor-emendas) ${Math.round(28 + 72 * Math.sqrt(valor / (maximo || 1)))}%, var(--superficie))`;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { type CasaCongresso, type PeriodoCota, NOME_UF, inteiro } from "../_dados/congressoModelo";
 import { municipiosDasEmendas, municipiosPrevistosDosPlanos, planosDasEmendas, type EmendasParlamentar, type OrdemEmendas } from "../_dados/emendasParlamentarModelo";
 import { useJson } from "../_dados/useJson";
@@ -17,7 +17,7 @@ type Visao = "aplicacao" | "prefeituras" | "planos" | "sem-municipio";
 const LIMITE = 10;
 const FONTE = "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares";
 
-export function EmendasMunicipiosParlamentar({ casa, id, periodo, uf, className }: {
+export const EmendasMunicipiosParlamentar = memo(function EmendasMunicipiosParlamentar({ casa, id, periodo, uf, className }: {
   casa: CasaCongresso; id: number; periodo: PeriodoCota; uf: string; className: string;
 }) {
   const { dados, erro, carregando } = useJson<EmendasParlamentar>(`/api/painel/congresso/emendas?${new URLSearchParams({ casa, id: String(id), ano: String(periodo) })}`);
@@ -25,7 +25,7 @@ export function EmendasMunicipiosParlamentar({ casa, id, periodo, uf, className 
     {carregando ? <div aria-busy="true"><EsqueletoDetalhe /></div> : erro ? <p className={estilos.aviso}>Não foi possível carregar as emendas. Recarregue a página para tentar novamente.</p>
       : dados ? dados.ate < 2014 ? <p className={estilos.aviso}>A fonte nacional de emendas tem cobertura desde 2014. Não há cobertura para {dados.ate}; isso não significa ausência de emendas.</p> : <TabelaEmendas key={`${casa}-${id}-${periodo}`} dados={dados} /> : null}
   </Bloco>;
-}
+});
 
 /** Exportada para conferir a mesma tabela com dados reais e casos de ausência nos testes. */
 export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
@@ -39,7 +39,7 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
   const buscaRotulo = semMunicipio ? "Buscar favorecido, emenda ou localidade" : planos ? "Buscar município ou projeto" : "Buscar município";
   const cobertura = dados.cobertura;
   const dinheiro = (v: number | null) => v === null ? "valor não informado" : formatar(v, "reais2");
-  const linhas = municipiosDasEmendas(dados[prefeituras ? "prefeituras" : "aplicacao"], busca, ordem);
+  const linhas = useMemo(() => municipiosDasEmendas(dados[prefeituras ? "prefeituras" : "aplicacao"], busca, ordem), [dados, prefeituras, busca, ordem]);
   const visiveis = todos ? linhas : linhas.slice(0, LIMITE);
   const periodo = dados.desde === dados.ate ? String(dados.desde) : `${dados.desde}–${dados.ate}`;
   const trocarVisao = (v: Visao) => { setVisao(v); setOrdem(v === "prefeituras" ? "pago" : "destinado"); setTodos(false); };
@@ -50,7 +50,7 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
     </button>
   </th>;
   const [foco, setFoco] = useState<string | null>(null);
-  const mapa = planos ? municipiosPrevistosDosPlanos(planosDasEmendas(dados.planos, busca), dados.uf) : dados[prefeituras ? "prefeituras" : "aplicacao"];
+  const mapa = useMemo(() => planos ? municipiosPrevistosDosPlanos(planosDasEmendas(dados.planos, busca), dados.uf) : dados[prefeituras ? "prefeituras" : "aplicacao"], [dados, planos, prefeituras, busca]);
   return <div className={t.emendasCorpo} data-visao={visao}>
     <div className={t.emendasIntro}>
     <div className={t.emendasControles}>

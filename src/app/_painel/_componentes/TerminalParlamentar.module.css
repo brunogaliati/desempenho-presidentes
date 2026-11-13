@@ -176,10 +176,10 @@
 .mapaEmendasVazio { aspect-ratio:1; border-radius:14px; background:var(--faixa-a); display:grid; place-items:center; font-size:12px; color:var(--tinta-2); }
 .mapaEmendasBase path { fill:color-mix(in srgb, var(--tinta) 9%, transparent); stroke:var(--superficie); stroke-width:.6; vector-effect:non-scaling-stroke; stroke-linejoin:round; transition:fill .2s, opacity .2s; }
 .mapaEmendasBase path[data-recebeu] { cursor:pointer; animation:emendaEntra .7s cubic-bezier(.2,.7,.2,1) both; }
-.mapaEmendasBase:has(path[data-foco]) path[data-recebeu]:not([data-foco]) { opacity:.45; }
+.mapaEmendas svg[data-com-foco] .mapaEmendasBase path[data-recebeu] { opacity:.45; }
 .mapaEmendasContorno { fill:none; stroke:var(--tinta); stroke-width:1.6; vector-effect:non-scaling-stroke; stroke-linejoin:round; pointer-events:none; }
 .mapaEmendasPulso { pointer-events:none; }
-.mapaEmendasOnda { fill:none; stroke:var(--cor-emendas); stroke-width:1.5; vector-effect:non-scaling-stroke; transform-box:fill-box; transform-origin:center; opacity:0; animation:emendaOnda 2.8s ease-out infinite; animation-delay:var(--atraso); }
+.mapaEmendasOnda { fill:none; stroke:var(--cor-emendas); stroke-width:1.5; vector-effect:non-scaling-stroke; transform-box:fill-box; transform-origin:center; opacity:0; animation:emendaOnda 2.8s ease-out 2; animation-delay:var(--atraso); }
 .mapaEmendasOnda[data-segunda] { animation-delay:calc(var(--atraso) + 1.4s); }
 .mapaEmendasNucleo { fill:var(--cor-emendas); stroke:var(--superficie); stroke-width:1.5; vector-effect:non-scaling-stroke; filter:drop-shadow(0 0 3px var(--cor-emendas)); }
 .mapaEmendasRotulo { text-anchor:middle; font-weight:700; fill:var(--tinta); paint-order:stroke; stroke:var(--superficie); stroke-width:3px; stroke-linejoin:round; vector-effect:non-scaling-stroke; }

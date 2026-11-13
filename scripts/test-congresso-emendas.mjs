@@ -27,6 +27,22 @@ const { SemMunicipioEmendasParlamentar } = require('../src/app/_painel/_componen
 const { SeletorAnoCota } = require('../src/app/_painel/_componentes/GraficosCota.tsx');
 const { renderToStaticMarkup } = require('react-dom/server');
 const CarregandoPainel = require('../src/app/_painel/_componentes/CarregandoPainel.tsx').default;
+const { GET: malhaDoEstado } = require('../src/app/api/painel/congresso/malha/route.ts');
+
+test('mapa do perfil entrega só a UF, preserva os contornos e rejeita UF inválida', async () => {
+  const nacional = JSON.parse(fs.readFileSync(new URL('../public/painel/municipios-brasil.json', import.meta.url), 'utf8'));
+  for (const uf of new Set(nacional.municipios.map(m => m.uf))) {
+    const resposta = malhaDoEstado(new Request(`http://localhost/api/painel/congresso/malha?uf=${uf}`));
+    assert.equal(resposta.status, 200);
+    assert.match(resposta.headers.get('Cache-Control'), /public, max-age=/);
+    const texto = await resposta.text();
+    assert.deepEqual(JSON.parse(texto).municipios, nacional.municipios.filter(m => m.uf === uf));
+    assert.ok(texto.length < JSON.stringify(nacional).length / 4, `${uf}: payload deve ser menor que um quarto da malha nacional`);
+  }
+  for (const consulta of ['', '?uf=XX', '?uf=']) {
+    assert.equal(malhaDoEstado(new Request(`http://localhost/api/painel/congresso/malha${consulta}`)).status, 400);
+  }
+});
 test('perfil tem skeleton de identidade e painéis, enquanto o diretório mantém o plenário', () => {
   const React = require('react');
   const perfil = renderToStaticMarkup(React.createElement(CarregandoPainel, { aba: 'congresso', perfilParlamentar: true, embutido: true }));
