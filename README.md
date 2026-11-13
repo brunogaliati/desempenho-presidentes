@@ -418,3 +418,33 @@ Bloqueio do Analytics nunca impede copiar ou abrir o destino. Para rankings,
 filtrar o evento `share` e comparar Conteúdo compartilhado, Tipo de conteúdo,
 Destino do compartilhamento e os filtros cadastrados. Aberturas usam `share_open`
 e devem ser analisadas separadamente. Eventos são agregados; não incluem ID de usuário.
+
+### Emendas por município no perfil parlamentar
+
+Os perfis de deputados e senadores incluem **Emendas para os municípios**, com
+atalho no cabeçalho. Reutiliza `Bloco`, `Opcoes`, os tokens e as tabelas do terminal;
+no celular os valores destinado e pago aparecem juntos em cada município.
+Busca sem acento, ordenação por nome/valor e expansão da lista usam os mesmos
+dados da API `/api/painel/congresso/emendas?casa=deputados&id=74646&ano=2025`.
+Sem `ano`, consulta as emendas da legislatura corrente; o seletor de período do
+perfil controla o ano da emenda, não o ano em que aconteceu o pagamento.
+
+`emendasParlamentar.ts` lê os marts da coleta CGU, validando casa e ID no cadastro
+de parlamentares e restringindo o destino à UF do perfil. A visão **Local de
+aplicação** usa `mart.emendas_parlamentar_municipio`: destinado é empenhado e pago
+inclui restos pagos. **Prefeituras e fundos** usa
+`mart.emendas_parlamentar_municipio_recebido`, somente com destinatário da
+administração municipal, pelo endereço do favorecido; não estima destinado nem
+soma esse pagamento ao da outra visão. Localidades não individualizadas e
+autorias ambíguas não são atribuídas a municípios/perfis por aproximação.
+Ausência fica distinta de zero. O painel informa fonte, data de coleta e limites.
+
+Cache horário, com tags `painel-congresso` e `painel-economia` (esta já revalidada
+pelo webhook de dados). A falha da consulta de emendas não impede carregar cota,
+plenário e cadastro. Nenhuma dependência nova.
+
+Validação em 13/11/2026: 22 testes de lógica/regressão do Congresso, 7 testes com
+API/Neon (incluindo os quatro casos unitários da tabela), TypeScript, ESLint,
+detector de design e build de produção aprovados. Conferência visual em deputado
+e senador, busca/lista completa, troca de ano, temas claro/escuro e largura de
+390 px. O servidor de teste iniciado na porta 3000 foi encerrado ao concluir.

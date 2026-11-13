@@ -19,6 +19,7 @@ import { IdentidadePartido } from "./PainelEconomia";
 import { BASE_MINIMA, taxaComBase, usePlenario } from "./PlenarioParlamentar";
 import estilos from "./Parlamentares.module.css";
 import t from "./TerminalParlamentar.module.css";
+import { EmendasMunicipiosParlamentar } from "./EmendasMunicipiosParlamentar";
 
 /**
  * A página de um deputado ou senador como terminal: o crachá numa faixa, uma fita com os
@@ -110,6 +111,7 @@ export function TerminalParlamentar({ casa, pessoa, governos, ufs, cor, corDe, i
           <p className={t.fatos} aria-busy={perfil.carregando}>{perfil.carregando ? <span className={estilos.osso} style={{ width: 260 }} /> : fatos.join(" · ")}</p>
           <div className={t.links}>
             <a href={ficha.linkPerfil} target="_blank" rel="noreferrer">Perfil oficial<Seta /></a>
+            <a href="#emendas-municipios">Emendas por município</a>
             {acoes}
           </div>
         </div>
@@ -166,6 +168,7 @@ export function TerminalParlamentar({ casa, pessoa, governos, ufs, cor, corDe, i
         <PainelVotacoes casa={casa} pessoa={pessoa} className={`${t.painel} ${t.aVot}`} />
         {cota && <PainelBancadas casa={casa} pessoa={pessoa} cota={cota} corDe={corDe} deEstado={uf?.deNome ?? `de ${uf?.nome ?? pessoa.uf}`}
           classes={[`${t.painel} ${t.aUf}`, `${t.painel} ${t.aPar}`]} classeSozinha={`${t.painel} ${t.aBancada}`} />}
+        <EmendasMunicipiosParlamentar casa={casa} id={pessoa.id} periodo={periodo} uf={pessoa.uf} className={`${t.painel} ${t.aMun}`} />
         <PainelEmendas ficha={ficha} carregando={perfil.carregando} erro={perfil.erro} className={`${t.painel} ${t.aEme}`} />
         <PainelFontes casa={casa} indice={indice} cota={cota} linkNotas={ficha.linkNotas} className={`${t.painel} ${t.aFon}`} />
     </div>

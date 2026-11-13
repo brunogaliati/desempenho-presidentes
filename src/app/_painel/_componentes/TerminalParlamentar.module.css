@@ -58,6 +58,7 @@
  *   categorias | fornecedores      | plenário ano a ano (a presença)
  *   como votou (2 colunas, 2 linhas) | bancada do estado
  *                                  | bancada do partido
+ *   emendas por município (3 colunas; altura do conteúdo, até o teto)
  *   fontes (2 colunas)             | emendas
  * Painéis da mesma linha têm a altura da linha, então as bordas sempre batem. Cada painel
  * (`.painel`) tem o cabeçalho fixo e o miolo rolando quando não cabe: "ver todos" abre uma
@@ -71,12 +72,13 @@
   --linha-fim: 320px;
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
-  grid-template-rows:var(--linha-cota) var(--linha-listas) var(--linha-bancada) var(--linha-bancada) var(--linha-fim);
-  grid-template-areas:"mes mes ano" "cat for ple" "vot vot uf" "vot vot par" "fon fon eme";
+  grid-template-rows:var(--linha-cota) var(--linha-listas) var(--linha-bancada) var(--linha-bancada) auto var(--linha-fim);
+  grid-template-areas:"mes mes ano" "cat for ple" "vot vot uf" "vot vot par" "mun mun mun" "fon fon eme";
   gap:12px;
 }
 .aMes { grid-area:mes; } .aAno { grid-area:ano; } .aCat { grid-area:cat; } .aFor { grid-area:for; } .aPle { grid-area:ple; }
 .aVot { grid-area:vot; } .aUf { grid-area:uf; } .aPar { grid-area:par; } .aEme { grid-area:eme; } .aFon { grid-area:fon; }
+.aMun { grid-area:mun; max-height:680px; }
 /* Só uma bancada (sem partido, ou sozinho no partido): ela ocupa o lugar das duas. */
 .aBancada { grid-area:uf / uf / par / par; }
 
@@ -113,6 +115,23 @@
 .verTodas { margin-top:8px; }
 .fontes { display:grid; gap:10px; }
 .fontes > p:first-child { padding-top:0; border-top:0; }
+
+/* Emendas: mesma tabela, controles e tipografia do terminal, sem cor de julgamento. */
+.emendasControles { display:flex; flex-wrap:wrap; align-items:end; justify-content:space-between; gap:12px 20px; }
+.emendasBusca { display:grid; gap:4px; width:min(100%,280px); font-size:12px; color:var(--tinta-2); }
+.emendasBusca input { min-height:36px; width:100%; padding:7px 10px; border:1px solid var(--borda); border-radius:8px; background:var(--superficie); color:var(--tinta); font:inherit; caret-color:var(--serie); }
+.emendasBusca input::placeholder { color:var(--tinta-2); }
+.emendasBusca input:focus-visible,.emendasRolagem:focus-visible { outline:2px solid var(--serie); outline-offset:2px; }
+.emendasContexto { margin:12px 0; font-size:12px; line-height:1.5; color:var(--tinta-2); }
+.emendasRolagem { max-height:365px; overflow:auto; scrollbar-width:thin; scrollbar-color:var(--eixo) transparent; }
+.emendasTabela { width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; }
+.emendasTabela thead th { position:sticky; top:0; z-index:1; background:var(--superficie); }
+.emendasTabela :is(th,td) { padding:10px 12px; border-bottom:1px solid var(--borda); text-align:right; }
+.emendasTabela :is(th,td):first-child { text-align:left; padding-left:2px; }
+.emendasTabela tbody th { font-weight:500; min-width:150px; }
+.emendasTabela td { white-space:nowrap; }
+.emendasTabela tbody tr:hover { background:var(--faixa-a); }
+.emendasTabela button:focus-visible { outline:2px solid var(--serie); outline-offset:2px; }
 
 /* Como votou: uma linha por votação. */
 .votos { width:100%; border-collapse:collapse; font-size:13px; line-height:1.4; }
@@ -155,6 +174,17 @@
 }
 
 @media (max-width:700px) {
+  /* Os dois valores ficam visíveis juntos, como as fichas de votação abaixo. */
+  .emendasTabela[data-visao="aplicacao"] { display:block; }
+  .emendasTabela[data-visao="aplicacao"] thead { display:block; position:sticky; top:0; z-index:1; background:var(--superficie); }
+  .emendasTabela[data-visao="aplicacao"] thead tr { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .emendasTabela[data-visao="aplicacao"] thead th { padding:6px 2px; text-align:left; }
+  .emendasTabela[data-visao="aplicacao"] tbody { display:block; }
+  .emendasTabela[data-visao="aplicacao"] tbody tr { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 12px; padding:12px 2px; border-bottom:1px solid var(--borda); }
+  .emendasTabela[data-visao="aplicacao"] tbody :is(th,td) { min-width:0; border:0; padding:0; text-align:left; }
+  .emendasTabela[data-visao="aplicacao"] tbody th { grid-column:1 / -1; font-weight:600; }
+  .emendasTabela[data-visao="aplicacao"] td { display:grid; gap:3px; white-space:normal; }
+  .emendasTabela[data-visao="aplicacao"] td::before { content:attr(data-rotulo); font-size:11.5px; color:var(--tinta-2); }
   .cabeca { padding:14px 14px 12px; }
   .identidade { grid-template-columns:auto minmax(0,1fr); gap:12px; }
   .identidade > :first-child { width:64px !important; height:86px !important; }

@@ -525,7 +525,8 @@ export function desenharCartao(canvas: HTMLCanvasElement, d: DadosCartao, format
 
     const barra = link.indexOf("/");
     const dominio = barra < 0 ? link : link.slice(0, barra);
-    const caminho = barra < 0 ? "" : link.slice(barra);
+    // A home ("/") não tem caminho a mostrar: a barra sozinha embaixo do domínio parecia erro.
+    const caminho = barra < 0 || link.slice(barra) === "/" ? "" : link.slice(barra);
     const espaco = xSeta - raio - 24 - (x + 30);
     const tamChamada = caber("Veja cada número, com a fonte e o histórico", 500, 20, 15, espaco);
     const tamDominio = caber(dominio, 700, stories ? 36 : 32, 20, espaco);
