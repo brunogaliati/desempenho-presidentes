@@ -6,6 +6,7 @@ import { municipiosDasEmendas, type EmendasParlamentar, type OrdemEmendas } from
 import { useJson } from "../_dados/useJson";
 import { Bloco, Opcoes } from "./Bloco";
 import { EsqueletoDetalhe } from "./GraficosCota";
+import { MapaEmendasEstado } from "./MapaEmendasEstado";
 import { formatar, titulo } from "./formatos";
 import estilos from "./Parlamentares.module.css";
 import t from "./TerminalParlamentar.module.css";
@@ -18,7 +19,7 @@ export function EmendasMunicipiosParlamentar({ casa, id, periodo, uf, className 
   casa: CasaCongresso; id: number; periodo: PeriodoCota; uf: string; className: string;
 }) {
   const { dados, erro, carregando } = useJson<EmendasParlamentar>(`/api/painel/congresso/emendas?${new URLSearchParams({ casa, id: String(id), ano: String(periodo) })}`);
-  return <Bloco id="emendas-municipios" titulo="Emendas para os municípios" detalhe={NOME_UF[uf] ?? uf} lustroFixo className={className}>
+  return <Bloco id="emendas-municipios" titulo="Emendas para os municípios" detalhe={NOME_UF[uf] ?? uf} lustroFixo className={className} corpo={t.emendasMiolo}>
     {carregando ? <div aria-busy="true"><EsqueletoDetalhe /></div> : erro ? <p className={estilos.aviso}>Não foi possível carregar as emendas. Recarregue a página para tentar novamente.</p>
       : dados ? <TabelaEmendas key={`${casa}-${id}-${periodo}`} dados={dados} /> : null}
   </Bloco>;
@@ -31,6 +32,8 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
   const [ordem, setOrdem] = useState<OrdemEmendas>("destinado");
   const [todos, setTodos] = useState(false);
   const prefeituras = visao === "prefeituras";
+  const cobertura = dados.cobertura;
+  const dinheiro = (v: number | null) => v === null ? "valor não informado" : formatar(v, "reais2");
   const linhas = municipiosDasEmendas(dados[visao], busca, ordem);
   const visiveis = todos ? linhas : linhas.slice(0, LIMITE);
   const periodo = dados.desde === dados.ate ? String(dados.desde) : `${dados.desde}–${dados.ate}`;
@@ -41,7 +44,9 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
       {rotulo}<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d={campo === "nome" ? "M3 8 6 5l3 3" : "m3 4 3 3 3-3"} /></svg>
     </button>
   </th>;
-  return <>
+  const [foco, setFoco] = useState<string | null>(null);
+  return <div className={t.emendasCorpo}>
+    <div className={t.emendasIntro}>
     <div className={t.emendasControles}>
       <Opcoes<Visao> ativa={visao} aoEscolher={trocarVisao} rotulo="Localidade das emendas" quebra
         opcoes={[{ id: "aplicacao", rotulo: "Local de aplicação" }, { id: "prefeituras", rotulo: "Prefeituras e fundos" }]} />
@@ -52,12 +57,22 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
     <p className={t.emendasContexto}>
       Emendas de {periodo} · {prefeituras ? "Valores recebidos pelas prefeituras e fundos municipais, pelo endereço do favorecido." : "Destinado é o valor empenhado. Pago inclui pagamentos de restos a pagar."}
     </p>
+    {!prefeituras && <p className={t.emendasCobertura}>
+      {cobertura.destinadoTotal === null ? "O total destinado não está informado integralmente para este período." : <>Dos {dinheiro(cobertura.destinadoTotal)} destinados, {dinheiro(cobertura.destinadoNoEstado)} têm município identificado em {NOME_UF[dados.uf] ?? dados.uf}.</>}
+      {cobertura.destinadoSemMunicipio === null ? <> <strong>A cobertura municipal está incompleta: há valores não informados.</strong></>
+        : cobertura.destinadoSemMunicipio !== 0 ? <> <strong>{dinheiro(cobertura.destinadoSemMunicipio)} ainda sem município definido.</strong></> : null}
+      {cobertura.destinadoForaEstado !== null && cobertura.destinadoForaEstado !== 0 && <> Outros {dinheiro(cobertura.destinadoForaEstado)} têm município em outra UF.</>}
+      {cobertura.pagoSemMunicipio !== null && cobertura.pagoSemMunicipio !== 0 && <> Nos pagamentos, {dinheiro(cobertura.pagoSemMunicipio)} ainda sem município definido.</>}
+    </p>}
+    </div>
+    <div className={t.emendasLista}>
     {linhas.length ? <>
       <div className={t.emendasRolagem} role="region" aria-label="Valores de emendas por município" tabIndex={0}>
         <table className={t.emendasTabela} data-visao={visao}>
           <caption className="sr-only">{prefeituras ? "Recebimentos de prefeituras e fundos" : "Destinado e pago por local de aplicação"} · {NOME_UF[dados.uf]} · emendas de {periodo}, em reais nominais</caption>
           <thead><tr>{cabecalho("nome", "Município")}{!prefeituras && cabecalho("destinado", "Destinado")}{cabecalho("pago", "Pago")}</tr></thead>
-          <tbody>{visiveis.map(m => <tr key={m.codigo}>
+          <tbody onMouseLeave={() => setFoco(null)}>{visiveis.map(m => <tr key={m.codigo} data-foco={foco === m.codigo ? "" : undefined}
+            onMouseEnter={() => setFoco(m.codigo)} onFocus={() => setFoco(m.codigo)}>
             <th scope="row">{titulo(m.nome)}</th>
             {!prefeituras && <td data-rotulo="Destinado">{m.destinado === null ? <span aria-label="Valor destinado não informado">—</span> : formatar(m.destinado, "reais2")}</td>}
             <td data-rotulo="Pago">{m.pago === null ? <span aria-label="Valor pago não informado">—</span> : formatar(m.pago, "reais2")}</td>
@@ -73,10 +88,22 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
       : "Não há municípios de aplicação identificados para este parlamentar e período. Consulte também Prefeituras e fundos."}</p>}
     <p className={t.nota}>{prefeituras
       ? "A fonte não informa o valor destinado nesta visão. O endereço de quem recebeu não comprova o local de aplicação. Estes pagamentos não se somam aos da outra visão."
-      : "Localidades sem município definido não são distribuídas entre cidades. Valores acumulados pelo ano da emenda, mesmo quando o pagamento ocorreu depois."}
+      : "A tabela mostra apenas os valores com município identificado. Localidades estaduais, nacionais ou múltiplas não são rateadas. Valores acumulados pelo ano da emenda, mesmo quando o pagamento ocorreu depois."}
       {" "}Somente autoria individual identificada. Ausência de registro não significa R$ 0; — indica valor não informado.
     </p>
+    {!prefeituras && <details className={t.nota}>
+      <summary className={t.linkPainel}>Como identificamos os municípios</summary>
+      <p>Usamos o município de aplicação publicado nos documentos de empenho e pagamento da CGU, sem inferir o destino pelo endereço de fornecedores.
+        O detalhamento substitui o resumo somente quando os valores fecham em centavos, por emenda e fase da despesa.</p>
+      <p>{cobertura.emendasPendentes > 0
+        ? `${inteiro(cobertura.emendasPendentes)} ${cobertura.emendasPendentes === 1 ? "emenda ainda usa" : "emendas ainda usam"} o resumo em pelo menos uma fase: os documentos estão ausentes, incompletos ou divergem do total. A localização pode estar incompleta.`
+        : "Todas as emendas com valores foram conferidas com os documentos nas duas fases disponíveis."}
+        {" "}Planos e convênios não são contados como empenho. Ausência de um pagamento municipal não comprova que nada foi pago.</p>
+      <a className={t.linkPainel} href="https://portaldatransparencia.gov.br/dicionario-de-dados/emendas-parlamentares-por-documento" target="_blank" rel="noreferrer">Dicionário dos documentos de despesa</a>
+    </details>}
     <p className={t.nota}><a className={t.linkPainel} href={FONTE} target="_blank" rel="noreferrer">Fonte: Portal da Transparência · CGU</a>
       {" · "}coleta em {new Date(dados.coletadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}. Valores sem correção pela inflação.</p>
-  </>;
+    </div>
+    <MapaEmendasEstado uf={dados.uf} linhas={dados[visao]} medida={prefeituras || ordem === "pago" ? "pago" : "destinado"} foco={foco} aoFocar={setFoco} />
+  </div>;
 }

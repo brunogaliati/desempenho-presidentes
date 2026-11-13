@@ -50,6 +50,26 @@ export function useMunicipiosAmbiente(foco: FocoMandato) {
   return { formas, municipal: dados };
 }
 
+/** Só os contornos (mesmo cache da aba do Meio ambiente): para quem desenha um estado sem os números do ambiente. */
+export function useMalhaMunicipal() {
+  const [formas, setFormas] = useState(cacheFormas);
+  useEffect(() => {
+    if (cacheFormas) return;
+    let vivo = true;
+    fetch("/painel/municipios-brasil.json")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((malha: { municipios: MunicipioNacional[] }) => {
+        cacheFormas = malha.municipios;
+        if (vivo) setFormas(cacheFormas);
+      })
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, []);
+  return formas;
+}
+
 /** Uma Terra Indígena ou Unidade de Conservação no mapa. */
 export interface AreaDesenhada {
   r: "ti" | "uc";

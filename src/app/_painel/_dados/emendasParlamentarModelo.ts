@@ -7,6 +7,14 @@ export type EmendasParlamentar = {
   desde: number;
   ate: number;
   coletadoEm: string;
+  cobertura: {
+    destinadoTotal: number | null;
+    destinadoNoEstado: number | null;
+    destinadoSemMunicipio: number | null;
+    destinadoForaEstado: number | null;
+    pagoSemMunicipio: number | null;
+    emendasPendentes: number;
+  };
   aplicacao: MunicipioEmenda[];
   prefeituras: MunicipioEmenda[];
 };

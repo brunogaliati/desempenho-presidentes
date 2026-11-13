@@ -34,6 +34,7 @@ test('perfil tem skeleton de identidade e painéis, enquanto o diretório manté
 });
 const dados = {
   uf: 'MG', desde: 2023, ate: 2026, coletadoEm: '2026-11-13T14:00:00Z',
+  cobertura: { destinadoTotal: 2000, destinadoNoEstado: 1200, destinadoSemMunicipio: 800, destinadoForaEstado: 0, pagoSemMunicipio: 100, emendasPendentes: 1 },
   aplicacao: [
     { codigo: '1', nome: 'São João', destinado: 1234.56, pago: 0 },
     { codigo: '2', nome: 'Belo Horizonte', destinado: null, pago: null },
@@ -57,6 +58,8 @@ test('tabela real exibe centavos, contexto, fonte e ausências, sem somar geogra
   assert.match(html, /Destinado/); assert.match(html, /Pago/); assert.match(html, /2023–2026/);
   assert.match(html, /1\.234,56/); assert.match(html, /R\$ 0,00/);
   assert.match(html, /Valor destinado não informado/); assert.match(html, /Valor pago não informado/);
+  assert.match(html, /800,00.*ainda sem município definido/);
+  assert.match(html, /1 emenda ainda usa/); assert.match(html, /Como identificamos os municípios/);
   assert.match(html, /restos a pagar/); assert.match(html, /não significa R\$ 0/);
   assert.match(html, /Portal da Transparência/); assert.match(html, /scope="row"/);
   assert.doesNotMatch(html, /Outra cidade|999,00/, 'recebimento não entra na tabela de aplicação');
@@ -82,10 +85,14 @@ if (process.env.EMENDAS_BASE_URL) {
       assert.equal(d.uf, uf); assert.equal(d.desde, 2025); assert.equal(d.ate, 2025);
       assert.ok(d.coletadoEm);
       const casaBanco = casa === 'deputados' ? 'camara' : 'senado';
-      const [esperado] = await sql`select sum(valor_destinado)::float8 as destinado,sum(valor_pago)::float8 as pago
-        from mart.emendas_parlamentar_municipio where casa=${casaBanco} and parlamentar_id=${id}
+      const [esperado] = await sql`select sum(valor) filter(where fase='Empenho')::float8 as destinado,sum(valor) filter(where fase='Pagamento')::float8 as pago
+        from mart.emendas_municipios where casa=${casaBanco} and parlamentar_id=${id}
         and uf=${uf} and ano_emenda=2025 and codigo_municipio is not null`;
       for (const k of ['destinado', 'pago']) assert.ok(Math.abs(d.aplicacao.reduce((s, m) => s + (m[k] ?? 0), 0) - (esperado[k] ?? 0)) < .005);
+      const [total] = await sql`select sum(valor) filter(where fase='Empenho')::float8 as destinado
+        from mart.emendas_municipios where casa=${casaBanco} and parlamentar_id=${id} and ano_emenda=2025`;
+      assert.ok(Math.abs(d.cobertura.destinadoTotal - (total.destinado ?? 0)) < .005);
+      assert.ok(Math.abs(d.cobertura.destinadoTotal - d.cobertura.destinadoNoEstado - d.cobertura.destinadoSemMunicipio - d.cobertura.destinadoForaEstado) < .005);
       const [recebido] = await sql`select sum(valor_pago)::float8 as pago from mart.emendas_parlamentar_municipio_recebido
         where casa=${casaBanco} and parlamentar_id=${id} and uf=${uf} and ano_emenda=2025
         and codigo_municipio is not null and tipo_destinatario='administracao_municipal'`;

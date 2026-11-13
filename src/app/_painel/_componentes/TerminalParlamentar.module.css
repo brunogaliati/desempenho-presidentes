@@ -116,6 +116,45 @@
 .fontes { display:grid; gap:10px; }
 .fontes > p:first-child { padding-top:0; border-top:0; }
 
+/*
+ * Emendas: a tabela à esquerda e, à direita, o mapa do estado. Municípios que receberam ficam
+ * no verde-azulado das emendas (mais forte, mais dinheiro); os cinco maiores pulsam, com a
+ * posição em cima. Linha da tabela e município do mapa acendem juntos.
+ */
+.emendasCorpo { display:grid; grid-template-columns:minmax(0,2.2fr) minmax(240px,1fr); gap:14px 28px; align-items:start; }
+.emendasIntro { grid-column:1 / -1; min-width:0; }
+.emendasLista { min-width:0; }
+/* O cabeçalho já tem a altura do botão de compartilhar: sem a margem do miolo, as abas encostam no título. */
+.emendasMiolo.emendasMiolo { margin-top:0; }
+.emendasTabela tbody tr[data-foco] { background:var(--faixa-a); }
+.emendasTabela tbody tr[data-foco] th { color:var(--cor-emendas); }
+.mapaEmendas { position:sticky; top:0; display:grid; gap:10px; min-width:0; margin:0; }
+.mapaEmendas svg { display:block; width:100%; height:auto; max-height:300px; overflow:visible; }
+.mapaEmendasVazio { aspect-ratio:1; border-radius:14px; background:var(--faixa-a); display:grid; place-items:center; font-size:12px; color:var(--tinta-2); }
+.mapaEmendasBase path { fill:color-mix(in srgb, var(--tinta) 9%, transparent); stroke:var(--superficie); stroke-width:.6; vector-effect:non-scaling-stroke; stroke-linejoin:round; transition:fill .2s, opacity .2s; }
+.mapaEmendasBase path[data-recebeu] { cursor:pointer; animation:emendaEntra .7s cubic-bezier(.2,.7,.2,1) both; }
+.mapaEmendasBase:has(path[data-foco]) path[data-recebeu]:not([data-foco]) { opacity:.45; }
+.mapaEmendasContorno { fill:none; stroke:var(--tinta); stroke-width:1.6; vector-effect:non-scaling-stroke; stroke-linejoin:round; pointer-events:none; }
+.mapaEmendasPulso { pointer-events:none; }
+.mapaEmendasOnda { fill:none; stroke:var(--cor-emendas); stroke-width:1.5; vector-effect:non-scaling-stroke; transform-box:fill-box; transform-origin:center; opacity:0; animation:emendaOnda 2.8s ease-out infinite; animation-delay:var(--atraso); }
+.mapaEmendasOnda[data-segunda] { animation-delay:calc(var(--atraso) + 1.4s); }
+.mapaEmendasNucleo { fill:var(--cor-emendas); stroke:var(--superficie); stroke-width:1.5; vector-effect:non-scaling-stroke; filter:drop-shadow(0 0 3px var(--cor-emendas)); }
+.mapaEmendasRotulo { text-anchor:middle; font-weight:700; fill:var(--tinta); paint-order:stroke; stroke:var(--superficie); stroke-width:3px; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+.mapaEmendasLeitura { display:grid; gap:2px; padding:10px 12px; border:1px solid var(--borda); border-radius:12px; font-size:12px; color:var(--tinta-2); }
+.mapaEmendasLeitura > span:first-child { font-weight:600; color:var(--tinta); }
+.mapaEmendasLeitura strong { font-size:20px; font-weight:650; letter-spacing:-.02em; color:var(--cor-emendas); font-variant-numeric:tabular-nums; }
+@keyframes emendaEntra { from { opacity:0; } }
+@keyframes emendaOnda { 0% { transform:scale(.25); opacity:.9; } 100% { transform:scale(1.6); opacity:0; } }
+@media (prefers-reduced-motion:reduce) {
+  .mapaEmendasBase path[data-recebeu], .mapaEmendasOnda { animation:none; }
+}
+@media (max-width:1100px) {
+  .emendasCorpo { grid-template-columns:minmax(0,1fr); }
+  .emendasIntro { order:-2; }
+  .mapaEmendas { position:static; order:-1; }
+  .mapaEmendas svg { max-height:260px; }
+}
+
 /* Emendas: mesma tabela, controles e tipografia do terminal, sem cor de julgamento. */
 .emendasControles { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px 20px; }
 .emendasBusca { display:grid; gap:4px; width:min(100%,280px); font-size:12px; color:var(--tinta-2); }
@@ -123,6 +162,8 @@
 .emendasBusca input::placeholder { color:var(--tinta-2); }
 .emendasBusca input:focus-visible,.emendasRolagem:focus-visible { outline:2px solid var(--serie); outline-offset:2px; }
 .emendasContexto { margin:12px 0; font-size:12px; line-height:1.5; color:var(--tinta-2); }
+.emendasCobertura { margin:0; max-width:100ch; font-size:12px; line-height:1.6; color:var(--tinta-2); }
+.emendasCobertura strong { font-weight:600; color:var(--tinta); }
 .emendasRolagem { max-height:365px; overflow:auto; scrollbar-width:thin; scrollbar-color:var(--eixo) transparent; }
 .emendasTabela { width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; }
 .emendasTabela thead th { position:sticky; top:0; z-index:1; background:var(--superficie); }

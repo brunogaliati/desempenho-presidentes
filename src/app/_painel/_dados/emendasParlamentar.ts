@@ -14,11 +14,13 @@ async function emendasSemCache(casa: CasaCongresso, id: number, periodo: Periodo
   if (!pessoa) return null;
   const casaBanco = casa === "deputados" ? "camara" : "senado";
   const { desde, ate } = anosDasEmendas(periodo);
-  const [aplicacao, prefeituras, coletas] = await Promise.all([
+  const [aplicacao, prefeituras, coletas, cobertura] = await Promise.all([
     sql`select e.codigo_municipio as codigo, max(coalesce(m.nome,e.municipio)) as nome,
-      (case when count(e.valor_destinado)=count(*) then sum(e.valor_destinado) end)::text as destinado,
-      (case when count(e.valor_pago)=count(*) then sum(e.valor_pago) end)::text as pago
-      from mart.emendas_parlamentar_municipio e left join mart.municipio m on m.codigo_ibge=e.codigo_municipio
+      (case when count(e.valor) filter(where e.fase='Empenho')=count(*) filter(where e.fase='Empenho')
+        then sum(e.valor) filter(where e.fase='Empenho') end)::text as destinado,
+      (case when count(e.valor) filter(where e.fase='Pagamento')=count(*) filter(where e.fase='Pagamento')
+        then sum(e.valor) filter(where e.fase='Pagamento') end)::text as pago
+      from mart.emendas_municipios e left join mart.municipio m on m.codigo_ibge=e.codigo_municipio
       where e.casa=${casaBanco} and e.parlamentar_id=${id} and e.uf=${pessoa.uf}
         and e.ano_emenda between ${desde} and ${ate} and e.codigo_municipio is not null
       group by e.codigo_municipio`,
@@ -29,13 +31,33 @@ async function emendasSemCache(casa: CasaCongresso, id: number, periodo: Periodo
         and e.ano_emenda between ${desde} and ${ate} and e.codigo_municipio is not null
         and e.tipo_destinatario='administracao_municipal'
       group by e.codigo_municipio`,
-    sql`select dominio,coletado_em::text as data from mart.emendas_ultima_coleta`,
+    sql`select coletado_em::text as data from mart.emendas_municipios_coleta`,
+    sql`select
+      case when count(*) filter(where fase='Empenho')>0 and count(valor) filter(where fase='Empenho')=count(*) filter(where fase='Empenho')
+        then coalesce(sum(valor) filter(where fase='Empenho'),0)::text end as total,
+      case when count(valor) filter(where fase='Empenho' and codigo_municipio is not null and uf=${pessoa.uf})=
+        count(*) filter(where fase='Empenho' and codigo_municipio is not null and uf=${pessoa.uf})
+        then coalesce(sum(valor) filter(where fase='Empenho' and codigo_municipio is not null and uf=${pessoa.uf}),0)::text end as no_estado,
+      case when count(valor) filter(where fase='Empenho' and codigo_municipio is null)=count(*) filter(where fase='Empenho' and codigo_municipio is null)
+        then coalesce(sum(valor) filter(where fase='Empenho' and codigo_municipio is null),0)::text end as sem_municipio,
+      case when count(valor) filter(where fase='Empenho' and codigo_municipio is not null and uf<>${pessoa.uf})=
+        count(*) filter(where fase='Empenho' and codigo_municipio is not null and uf<>${pessoa.uf})
+        then coalesce(sum(valor) filter(where fase='Empenho' and codigo_municipio is not null and uf<>${pessoa.uf}),0)::text end as fora_estado,
+      case when count(valor) filter(where fase='Pagamento' and codigo_municipio is null)=count(*) filter(where fase='Pagamento' and codigo_municipio is null)
+        then coalesce(sum(valor) filter(where fase='Pagamento' and codigo_municipio is null),0)::text end as pago_sem_municipio,
+      count(distinct codigo_emenda) filter(where origem='resumo_cgu' and valor is distinct from 0)::int as pendentes
+      from mart.emendas_municipios where casa=${casaBanco} and parlamentar_id=${id}
+        and ano_emenda between ${desde} and ${ate}`,
   ]);
-  if (coletas.length !== 2) throw new Error("Fotografias de emendas incompletas");
+  if (coletas.length !== 1) throw new Error("Fotografia municipal de emendas incompleta");
+  const c = cobertura[0];
   return { uf: pessoa.uf, desde, ate, coletadoEm: coletas.map(c => String(c.data)).sort()[0],
+    cobertura: { destinadoTotal: medida(c.total), destinadoNoEstado: medida(c.no_estado),
+      destinadoSemMunicipio: medida(c.sem_municipio), destinadoForaEstado: medida(c.fora_estado),
+      pagoSemMunicipio: medida(c.pago_sem_municipio), emendasPendentes: Number(c.pendentes) },
     aplicacao: municipios(aplicacao as Linha[]), prefeituras: municipios(prefeituras as Linha[]) };
 }
 
-export const carregarEmendasParlamentar = unstable_cache(emendasSemCache, ["congresso-emendas-municipios-v1"], {
+export const carregarEmendasParlamentar = unstable_cache(emendasSemCache, ["congresso-emendas-municipios-v2"], {
   revalidate: 3600, tags: ["painel-congresso", "painel-economia"],
 });
