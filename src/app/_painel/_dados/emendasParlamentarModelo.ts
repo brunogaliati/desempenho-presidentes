@@ -2,6 +2,12 @@ import type { PeriodoCota } from "./congressoModelo";
 
 /** Aplicação do recurso e endereço do favorecido são geografias diferentes. */
 export type MunicipioEmenda = { codigo: string; nome: string; destinado: number | null; pago: number | null };
+export type PlanoEmenda = {
+  emenda: string; fonte: string; instrumento: string; executor: string;
+  objeto: string | null; situacao: string; codigoMunicipio: string | null; municipio: string | null; uf: string | null;
+  metodoLocalizacao: string; previsto: number | null; totalInstrumento: number | null;
+  beneficiario: string | null; empenhoPlano: number | null; documentos: string[]; conciliacao: string; fonteUrl: string;
+};
 export type EmendasParlamentar = {
   uf: string;
   desde: number;
@@ -17,7 +23,17 @@ export type EmendasParlamentar = {
   };
   aplicacao: MunicipioEmenda[];
   prefeituras: MunicipioEmenda[];
+  planos: PlanoEmenda[];
+  coletadoEmPlanos: string;
 };
+
+export function planosDasEmendas(linhas: PlanoEmenda[], busca: string) {
+  const normalizar = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR").trim();
+  const alvo = normalizar(busca);
+  return linhas.filter(p => normalizar([p.municipio, p.objeto, p.beneficiario, p.emenda, p.situacao].filter(Boolean).join(" ")).includes(alvo))
+    .sort((a, b) => Number(b.metodoLocalizacao === "municipio_citado_no_objeto") - Number(a.metodoLocalizacao === "municipio_citado_no_objeto")
+      || (b.previsto ?? -Infinity) - (a.previsto ?? -Infinity) || a.emenda.localeCompare(b.emenda) || a.executor.localeCompare(b.executor));
+}
 
 /** O orçamento de um ano pode ter sido apresentado no anterior; o recorte é o ano da emenda. */
 export function anosDasEmendas(periodo: PeriodoCota, hoje = new Date()) {

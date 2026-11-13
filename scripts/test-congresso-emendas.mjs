@@ -20,8 +20,9 @@ registerHooks({
     return next(url, ctx);
   },
 });
-const { anosDasEmendas, municipiosDasEmendas } = require('../src/app/_painel/_dados/emendasParlamentarModelo.ts');
+const { anosDasEmendas, municipiosDasEmendas, planosDasEmendas } = require('../src/app/_painel/_dados/emendasParlamentarModelo.ts');
 const { TabelaEmendas } = require('../src/app/_painel/_componentes/EmendasMunicipiosParlamentar.tsx');
+const { PlanosEmendasParlamentar } = require('../src/app/_painel/_componentes/PlanosEmendasParlamentar.tsx');
 const { renderToStaticMarkup } = require('react-dom/server');
 const CarregandoPainel = require('../src/app/_painel/_componentes/CarregandoPainel.tsx').default;
 test('perfil tem skeleton de identidade e painéis, enquanto o diretório mantém o plenário', () => {
@@ -41,6 +42,7 @@ const dados = {
     { codigo: '3', nome: 'Uberlândia', destinado: -10, pago: 500 },
   ],
   prefeituras: [{ codigo: '4', nome: 'Outra cidade', destinado: null, pago: 999 }],
+  planos: [], coletadoEmPlanos: '2026-11-13T14:00:00Z',
 };
 
 test('o período usa o ano da emenda e mantém a legislatura do perfil', () => {
@@ -55,12 +57,12 @@ test('busca sem acento e ordenação preservam ausência, zero e estorno', () =>
 });
 test('tabela real exibe centavos, contexto, fonte e ausências, sem somar geografias', () => {
   const html = renderToStaticMarkup(require('react').createElement(TabelaEmendas, { dados }));
-  assert.match(html, /Destinado/); assert.match(html, /Pago/); assert.match(html, /2023–2026/);
+  assert.match(html, /Empenhado/); assert.match(html, /Pago/); assert.match(html, /2023–2026/);
   assert.match(html, /1\.234,56/); assert.match(html, /R\$ 0,00/);
   assert.match(html, /Valor destinado não informado/); assert.match(html, /Valor pago não informado/);
   assert.match(html, /800,00.*ainda sem município definido/);
   assert.match(html, /1 emenda ainda usa/); assert.match(html, /Como identificamos os municípios/);
-  assert.match(html, /restos a pagar/); assert.match(html, /não significa R\$ 0/);
+  assert.match(html, /restos a pagar/); assert.match(html, /não entrega da obra ou serviço/); assert.match(html, /não significa R\$ 0/);
   assert.match(html, /Portal da Transparência/); assert.match(html, /scope="row"/);
   assert.doesNotMatch(html, /Outra cidade|999,00/, 'recebimento não entra na tabela de aplicação');
 });
@@ -69,6 +71,25 @@ test('sem dados oferece a visão por prefeituras sem afirmar valor zero', () => 
   assert.match(html, /Não há municípios de aplicação identificados/);
   assert.match(html, /Consulte também Prefeituras e fundos/);
   assert.doesNotMatch(html, /R\$ 0,00/);
+});
+
+test('planejamento mantém parcela prevista, total do instrumento e empenho do plano separados', () => {
+  const planos = [{ emenda: '202543980005', fonte: 'transferegov_executor', instrumento: '86640', executor: '49676',
+    objeto: 'Prêmio literário em Teresina - PI', situacao: 'Plano aprovado', codigoMunicipio: '2211001', municipio: 'Teresina', uf: 'PI',
+    metodoLocalizacao: 'municipio_citado_no_objeto', previsto: 198000, totalInstrumento: 1089000, beneficiario: 'Secretaria das Mulheres',
+    empenhoPlano: 1089000, documentos: ['170860000012025NE009559'], conciliacao: 'empenho_do_plano_conciliado',
+    fonteUrl: 'https://api-publica.transferegov.gestao.gov.br/especiais/executores-especiais?id_executor=49676' },
+    { emenda: '202512340001', fonte: 'cgu_parceria', instrumento: '123', executor: 'parceria', objeto: 'Custeio', situacao: 'Aprovada',
+      municipio: 'Outra cidade', metodoLocalizacao: 'endereco_do_beneficiario', previsto: null, totalInstrumento: 500000,
+      empenhoPlano: null, documentos: [], conciliacao: 'sem_documento_vinculado', fonteUrl: 'https://portaldatransparencia.gov.br/' }];
+  const html = renderToStaticMarkup(require('react').createElement(PlanosEmendasParlamentar, { planos, busca: '', coletadoEm: dados.coletadoEmPlanos }));
+  assert.match(html, /198\.000,00/); assert.match(html, /1\.089\.000,00/);
+  assert.match(html, /plano inteiro/); assert.match(html, /não deve ser somado entre linhas/);
+  assert.match(html, /parcela da emenda não informada/); assert.match(html, /Endereço do beneficiário; aplicação não confirmada/);
+  assert.match(html, /Realização da obra ou serviço não verificada/); assert.match(html, /Sem empenho conciliado nesta coleta/);
+  assert.doesNotMatch(html, /1\.287\.000|<th scope="col">Pago/);
+  assert.equal(planosDasEmendas(planos, 'premio')[0].municipio, 'Teresina');
+  assert.equal(planosDasEmendas(planos, 'inexistente').length, 0);
 });
 
 // Integração opcional com o servidor único: EMENDAS_BASE_URL=http://localhost:3000
@@ -84,6 +105,7 @@ if (process.env.EMENDAS_BASE_URL) {
       const d = await r.json();
       assert.equal(d.uf, uf); assert.equal(d.desde, 2025); assert.equal(d.ate, 2025);
       assert.ok(d.coletadoEm);
+      assert.ok(d.coletadoEmPlanos); assert.ok(Array.isArray(d.planos));
       const casaBanco = casa === 'deputados' ? 'camara' : 'senado';
       const [esperado] = await sql`select sum(valor) filter(where fase='Empenho')::float8 as destinado,sum(valor) filter(where fase='Pagamento')::float8 as pago
         from mart.emendas_municipios where casa=${casaBanco} and parlamentar_id=${id}
@@ -98,6 +120,9 @@ if (process.env.EMENDAS_BASE_URL) {
         and codigo_municipio is not null and tipo_destinatario='administracao_municipal'`;
       assert.ok(Math.abs(d.prefeituras.reduce((s, m) => s + (m.pago ?? 0), 0) - (recebido.pago ?? 0)) < .005);
       assert.ok(d.prefeituras.every(m => m.destinado === null));
+      const [planejamento] = await sql`select count(*)::int as registros from mart.emendas_planos
+        where casa=${casaBanco} and parlamentar_id=${id} and ano_emenda=2025 and (uf=${uf} or uf is null)`;
+      assert.equal(d.planos.length, planejamento.registros);
       assert.equal(new Set(d.aplicacao.map(m => m.codigo)).size, d.aplicacao.length);
       assert.ok([...d.aplicacao, ...d.prefeituras].every(m => m.codigo.startsWith(uf === 'MG' ? '31' : '16')));
       const legislatura = await (await fetch(`${base}?casa=${casa}&id=${id}`)).json();
