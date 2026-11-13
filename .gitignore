@@ -15,6 +15,7 @@
 
 # next.js
 /.next/
+/.next-dev/
 /.next-marcos-check/
 /.next-seo-check/
 /.next-inflacao-check/

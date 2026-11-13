@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   // Robôs de prévia que só leem o <head>: a lista do Next e os que ela não tem.
   htmlLimitedBots: new RegExp(`${HTML_LIMITED_BOT_UA_RE.source}|TelegramBot|Cardyb|Mastodon`, "i"),
   // Permite conferir o build sem sobrescrever os artefatos do servidor local.
-  distDir: process.env.NEXT_DIST_DIR ?? ".next",
+  distDir: process.env.NEXT_DIST_DIR ?? (process.env.NODE_ENV === "development" ? ".next-dev" : ".next"),
   async redirects() {
     return [
       { source: "/prototipo/api/:path*", destination: "/api/painel/:path*", permanent: true },
