@@ -20,9 +20,10 @@ registerHooks({
     return next(url, ctx);
   },
 });
-const { anosDasEmendas, municipiosDasEmendas, planosDasEmendas, municipiosPrevistosDosPlanos } = require('../src/app/_painel/_dados/emendasParlamentarModelo.ts');
+const { anosDasEmendas, municipiosDasEmendas, planosDasEmendas, municipiosPrevistosDosPlanos, documentosSemMunicipioDasEmendas } = require('../src/app/_painel/_dados/emendasParlamentarModelo.ts');
 const { TabelaEmendas } = require('../src/app/_painel/_componentes/EmendasMunicipiosParlamentar.tsx');
 const { PlanosEmendasParlamentar } = require('../src/app/_painel/_componentes/PlanosEmendasParlamentar.tsx');
+const { SemMunicipioEmendasParlamentar } = require('../src/app/_painel/_componentes/SemMunicipioEmendasParlamentar.tsx');
 const { renderToStaticMarkup } = require('react-dom/server');
 const CarregandoPainel = require('../src/app/_painel/_componentes/CarregandoPainel.tsx').default;
 test('perfil tem skeleton de identidade e painéis, enquanto o diretório mantém o plenário', () => {
@@ -43,11 +44,28 @@ const dados = {
   ],
   prefeituras: [{ codigo: '4', nome: 'Outra cidade', destinado: null, pago: 999 }],
   planos: [], coletadoEmPlanos: '2026-11-13T14:00:00Z',
+  semMunicipio: [], coletadoEmSemMunicipio: '2026-11-13T14:00:00Z',
 };
 
 test('o período usa o ano da emenda e mantém a legislatura do perfil', () => {
   assert.deepEqual(anosDasEmendas('legislatura', new Date('2026-11-13T12:00:00Z')), { desde: 2023, ate: 2026 });
   assert.deepEqual(anosDasEmendas(2025), { desde: 2025, ate: 2025 });
+});
+
+test('documentos sem município mostram favorecido, localidade e fases sem inventar pagamentos', () => {
+  const documentos = [
+    { emenda: '202643980002', documento: '200109000012026NE000576', favorecido: 'GENERAL MOTORS DO BRASIL LTDA', localidade: 'Nacional', ufInformada: '-1', fase: 'Empenho', valor: 350000, conciliado: true, linhasFonte: 3 },
+    { emenda: '202643980006', documento: '2026OB001', favorecido: 'Informação protegida por sigilo', localidade: 'Múltiplo', ufInformada: 'PI', fase: 'Pagamento', valor: -1.01, conciliado: false },
+    { emenda: '202643980006', documento: '2026NE002', favorecido: null, localidade: null, ufInformada: null, fase: 'Empenho', valor: null, conciliado: false },
+  ];
+  const html = renderToStaticMarkup(require('react').createElement(SemMunicipioEmendasParlamentar, { documentos, busca: '', coletadoEm: dados.coletadoEmSemMunicipio }));
+  for (const texto of ['GENERAL MOTORS', '350.000,00', '202643980002', 'Nacional', 'Empenhado', 'Pago', 'Ainda não conciliado', 'Informação protegida', 'Valor não informado', 'não se somam', 'Favorecido não informado']) assert.ok(html.includes(texto), texto);
+  assert.match(html, /3 linhas da fonte agrupadas; repetições preservadas/);
+  assert.equal(documentosSemMunicipioDasEmendas(documentos, 'multiplo').length, 1);
+  assert.equal(documentosSemMunicipioDasEmendas(documentos, 'general')[0].valor, 350000);
+  assert.equal(documentosSemMunicipioDasEmendas(documentos, '202643980006').length, 2);
+  const vazio = renderToStaticMarkup(require('react').createElement(SemMunicipioEmendasParlamentar, { documentos: [], busca: '', coletadoEm: dados.coletadoEmSemMunicipio }));
+  assert.match(vazio, /Saldos sem detalhamento ainda podem existir/);
 });
 test('busca sem acento e ordenação preservam ausência, zero e estorno', () => {
   assert.deepEqual(municipiosDasEmendas(dados.aplicacao, 'sao', 'nome').map(m => m.codigo), ['1']);
@@ -135,6 +153,9 @@ if (process.env.EMENDAS_BASE_URL) {
       const [planejamento] = await sql`select count(*)::int as registros from mart.emendas_planos
         where casa=${casaBanco} and parlamentar_id=${id} and ano_emenda=2025 and (uf=${uf} or uf is null)`;
       assert.equal(d.planos.length, planejamento.registros);
+      const [documentos] = await sql`select count(*)::int as registros from mart.emendas_sem_municipio
+        where casa=${casaBanco} and parlamentar_id=${id} and ano_emenda=2025`;
+      assert.equal(d.semMunicipio.length, documentos.registros); assert.ok(d.coletadoEmSemMunicipio);
       assert.equal(new Set(d.aplicacao.map(m => m.codigo)).size, d.aplicacao.length);
       assert.ok([...d.aplicacao, ...d.prefeituras].every(m => m.codigo.startsWith(uf === 'MG' ? '31' : '16')));
       const legislatura = await (await fetch(`${base}?casa=${casa}&id=${id}`)).json();

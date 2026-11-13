@@ -8,6 +8,10 @@ export type PlanoEmenda = {
   metodoLocalizacao: string; previsto: number | null; totalInstrumento: number | null;
   beneficiario: string | null; empenhoPlano: number | null; documentos: string[]; conciliacao: string; fonteUrl: string;
 };
+export type DocumentoSemMunicipio = {
+  emenda: string; documento: string; favorecido: string | null; localidade: string | null;
+  ufInformada: string | null; fase: "Empenho" | "Pagamento"; valor: number | null; conciliado: boolean; linhasFonte: number;
+};
 export type EmendasParlamentar = {
   uf: string;
   desde: number;
@@ -25,7 +29,16 @@ export type EmendasParlamentar = {
   prefeituras: MunicipioEmenda[];
   planos: PlanoEmenda[];
   coletadoEmPlanos: string;
+  semMunicipio: DocumentoSemMunicipio[];
+  coletadoEmSemMunicipio: string;
 };
+
+export function documentosSemMunicipioDasEmendas(linhas: DocumentoSemMunicipio[], busca: string) {
+  const normalizar = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR").trim();
+  const alvo = normalizar(busca);
+  return linhas.filter(r => normalizar([r.favorecido, r.emenda, r.documento, r.localidade, r.fase].filter(Boolean).join(" ")).includes(alvo))
+    .sort((a, b) => (b.valor ?? -Infinity) - (a.valor ?? -Infinity) || a.emenda.localeCompare(b.emenda) || a.documento.localeCompare(b.documento));
+}
 
 export function planosDasEmendas(linhas: PlanoEmenda[], busca: string) {
   const normalizar = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR").trim();

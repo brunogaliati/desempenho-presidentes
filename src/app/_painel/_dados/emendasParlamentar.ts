@@ -3,7 +3,7 @@ import { unstable_cache } from "next/cache";
 import { sql } from "@/lib/db";
 import fotografia from "./fotografia.json";
 import type { CasaCongresso, PeriodoCota } from "./congressoModelo";
-import { anosDasEmendas, type EmendasParlamentar, type MunicipioEmenda, type PlanoEmenda } from "./emendasParlamentarModelo";
+import { anosDasEmendas, type DocumentoSemMunicipio, type EmendasParlamentar, type MunicipioEmenda, type PlanoEmenda } from "./emendasParlamentarModelo";
 
 type Linha = { codigo: string; nome: string; destinado: string | null; pago: string | null };
 const medida = (v: string | null) => v === null ? null : Number(v);
@@ -14,7 +14,7 @@ async function emendasSemCache(casa: CasaCongresso, id: number, periodo: Periodo
   if (!pessoa) return null;
   const casaBanco = casa === "deputados" ? "camara" : "senado";
   const { desde, ate } = anosDasEmendas(periodo);
-  const [aplicacao, prefeituras, coletas, cobertura, planos, coletasPlanos] = await Promise.all([
+  const [aplicacao, prefeituras, coletas, cobertura, planos, coletasPlanos, semMunicipio, coletasSemMunicipio] = await Promise.all([
     sql`select e.codigo_municipio as codigo, max(coalesce(m.nome,e.municipio)) as nome,
       (case when count(e.valor) filter(where e.fase='Empenho')=count(*) filter(where e.fase='Empenho')
         then sum(e.valor) filter(where e.fase='Empenho') end)::text as destinado,
@@ -56,11 +56,18 @@ async function emendasSemCache(casa: CasaCongresso, id: number, periodo: Periodo
       from mart.emendas_planos where casa=${casaBanco} and parlamentar_id=${id}
         and ano_emenda between ${desde} and ${ate} and (uf=${pessoa.uf} or uf is null)`,
     sql`select coletado_em::text as data from mart.emendas_planos_coleta`,
+    sql`select codigo_emenda as emenda,documento,favorecido,localidade_informada as localidade,
+      uf_informada as "ufInformada",fase,valor::text as valor,conciliado,linhas_fonte as "linhasFonte"
+      from mart.emendas_sem_municipio where casa=${casaBanco} and parlamentar_id=${id}
+        and ano_emenda between ${desde} and ${ate}`,
+    sql`select coletado_em::text as data from mart.emendas_sem_municipio_coleta`,
   ]);
-  if (coletas.length !== 1 || coletasPlanos.length !== 1) throw new Error("Fotografia municipal de emendas incompleta");
+  if (coletas.length !== 1 || coletasPlanos.length !== 1 || coletasSemMunicipio.length !== 1) throw new Error("Fotografia municipal de emendas incompleta");
   const c = cobertura[0];
   return { uf: pessoa.uf, desde, ate, coletadoEm: coletas.map(c => String(c.data)).sort()[0],
     coletadoEmPlanos: String(coletasPlanos[0].data),
+    coletadoEmSemMunicipio: String(coletasSemMunicipio[0].data),
+    semMunicipio: semMunicipio.map(r => ({ ...r, valor: medida(r.valor) })) as DocumentoSemMunicipio[],
     planos: planos.map(p => ({ ...p, previsto: medida(p.previsto), totalInstrumento: medida(p.totalInstrumento), empenhoPlano: medida(p.empenhoPlano) })) as PlanoEmenda[],
     cobertura: { destinadoTotal: medida(c.total), destinadoNoEstado: medida(c.no_estado),
       destinadoSemMunicipio: medida(c.sem_municipio), destinadoForaEstado: medida(c.fora_estado),
@@ -68,6 +75,6 @@ async function emendasSemCache(casa: CasaCongresso, id: number, periodo: Periodo
     aplicacao: municipios(aplicacao as Linha[]), prefeituras: municipios(prefeituras as Linha[]) };
 }
 
-export const carregarEmendasParlamentar = unstable_cache(emendasSemCache, ["congresso-emendas-municipios-v3"], {
+export const carregarEmendasParlamentar = unstable_cache(emendasSemCache, ["congresso-emendas-municipios-v4"], {
   revalidate: 3600, tags: ["painel-congresso", "painel-economia"],
 });

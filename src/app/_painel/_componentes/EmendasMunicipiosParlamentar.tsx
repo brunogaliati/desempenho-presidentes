@@ -8,11 +8,12 @@ import { Bloco, Opcoes } from "./Bloco";
 import { EsqueletoDetalhe } from "./GraficosCota";
 import { MapaEmendasEstado } from "./MapaEmendasEstado";
 import { PlanosEmendasParlamentar } from "./PlanosEmendasParlamentar";
+import { SemMunicipioEmendasParlamentar } from "./SemMunicipioEmendasParlamentar";
 import { formatar, titulo } from "./formatos";
 import estilos from "./Parlamentares.module.css";
 import t from "./TerminalParlamentar.module.css";
 
-type Visao = "aplicacao" | "prefeituras" | "planos";
+type Visao = "aplicacao" | "prefeituras" | "planos" | "sem-municipio";
 const LIMITE = 10;
 const FONTE = "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares";
 
@@ -34,6 +35,8 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
   const [todos, setTodos] = useState(false);
   const prefeituras = visao === "prefeituras";
   const planos = visao === "planos";
+  const semMunicipio = visao === "sem-municipio";
+  const buscaRotulo = semMunicipio ? "Buscar favorecido, emenda ou localidade" : planos ? "Buscar município ou projeto" : "Buscar município";
   const cobertura = dados.cobertura;
   const dinheiro = (v: number | null) => v === null ? "valor não informado" : formatar(v, "reais2");
   const linhas = municipiosDasEmendas(dados[prefeituras ? "prefeituras" : "aplicacao"], busca, ordem);
@@ -52,13 +55,14 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
     <div className={t.emendasIntro}>
     <div className={t.emendasControles}>
       <Opcoes<Visao> ativa={visao} aoEscolher={trocarVisao} rotulo="Localidade das emendas" quebra
-        opcoes={[{ id: "aplicacao", rotulo: "Execução financeira" }, { id: "planos", rotulo: "Planos e projetos" }, { id: "prefeituras", rotulo: "Prefeituras e fundos" }]} />
-      <label className={t.emendasBusca}><span className="sr-only">{planos ? "Buscar município ou projeto" : "Buscar município"}</span>
-        <input type="search" value={busca} onChange={e => { setBusca(e.target.value); setTodos(false); }} placeholder={planos ? "Buscar município ou projeto" : "Buscar município"} />
+        opcoes={[{ id: "aplicacao", rotulo: "Execução financeira" }, { id: "planos", rotulo: "Planos e projetos" }, { id: "prefeituras", rotulo: "Prefeituras e fundos" }, { id: "sem-municipio", rotulo: "Sem município" }]} />
+      <label className={t.emendasBusca}><span className="sr-only">{buscaRotulo}</span>
+        <input type="search" value={busca} onChange={e => { setBusca(e.target.value); setTodos(false); }} placeholder={buscaRotulo} />
       </label>
     </div>
     <p className={t.emendasContexto}>
-      Emendas de {periodo} · {planos ? "Destinação prevista nos planos. Aprovação e empenho vinculado não comprovam realização da obra ou serviço."
+      Emendas de {periodo} · {semMunicipio ? "Documentos sem município de aplicação identificado, com favorecido e localidade publicados pela CGU."
+        : planos ? "Destinação prevista nos planos. Aprovação e empenho vinculado não comprovam realização da obra ou serviço."
         : prefeituras ? "Valores recebidos pelas prefeituras e fundos municipais, pelo endereço do favorecido." : "Execução financeira registrada: empenhado e pago, incluindo restos a pagar. Pagamento comprova repasse, não entrega da obra ou serviço."}
     </p>
     {!prefeituras && !planos && <p className={t.emendasCobertura}>
@@ -70,7 +74,8 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
     </p>}
     </div>
     <div className={t.emendasLista}>
-    {planos ? <PlanosEmendasParlamentar planos={dados.planos} busca={busca} coletadoEm={dados.coletadoEmPlanos} foco={foco} aoFocar={codigo => setFoco(codigo && mapa.some(m => m.codigo === codigo) ? codigo : null)} /> : <>
+    {semMunicipio ? <SemMunicipioEmendasParlamentar key={busca} documentos={dados.semMunicipio} busca={busca} coletadoEm={dados.coletadoEmSemMunicipio} />
+      : planos ? <PlanosEmendasParlamentar planos={dados.planos} busca={busca} coletadoEm={dados.coletadoEmPlanos} foco={foco} aoFocar={codigo => setFoco(codigo && mapa.some(m => m.codigo === codigo) ? codigo : null)} /> : <>
     {linhas.length ? <>
       <div className={t.emendasRolagem} role="region" aria-label="Valores de emendas por município" tabIndex={0}>
         <table className={t.emendasTabela} data-visao={visao}>
@@ -110,6 +115,6 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
       {" · "}coleta em {new Date(dados.coletadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}. Valores sem correção pela inflação.</p>
     </>}
     </div>
-    <MapaEmendasEstado uf={dados.uf} linhas={mapa} medida={planos ? "previsto" : prefeituras || ordem === "pago" ? "pago" : "destinado"} foco={foco} aoFocar={setFoco} />
+    {!semMunicipio && <MapaEmendasEstado uf={dados.uf} linhas={mapa} medida={planos ? "previsto" : prefeituras || ordem === "pago" ? "pago" : "destinado"} foco={foco} aoFocar={setFoco} />}
   </div>;
 }

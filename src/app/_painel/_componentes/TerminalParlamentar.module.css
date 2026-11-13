@@ -122,6 +122,8 @@
  * posição em cima. Linha da tabela e município do mapa acendem juntos.
  */
 .emendasCorpo { display:grid; grid-template-columns:minmax(0,2.2fr) minmax(240px,1fr); gap:14px 28px; align-items:start; }
+.emendasCorpo[data-visao="sem-municipio"] { grid-template-columns:minmax(0,1fr); }
+.emendasTabela.emendasDocumentosTabela tbody :is(th,td) { width:auto; overflow-wrap:anywhere; }
 .emendasIntro { grid-column:1 / -1; min-width:0; }
 .emendasTabela.emendasPlanosTabela thead th { text-align:left; }
 .emendasPlanosTabela tbody :is(th,td) { vertical-align:top; text-align:left; white-space:normal; }
