@@ -20,7 +20,7 @@ registerHooks({
     return next(url, ctx);
   },
 });
-const { anosDasEmendas, municipiosDasEmendas, planosDasEmendas } = require('../src/app/_painel/_dados/emendasParlamentarModelo.ts');
+const { anosDasEmendas, municipiosDasEmendas, planosDasEmendas, municipiosPrevistosDosPlanos } = require('../src/app/_painel/_dados/emendasParlamentarModelo.ts');
 const { TabelaEmendas } = require('../src/app/_painel/_componentes/EmendasMunicipiosParlamentar.tsx');
 const { PlanosEmendasParlamentar } = require('../src/app/_painel/_componentes/PlanosEmendasParlamentar.tsx');
 const { renderToStaticMarkup } = require('react-dom/server');
@@ -90,6 +90,18 @@ test('planejamento mantém parcela prevista, total do instrumento e empenho do p
   assert.doesNotMatch(html, /1\.287\.000|<th scope="col">Pago/);
   assert.equal(planosDasEmendas(planos, 'premio')[0].municipio, 'Teresina');
   assert.equal(planosDasEmendas(planos, 'inexistente').length, 0);
+  const teresina = planos[0];
+  const mapa = municipiosPrevistosDosPlanos([
+    teresina, teresina,
+    { ...teresina, executor: 'endereco', metodoLocalizacao: 'endereco_do_beneficiario', previsto: 900000 },
+    { ...teresina, executor: 'rascunho', situacao: 'Plano em análise ou elaboração', previsto: 900000 },
+    { ...teresina, executor: 'total', previsto: null, totalInstrumento: 900000 },
+    { ...teresina, executor: 'multiplo', metodoLocalizacao: 'objeto_com_varios_municipios', previsto: 900000 },
+    { ...teresina, executor: 'fora', uf: 'RJ', previsto: 900000 },
+  ], 'PI');
+  assert.deepEqual(mapa, [{ codigo: '2211001', nome: 'Teresina', previsto: 198000, destinado: null, pago: null }]);
+  assert.equal(municipiosPrevistosDosPlanos([{ ...teresina, executor: 'a', previsto: .1 }, { ...teresina, executor: 'b', previsto: .2 }], 'PI')[0].previsto, .3);
+  assert.deepEqual(municipiosPrevistosDosPlanos([], 'PI'), []);
 });
 
 // Integração opcional com o servidor único: EMENDAS_BASE_URL=http://localhost:3000

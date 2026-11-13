@@ -58,12 +58,13 @@ function posicionarRotulos(centros: Ponto[], r: number, fonte: number) {
 export function MapaEmendasEstado({ uf, linhas, medida, foco, aoFocar }: {
   uf: string;
   linhas: MunicipioEmenda[];
-  medida: "destinado" | "pago";
+  medida: "destinado" | "pago" | "previsto";
   foco: string | null;
   aoFocar: (codigo: string | null) => void;
 }) {
   const malha = useMalhaMunicipal();
-  const valor = (m: MunicipioEmenda) => (medida === "destinado" ? m.destinado : m.pago) ?? 0;
+  const valor = (m: MunicipioEmenda) => m[medida] ?? 0;
+  const previsao = medida === "previsto";
 
   const desenho = useMemo(() => {
     if (!malha) return null;
@@ -93,7 +94,7 @@ export function MapaEmendasEstado({ uf, linhas, medida, foco, aoFocar }: {
   const rotulos = posicionarRotulos(destaques.map(d => d.f!.centro), r, escala * 3.6);
 
   return <figure className={t.mapaEmendas}>
-    <svg viewBox={viewBox} role="img" aria-label={`Mapa de valores ${medida === "destinado" ? "destinados" : "pagos"} por município. ${ranking.slice(0, 3).map((m, i) => `${i + 1}º ${titulo(m.nome)}`).join(", ")}.`}
+    <svg viewBox={viewBox} role="img" aria-label={`Mapa de valores ${previsao ? "previstos em planos aprovados ou legados" : medida === "destinado" ? "destinados" : "pagos"} por município. ${ranking.slice(0, 3).map((m, i) => `${i + 1}º ${titulo(m.nome)}`).join(", ")}.`}
       onMouseLeave={() => aoFocar(null)}>
       <g className={t.mapaEmendasBase}>
         {formas.map(f => {
@@ -102,7 +103,7 @@ export function MapaEmendasEstado({ uf, linhas, medida, foco, aoFocar }: {
           const i = posicao.get(f.codigo);
           return <path key={f.codigo} d={f.d} data-recebeu={v > 0 ? "" : undefined} data-foco={foco === f.codigo ? "" : undefined}
             style={v > 0 ? { fill: cor(v), animationDelay: `${Math.min(i ?? 0, 30) * 40}ms` } : undefined}
-            onMouseEnter={m ? () => aoFocar(f.codigo) : undefined}><title>{titulo(f.nome)}{m ? ` · ${m[medida] === null ? "Valor não informado" : formatar(v, "reaiscurto")}` : ""}</title></path>;
+            onMouseEnter={m ? () => aoFocar(f.codigo) : undefined}><title>{titulo(f.nome)}{m ? ` · ${m[medida] == null ? "Valor não informado" : formatar(v, "reaiscurto")}${previsao ? " previsto" : ""}` : ""}</title></path>;
         })}
       </g>
       {focado && (() => { const f = formas.find(x => x.codigo === focado.codigo); return f ? <path className={t.mapaEmendasContorno} d={f.d} /> : null; })()}
@@ -116,10 +117,14 @@ export function MapaEmendasEstado({ uf, linhas, medida, foco, aoFocar }: {
         </g>)}
       </g>
     </svg>
-    {leitura && <figcaption className={t.mapaEmendasLeitura} aria-live="polite">
+    {(leitura || previsao) && <figcaption className={t.mapaEmendasLeitura} aria-live="polite">
+      {leitura && <>
       <span>{posicao.has(leitura.codigo) ? `${posicao.get(leitura.codigo)! + 1}º · ` : ""}{titulo(leitura.nome)}</span>
-      <strong>{leitura[medida] === null ? "Não informado" : formatar(valor(leitura), "reaiscurto")}</strong>
-      <span>{total > 0 && leitura[medida] !== null ? `${formatar(valor(leitura) / total * 100, "pct0")} do ${medida} com município` : `Valor ${medida}`} · {formatar(ranking.length, "inteiro")} de {formatar(formas.length, "inteiro")} municípios</span>
+      <strong>{leitura[medida] == null ? "Não informado" : formatar(valor(leitura), "reaiscurto")}</strong>
+      <span>{total > 0 && leitura[medida] != null ? `${formatar(valor(leitura) / total * 100, "pct0")} do ${medida} com município` : `Valor ${medida}`} · {formatar(ranking.length, "inteiro")} de {formatar(formas.length, "inteiro")} municípios</span>
+      </>}
+      {previsao && <p className={t.nota}>{ranking.length ? "Previsão de planos aprovados ou legados, por município citado no objeto ou beneficiário municipal. Totais compartilhados e meros endereços ficam fora do mapa. Não comprova aplicação financeira no município nem entrega."
+        : "Nenhuma parcela prevista de plano aprovado ou legado tem município identificável neste recorte. Isso não significa valor zero destinado."}</p>}
     </figcaption>}
   </figure>;
 }

@@ -123,8 +123,7 @@
  */
 .emendasCorpo { display:grid; grid-template-columns:minmax(0,2.2fr) minmax(240px,1fr); gap:14px 28px; align-items:start; }
 .emendasIntro { grid-column:1 / -1; min-width:0; }
-.emendasCorpo[data-visao="planos"] { grid-template-columns:minmax(0,1fr); }
-.emendasPlanosTabela thead th { text-align:left; }
+.emendasTabela.emendasPlanosTabela thead th { text-align:left; }
 .emendasPlanosTabela tbody :is(th,td) { vertical-align:top; text-align:left; white-space:normal; }
 .emendasPlanosTabela tbody th { width:42%; }
 .emendasPlanosTabela tbody td { width:29%; }

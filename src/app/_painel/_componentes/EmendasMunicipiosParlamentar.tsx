@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { type CasaCongresso, type PeriodoCota, NOME_UF, inteiro } from "../_dados/congressoModelo";
-import { municipiosDasEmendas, type EmendasParlamentar, type OrdemEmendas } from "../_dados/emendasParlamentarModelo";
+import { municipiosDasEmendas, municipiosPrevistosDosPlanos, planosDasEmendas, type EmendasParlamentar, type OrdemEmendas } from "../_dados/emendasParlamentarModelo";
 import { useJson } from "../_dados/useJson";
 import { Bloco, Opcoes } from "./Bloco";
 import { EsqueletoDetalhe } from "./GraficosCota";
@@ -47,6 +47,7 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
     </button>
   </th>;
   const [foco, setFoco] = useState<string | null>(null);
+  const mapa = planos ? municipiosPrevistosDosPlanos(planosDasEmendas(dados.planos, busca), dados.uf) : dados[prefeituras ? "prefeituras" : "aplicacao"];
   return <div className={t.emendasCorpo} data-visao={visao}>
     <div className={t.emendasIntro}>
     <div className={t.emendasControles}>
@@ -69,7 +70,7 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
     </p>}
     </div>
     <div className={t.emendasLista}>
-    {planos ? <PlanosEmendasParlamentar planos={dados.planos} busca={busca} coletadoEm={dados.coletadoEmPlanos} /> : <>
+    {planos ? <PlanosEmendasParlamentar planos={dados.planos} busca={busca} coletadoEm={dados.coletadoEmPlanos} foco={foco} aoFocar={codigo => setFoco(codigo && mapa.some(m => m.codigo === codigo) ? codigo : null)} /> : <>
     {linhas.length ? <>
       <div className={t.emendasRolagem} role="region" aria-label="Valores de emendas por município" tabIndex={0}>
         <table className={t.emendasTabela} data-visao={visao}>
@@ -109,6 +110,6 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
       {" · "}coleta em {new Date(dados.coletadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}. Valores sem correção pela inflação.</p>
     </>}
     </div>
-    {!planos && <MapaEmendasEstado uf={dados.uf} linhas={dados[prefeituras ? "prefeituras" : "aplicacao"]} medida={prefeituras || ordem === "pago" ? "pago" : "destinado"} foco={foco} aoFocar={setFoco} />}
+    <MapaEmendasEstado uf={dados.uf} linhas={mapa} medida={planos ? "previsto" : prefeituras || ordem === "pago" ? "pago" : "destinado"} foco={foco} aoFocar={setFoco} />
   </div>;
 }

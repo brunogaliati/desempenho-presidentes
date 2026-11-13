@@ -14,7 +14,7 @@ const LOCALIZACAO: Record<string, string> = {
   sem_municipio: "Aplicação municipal não identificada",
 };
 
-export function PlanosEmendasParlamentar({ planos, busca, coletadoEm }: { planos: PlanoEmenda[]; busca: string; coletadoEm: string }) {
+export function PlanosEmendasParlamentar({ planos, busca, coletadoEm, foco, aoFocar }: { planos: PlanoEmenda[]; busca: string; coletadoEm: string; foco?: string | null; aoFocar?: (codigo: string | null) => void }) {
   const [todos, setTodos] = useState(false);
   const linhas = planosDasEmendas(planos, busca);
   const visiveis = todos ? linhas : linhas.slice(0, 10);
@@ -24,7 +24,8 @@ export function PlanosEmendasParlamentar({ planos, busca, coletadoEm }: { planos
         <table className={`${t.emendasTabela} ${t.emendasPlanosTabela}`}>
           <caption className="sr-only">Planos e projetos previstos, com origem da localização e vínculo financeiro</caption>
           <thead><tr><th scope="col">Município e projeto</th><th scope="col">Valor previsto</th><th scope="col">Evidência disponível</th></tr></thead>
-          <tbody>{visiveis.map(p => <tr key={`${p.emenda}-${p.fonte}-${p.instrumento}-${p.executor}`}>
+          <tbody onMouseLeave={() => aoFocar?.(null)}>{visiveis.map(p => <tr key={`${p.emenda}-${p.fonte}-${p.instrumento}-${p.executor}`} data-foco={p.codigoMunicipio && foco === p.codigoMunicipio ? "" : undefined}
+            onMouseEnter={() => aoFocar?.(p.codigoMunicipio)} onFocus={() => aoFocar?.(p.codigoMunicipio)}>
             <th scope="row" data-rotulo="Município e projeto">
               <strong>{p.municipio ? `${titulo(p.municipio)}${p.uf ? ` (${p.uf})` : ""}` : "Município não identificado"}</strong>
               <small>{LOCALIZACAO[p.metodoLocalizacao] ?? "Localização não confirmada"}</small>
