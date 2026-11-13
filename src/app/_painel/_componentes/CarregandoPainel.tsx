@@ -1,13 +1,14 @@
 import silhuetas from "../_dados/biomas-silhuetas.json";
 import { CongressoCarregando } from "./CongressoCarregando";
+import { PerfilParlamentarCarregando } from "./PerfilParlamentarCarregando";
 
 export type TemaPainel = "resumo" | "economia" | "ambiente" | "dinheiro" | "congresso";
 const nomes = { resumo: "Resumo do governo", economia: "Economia", ambiente: "Meio ambiente", dinheiro: "Orçamento público", congresso: "Congresso" };
 
 /** As mesmas proporções da hero, sem apresentar números antes das fontes. */
-export default function CarregandoPainel({ aba="economia", embutido=false }: { aba?:TemaPainel; embutido?:boolean }) {
+export default function CarregandoPainel({ aba="economia", embutido=false, perfilParlamentar=false }: { aba?:TemaPainel; embutido?:boolean; perfilParlamentar?:boolean }) {
   // O Resumo abre no mesmo palco da Economia (coluna, mapa e barra de vidro): o mesmo esqueleto.
-  const conteudo = aba === "congresso" ? <CongressoCarregando /> : <section className="esqueleto-painel" data-skeleton={aba} aria-busy="true" aria-label={`Carregando ${nomes[aba]}`}>
+  const conteudo = aba === "congresso" ? perfilParlamentar ? <PerfilParlamentarCarregando /> : <CongressoCarregando /> : <section className="esqueleto-painel" data-skeleton={aba} aria-busy="true" aria-label={`Carregando ${nomes[aba]}`}>
     <p role="status" className="sr-only">Carregando {nomes[aba]} com os dados oficiais…</p>
     <div className="esqueleto-sala" aria-hidden="true">
       {aba==='dinheiro'&&<div className="esqueleto-linha esqueleto-titulo-dinheiro"/>}

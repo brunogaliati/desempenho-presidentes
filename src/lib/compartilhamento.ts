@@ -4,6 +4,15 @@ export function idCompartilhavel(titulo: string) {
   return `bloco-${titulo.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,85)}`;
 }
 
+/** A âncora simples também precisa esperar a montagem do conteúdo assíncrono. */
+export function alvoCompartilhado(url: URL): string | null {
+  let id = url.searchParams.get('painel');
+  if (!id) {
+    try { id = decodeURIComponent(url.hash.slice(1)); } catch { return null; }
+  }
+  return /^[a-zA-Z0-9_.-]{1,100}$/.test(id) ? id : null;
+}
+
 export function codificarFiltro(valor: unknown): string | null {
   if (valor === undefined) return null;
   return typeof valor === 'string' ? valor : JSON.stringify(valor);

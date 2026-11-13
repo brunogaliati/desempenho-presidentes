@@ -19,6 +19,7 @@ import { mandatoDoEndereco, recortarAoMandato, TERMO_2015 } from "../_dados/mand
 import { capaDoLink } from "./capaRecorte";
 import type { AbaId, DadosPainel } from "../_dados/tipos";
 import CarregandoPainel from "./CarregandoPainel";
+import CarregandoRotaPainel from "./CarregandoRotaPainel";
 import { gestaoEmCurso, gestaoValida } from "../_dados/resumoMunicipalModelo";
 import { PosseContext } from "./GraficoLinha";
 import { BarraMandato, Cabecalho } from "./Topo";
@@ -29,7 +30,7 @@ const AbaResumo = dynamic(() => import("./AbaResumo").then(m => m.AbaResumo), { 
 const AbaEconomia = dynamic(() => import("./AbaEconomia").then(m => m.AbaEconomia), { loading: () => <CarregandoPainel aba="economia" embutido /> });
 const AbaAmbiente = dynamic(() => import("./AbaAmbiente").then(m => m.AbaAmbiente), { loading: () => <CarregandoPainel aba="ambiente" embutido /> });
 const AbaDinheiro = dynamic(() => import("./AbaDinheiro").then(m => m.AbaDinheiro), { loading: () => <CarregandoPainel aba="dinheiro" embutido /> });
-const AbaCongresso = dynamic(() => import("./AbaCongresso").then(m => m.AbaCongresso), { loading: () => <CarregandoPainel aba="congresso" embutido /> });
+const AbaCongresso = dynamic(() => import("./AbaCongresso").then(m => m.AbaCongresso), { loading: () => <CarregandoRotaPainel embutido /> });
 const ResumoMunicipal = dynamic(() => import("./ResumoMunicipal").then(m => m.ResumoMunicipal), { loading: () => <CarregandoPainel aba="resumo" embutido /> });
 
 /**

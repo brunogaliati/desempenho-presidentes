@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {codificarFiltro,decodificarFiltro,registroDoFiltro,linkCompartilhado,idCompartilhavel,opcaoCompartilhada,inteiroCompartilhado} from '../src/lib/compartilhamento.ts';
+import {alvoCompartilhado,codificarFiltro,decodificarFiltro,registroDoFiltro,linkCompartilhado,idCompartilhavel,opcaoCompartilhada,inteiroCompartilhado} from '../src/lib/compartilhamento.ts';
+
+test('foco aceita âncora direta, preserva prioridade de painel e recusa identificadores inválidos',()=>{
+ const base='https://exemplo.com/congresso/deputados/jadyel-alencar-220697';
+ assert.equal(alvoCompartilhado(new URL(base+'#emendas-municipios')),'emendas-municipios');
+ assert.equal(alvoCompartilhado(new URL(base+'#emendas%2Dmunicipios')),'emendas-municipios');
+ assert.equal(alvoCompartilhado(new URL(base+'?painel=outro#emendas-municipios')),'outro');
+ for(const fim of ['', '#%ZZ', '#%3Cscript%3E', '#'+ 'a'.repeat(101)])assert.equal(alvoCompartilhado(new URL(base+fim)),null);
+});
 
 test('filtro calculado preserva ano e período efetivos mesmo se o estado interno é padrão',()=>{
  assert.equal(registroDoFiltro(null,null,null,()=>2024),'2024');

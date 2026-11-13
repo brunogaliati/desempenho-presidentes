@@ -448,3 +448,11 @@ API/Neon (incluindo os quatro casos unitários da tabela), TypeScript, ESLint,
 detector de design e build de produção aprovados. Conferência visual em deputado
 e senador, busca/lista completa, troca de ano, temas claro/escuro e largura de
 390 px. O servidor de teste iniciado na porta 3000 foi encerrado ao concluir.
+
+Correção do perfil: a busca municipal usa rótulo acessível sem criar uma linha
+extra acima dos controles. Links com `#emendas-municipios` também aguardam a
+montagem e os dados antes de rolar/focar a seção; a navegação sem âncora continua
+no início. O fallback da rota e o carregamento do módulo do Congresso distinguem
+o perfil individual (retrato, fita e grade de painéis) do diretório com plenário.
+Regressão: 25 testes aprovados, TypeScript/ESLint e detector de design; chegada por
+âncora e atalho interno conferidos no navegador a 1280 e 390 px.

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import { codificarFiltro, decodificarFiltro, registroDoFiltro, type FiltrosCompartilhados } from '@/lib/compartilhamento';
+import { alvoCompartilhado, codificarFiltro, decodificarFiltro, registroDoFiltro, type FiltrosCompartilhados } from '@/lib/compartilhamento';
 import { usePathname } from 'next/navigation';
 
 /** O que os aplicativos mostram para um link: quem sabe ler o endereço responde sem esperar o aplicativo. */
@@ -51,18 +51,20 @@ export function useEstadoCompartilhavel<T>(chave:string,inicial:T,validar:(valor
 function FocoCompartilhado() {
   const caminho=usePathname();
   useEffect(()=>{
-    let observador:MutationObserver|undefined,timer:ReturnType<typeof setTimeout>|undefined,encerrado=false;
-    const parar=()=>{encerrado=true;observador?.disconnect();if(timer)clearTimeout(timer);};
+    let observador:MutationObserver|undefined,timer:ReturnType<typeof setTimeout>|undefined,encerrado=false,agendado=false,quadro=0;
+    const parar=()=>{encerrado=true;observador?.disconnect();if(timer)clearTimeout(timer);cancelAnimationFrame(quadro);};
     const abrir=()=>{
-      const url=new URL(location.href),id=url.searchParams.get('painel');
-      if(!id||!/^[a-zA-Z0-9_.-]{1,100}$/.test(id))return;
-      const tentar=()=>{if(encerrado)return;const el=document.getElementById(id);if(!el||el.querySelector('[aria-busy="true"]'))return;
-        requestAnimationFrame(()=>requestAnimationFrame(()=>{if(encerrado)return;el.scrollIntoView({block:'start',behavior:'instant'});el.setAttribute('data-compartilhado','true');el.setAttribute('tabindex','-1');el.focus({preventScroll:true});parar();setTimeout(()=>el.removeAttribute('data-compartilhado'),4500);}));
+      parar();encerrado=false;agendado=false;
+      const id=alvoCompartilhado(new URL(location.href));
+      if(!id)return;
+      const tentar=()=>{if(encerrado||agendado)return;const el=document.getElementById(id);if(!el||el.matches('[aria-busy="true"]')||el.querySelector('[aria-busy="true"]'))return;
+        agendado=true;
+        quadro=requestAnimationFrame(()=>{quadro=requestAnimationFrame(()=>{if(encerrado)return;el.scrollIntoView({block:'start',behavior:'instant'});el.setAttribute('data-compartilhado','true');el.setAttribute('tabindex','-1');el.focus({preventScroll:true});parar();setTimeout(()=>el.removeAttribute('data-compartilhado'),4500);});});
       };
-      observador=new MutationObserver(tentar);observador.observe(document.body,{childList:true,subtree:true});timer=setTimeout(parar,30000);tentar();
+      observador=new MutationObserver(tentar);observador.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['aria-busy']});timer=setTimeout(parar,30000);tentar();
     };
-    abrir();window.addEventListener('wheel',parar,{passive:true});window.addEventListener('pointerdown',parar,{passive:true});
-    return()=>{parar();window.removeEventListener('wheel',parar);window.removeEventListener('pointerdown',parar);};
+    abrir();window.addEventListener('hashchange',abrir);window.addEventListener('wheel',parar,{passive:true});window.addEventListener('pointerdown',parar,{passive:true});
+    return()=>{parar();window.removeEventListener('hashchange',abrir);window.removeEventListener('wheel',parar);window.removeEventListener('pointerdown',parar);};
   },[caminho]);
   return null;
 }

@@ -117,7 +117,7 @@
 .fontes > p:first-child { padding-top:0; border-top:0; }
 
 /* Emendas: mesma tabela, controles e tipografia do terminal, sem cor de julgamento. */
-.emendasControles { display:flex; flex-wrap:wrap; align-items:end; justify-content:space-between; gap:12px 20px; }
+.emendasControles { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px 20px; }
 .emendasBusca { display:grid; gap:4px; width:min(100%,280px); font-size:12px; color:var(--tinta-2); }
 .emendasBusca input { min-height:36px; width:100%; padding:7px 10px; border:1px solid var(--borda); border-radius:8px; background:var(--superficie); color:var(--tinta); font:inherit; caret-color:var(--serie); }
 .emendasBusca input::placeholder { color:var(--tinta-2); }

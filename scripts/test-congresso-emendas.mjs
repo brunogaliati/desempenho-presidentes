@@ -23,6 +23,15 @@ registerHooks({
 const { anosDasEmendas, municipiosDasEmendas } = require('../src/app/_painel/_dados/emendasParlamentarModelo.ts');
 const { TabelaEmendas } = require('../src/app/_painel/_componentes/EmendasMunicipiosParlamentar.tsx');
 const { renderToStaticMarkup } = require('react-dom/server');
+const CarregandoPainel = require('../src/app/_painel/_componentes/CarregandoPainel.tsx').default;
+test('perfil tem skeleton de identidade e painéis, enquanto o diretório mantém o plenário', () => {
+  const React = require('react');
+  const perfil = renderToStaticMarkup(React.createElement(CarregandoPainel, { aba: 'congresso', perfilParlamentar: true, embutido: true }));
+  const congresso = renderToStaticMarkup(React.createElement(CarregandoPainel, { aba: 'congresso', embutido: true }));
+  assert.match(perfil, /data-skeleton="parlamentar"/); assert.match(perfil, /aria-busy="true"/);
+  assert.match(perfil, /Carregando perfil parlamentar/); assert.doesNotMatch(perfil, /<circle|<svg|<img/);
+  assert.match(congresso, /data-skeleton="congresso"/); assert.match(congresso, /<circle/);
+});
 const dados = {
   uf: 'MG', desde: 2023, ate: 2026, coletadoEm: '2026-11-13T14:00:00Z',
   aplicacao: [

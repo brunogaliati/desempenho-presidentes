@@ -19,7 +19,7 @@ export function EmendasMunicipiosParlamentar({ casa, id, periodo, uf, className 
 }) {
   const { dados, erro, carregando } = useJson<EmendasParlamentar>(`/api/painel/congresso/emendas?${new URLSearchParams({ casa, id: String(id), ano: String(periodo) })}`);
   return <Bloco id="emendas-municipios" titulo="Emendas para os municípios" detalhe={NOME_UF[uf] ?? uf} lustroFixo className={className}>
-    {carregando ? <EsqueletoDetalhe /> : erro ? <p className={estilos.aviso}>Não foi possível carregar as emendas. Recarregue a página para tentar novamente.</p>
+    {carregando ? <div aria-busy="true"><EsqueletoDetalhe /></div> : erro ? <p className={estilos.aviso}>Não foi possível carregar as emendas. Recarregue a página para tentar novamente.</p>
       : dados ? <TabelaEmendas key={`${casa}-${id}-${periodo}`} dados={dados} /> : null}
   </Bloco>;
 }
@@ -45,8 +45,8 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
     <div className={t.emendasControles}>
       <Opcoes<Visao> ativa={visao} aoEscolher={trocarVisao} rotulo="Localidade das emendas" quebra
         opcoes={[{ id: "aplicacao", rotulo: "Local de aplicação" }, { id: "prefeituras", rotulo: "Prefeituras e fundos" }]} />
-      <label className={t.emendasBusca}>Buscar município
-        <input type="search" value={busca} onChange={e => { setBusca(e.target.value); setTodos(false); }} placeholder="Nome do município" />
+      <label className={t.emendasBusca}><span className="sr-only">Buscar município</span>
+        <input type="search" value={busca} onChange={e => { setBusca(e.target.value); setTodos(false); }} placeholder="Buscar município" />
       </label>
     </div>
     <p className={t.emendasContexto}>
