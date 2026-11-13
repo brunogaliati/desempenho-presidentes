@@ -28,6 +28,53 @@ const { SeletorAnoCota } = require('../src/app/_painel/_componentes/GraficosCota
 const { renderToStaticMarkup } = require('react-dom/server');
 const CarregandoPainel = require('../src/app/_painel/_componentes/CarregandoPainel.tsx').default;
 const { GET: malhaDoEstado } = require('../src/app/api/painel/congresso/malha/route.ts');
+const { FotoParlamentar } = require('../src/app/_painel/_componentes/FotoParlamentar.tsx');
+const { Analytics } = require('../src/components/Analytics.tsx');
+
+test('o perfil usa retrato local vertical com prioridade, e a lista conserva a miniatura', () => {
+  const React = require('react');
+  for (const [casa, id] of [['deputados', 209787], ['senadores', 739]]) {
+    const perfil = renderToStaticMarkup(React.createElement(FotoParlamentar, { casa, id, nome: 'Parlamentar', tamanho: 84, altura: 112, prioridade: true }));
+    assert.ok(perfil.includes(`/painel/congresso/fotos/${casa}/${id}-perfil.webp`));
+    assert.match(perfil, /fetchPriority="high"/);
+    assert.match(perfil, /loading="eager"/);
+    assert.doesNotMatch(perfil, /https:\/\//);
+    const lista = renderToStaticMarkup(React.createElement(FotoParlamentar, { casa, id, nome: 'Parlamentar', tamanho: 40 }));
+    assert.ok(lista.includes(`/painel/congresso/fotos/${casa}/${id}.webp`));
+    assert.match(lista, /loading="lazy"/);
+  }
+});
+
+test('aviso de cookies já vem no HTML de produção e não carrega o Google antes da escolha', () => {
+  const ambiente = process.env.NODE_ENV;
+  try {
+    process.env.NODE_ENV = 'production';
+    const html = renderToStaticMarkup(require('react').createElement(Analytics));
+    assert.match(html, /id="analytics-aviso"/);
+    assert.match(html, /Não permitir/);
+    assert.match(html, /Permitir estatísticas/);
+    assert.match(html, /localStorage\.getItem/);
+    assert.doesNotMatch(html, /googletagmanager\.com/);
+  } finally {
+    if (ambiente === undefined) delete process.env.NODE_ENV; else process.env.NODE_ENV = ambiente;
+  }
+});
+
+test('todos os retratos do manifesto existem em WebP leve, com até 224 px e sem ampliar originais pequenos', async () => {
+  const sharp = require('sharp');
+  const fotos = JSON.parse(fs.readFileSync(new URL('../src/app/_painel/_dados/fotos-parlamentares.json', import.meta.url), 'utf8'));
+  for (const casa of ['deputados', 'senadores']) {
+    assert.deepEqual(fotos.perfis[casa], fotos[casa]);
+    for (const id of fotos.perfis[casa]) {
+      const arquivo = new URL(`../public/painel/congresso/fotos/${casa}/${id}-perfil.webp`, import.meta.url);
+      const meta = await sharp(fs.readFileSync(arquivo)).metadata();
+      assert.equal(meta.format, 'webp');
+      assert.ok(meta.width >= 112 && meta.width <= 224, `${casa} ${id}: largura do retrato`);
+      assert.ok(meta.height >= meta.width);
+      assert.ok(fs.statSync(arquivo).size < 30000, `${casa} ${id}: retrato deve ser leve`);
+    }
+  }
+});
 
 test('mapa do perfil entrega só a UF, preserva os contornos e rejeita UF inválida', async () => {
   const nacional = JSON.parse(fs.readFileSync(new URL('../public/painel/municipios-brasil.json', import.meta.url), 'utf8'));

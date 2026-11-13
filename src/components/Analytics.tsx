@@ -4,7 +4,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { CHAVE_ANALYTICS, ID_ANALYTICS, dominioComAnalytics, enderecoAnalytics, paginaAnalytics, permitirEventosAnalytics } from "@/lib/analytics";
+import { CHAVE_ANALYTICS, ID_ANALYTICS, INICIAR_AVISO_ANALYTICS, dominioComAnalytics, enderecoAnalytics, paginaAnalytics, permitirEventosAnalytics } from "@/lib/analytics";
 
 declare global {
   interface Window {
@@ -17,7 +17,7 @@ type Escolha = "aceito" | "recusado";
 
 export function Analytics() {
   const caminho = usePathname();
-  const [ativo, setAtivo] = useState(false);
+  const [ativo, setAtivo] = useState(process.env.NODE_ENV === "production");
   const [escolha, setEscolha] = useState<Escolha | null>(null);
   const [preferencias, setPreferencias] = useState(false);
   const [preparado, setPreparado] = useState(false);
@@ -87,13 +87,14 @@ export function Analytics() {
   if (!ativo) return null;
   return <>
     {escolha === "aceito" && preparado && <Script id="google-analytics" src={`https://www.googletagmanager.com/gtag/js?id=${ID_ANALYTICS}`} strategy="afterInteractive" />}
-    <nav className="analytics-preferencias" aria-label="Privacidade">
+    <nav id="analytics-preferencias" className="analytics-preferencias" aria-label="Privacidade" suppressHydrationWarning>
       <Link href="/sobre#privacidade">Privacidade</Link>
       <button type="button" onClick={() => setPreferencias(true)}>Preferências de estatísticas</button>
     </nav>
-    {(escolha === null || preferencias) && <aside className="analytics-aviso" aria-labelledby="analytics-titulo">
+    {(escolha === null || preferencias) && <aside id="analytics-aviso" className="analytics-aviso" aria-labelledby="analytics-titulo" suppressHydrationWarning>
       <div><h2 id="analytics-titulo">Estatísticas de acesso</h2><p>Podemos usar cookies do Google Analytics para entender quais páginas são úteis? Você pode mudar sua escolha em Preferências de estatísticas. <Link href="/sobre#privacidade">Saiba mais</Link>.</p></div>
       <div className="analytics-acoes"><button type="button" onClick={() => escolher("recusado")}>Não permitir</button><button type="button" onClick={() => escolher("aceito")}>Permitir estatísticas</button></div>
     </aside>}
+    <script dangerouslySetInnerHTML={{ __html: INICIAR_AVISO_ANALYTICS }} />
   </>;
 }

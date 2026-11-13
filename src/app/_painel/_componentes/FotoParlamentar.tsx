@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 
-import { fotoParlamentar, miniaturaParlamentar } from "../_dados/fotoParlamentar";
+import { retratoParlamentar, miniaturaParlamentar } from "../_dados/fotoParlamentar";
 import estilos from "./FotoParlamentar.module.css";
 
 /**
@@ -20,13 +20,12 @@ export function FotoParlamentar({ casa, id, nome, tamanho, altura = tamanho, pri
 }) {
   const [falhou, setFalhou] = useState(false);
   const [carregou, setCarregou] = useState(false);
-  // Até 56 px (listas, cartões), a miniatura do próprio site; o crachá, maior, usa a foto oficial.
-  const src = Math.max(tamanho, altura) <= 56 ? miniaturaParlamentar(casa, id) : fotoParlamentar(casa, id);
+  const src = Math.max(tamanho, altura) <= 56 ? miniaturaParlamentar(casa, id) : retratoParlamentar(casa, id);
   const iniciais = nome.trim().split(/\s+/).slice(0, 2).map(p => p[0]).join("");
   return <span className={estilos.retrato} data-forma={altura > tamanho ? "cracha" : "redondo"} data-carregando={!!src && !falhou && !carregou}
     style={{ width: tamanho, height: altura, fontSize: Math.min(tamanho, altura) * .34 }} aria-hidden="true">
     {src && !falhou
-      ? <Image src={src} alt="" width={tamanho} height={altura} unoptimized loading={prioridade ? "eager" : "lazy"} className="h-full w-full object-cover object-top" onLoad={() => setCarregou(true)} onError={() => setFalhou(true)} />
+      ? <Image src={src} alt="" width={tamanho} height={altura} unoptimized loading={prioridade ? "eager" : "lazy"} fetchPriority={prioridade ? "high" : undefined} className="h-full w-full object-cover object-top" onLoad={() => setCarregou(true)} onError={() => setFalhou(true)} />
       : iniciais}
   </span>;
 }

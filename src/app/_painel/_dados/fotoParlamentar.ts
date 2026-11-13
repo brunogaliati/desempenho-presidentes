@@ -12,6 +12,13 @@ export function fotoParlamentar(casa: "deputados" | "senadores", id: number): st
 }
 
 const comMiniatura = { deputados: new Set<number>(fotos.deputados), senadores: new Set<number>(fotos.senadores) };
+const comRetrato = { deputados: new Set<number>(fotos.perfis.deputados), senadores: new Set<number>(fotos.perfis.senadores) };
+
+/** Retrato vertical de 224 px para o perfil, inclusive em telas de densidade 2. */
+export function retratoParlamentar(casa: "deputados" | "senadores", id: number): string | null {
+  if (!Number.isSafeInteger(id) || id <= 0) return null;
+  return comRetrato[casa].has(id) ? `/painel/congresso/fotos/${casa}/${id}-perfil.webp` : miniaturaParlamentar(casa, id);
+}
 
 /**
  * A miniatura de 112 px servida pelo próprio site (`scripts/coletar-fotos-parlamentares.mjs`), para

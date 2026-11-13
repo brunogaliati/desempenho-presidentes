@@ -1,10 +1,14 @@
 /** Identificador público do fluxo web; não é uma credencial. */
 export const ID_ANALYTICS = "G-DSETD1YL9C";
 export const CHAVE_ANALYTICS = "ddg:estatisticas:v1";
+const DOMINIOS_ANALYTICS = ["desempenhodogoverno.com.br", "www.desempenhodogoverno.com.br"];
 
 export function dominioComAnalytics(hostname: string) {
-  return hostname === "desempenhodogoverno.com.br" || hostname === "www.desempenhodogoverno.com.br";
+  return DOMINIOS_ANALYTICS.includes(hostname);
 }
+
+/** Executa junto do HTML: evita piscar o aviso salvo, sem esperar hidratação nem iniciar analytics. */
+export const INICIAR_AVISO_ANALYTICS = `(()=>{const aviso=document.getElementById("analytics-aviso"),preferencias=document.getElementById("analytics-preferencias");if(!${JSON.stringify(DOMINIOS_ANALYTICS)}.includes(location.hostname)){if(aviso)aviso.hidden=true;if(preferencias)preferencias.hidden=true;return}try{if(["aceito","recusado"].includes(localStorage.getItem(${JSON.stringify(CHAVE_ANALYTICS)}))){if(aviso)aviso.hidden=true}}catch{}})();`;
 
 /** Filtros, buscas, fragmentos e credenciais não entram nos relatórios. */
 export function enderecoAnalytics(endereco: string): string | undefined {

@@ -1,6 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { dominioComAnalytics, enderecoAnalytics, paginaAnalytics, dadosAnalyticsCompartilhamento, registrarCompartilhamentoAnalytics, permitirEventosAnalytics, DIMENSOES_COMPARTILHAMENTO } from '../src/lib/analytics.ts';
+import { runInNewContext } from 'node:vm';
+import { CHAVE_ANALYTICS, INICIAR_AVISO_ANALYTICS, dominioComAnalytics, enderecoAnalytics, paginaAnalytics, dadosAnalyticsCompartilhamento, registrarCompartilhamentoAnalytics, permitirEventosAnalytics, DIMENSOES_COMPARTILHAMENTO } from '../src/lib/analytics.ts';
+
+test('aviso inicial respeita consentimento e ambiente antes da hidratação, inclusive sem armazenamento', () => {
+ for (const hostname of ['desempenhodogoverno.com.br', 'www.desempenhodogoverno.com.br', 'localhost', 'desempenho-do-governo.brunop-galiati.workers.dev']) {
+  for (const salva of [null, 'aceito', 'recusado', 'invalido', 'bloqueado']) {
+   const elementos = { 'analytics-aviso': { hidden: false }, 'analytics-preferencias': { hidden: false } };
+   runInNewContext(INICIAR_AVISO_ANALYTICS, {
+    document: { getElementById: id => elementos[id] }, location: { hostname },
+    localStorage: { getItem(chave) { assert.equal(chave, CHAVE_ANALYTICS); if (salva === 'bloqueado') throw Error('bloqueado'); return salva; } },
+   });
+   const publico = dominioComAnalytics(hostname);
+   assert.equal(elementos['analytics-aviso'].hidden, !publico || salva === 'aceito' || salva === 'recusado', `${hostname}: ${salva}`);
+   assert.equal(elementos['analytics-preferencias'].hidden, !publico);
+  }
+ }
+});
 
 test('analytics só permite os dois hosts públicos, sem desenvolvimento nem previews',()=>{
  for(const h of ['desempenhodogoverno.com.br','www.desempenhodogoverno.com.br'])assert.equal(dominioComAnalytics(h),true);
