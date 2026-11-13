@@ -9,6 +9,7 @@ import { type CasaCongresso, NOME_UF, caminhoParlamentar } from "../_dados/congr
 import fotografia from "../_dados/fotografia.json";
 import type { DadosPainel } from "../_dados/tipos";
 import { useCotaDoAno } from "../_dados/useCota";
+import { usePlenario } from "./PlenarioParlamentar";
 import type { Parlamentar } from "./DiretorioCongresso";
 import { TerminalParlamentar, linkCongresso } from "./TerminalParlamentar";
 import estilos from "./Parlamentares.module.css";
@@ -26,7 +27,9 @@ export function PaginaParlamentar({ casa, id, dados, corDe }: {
   corDe: (partido: string | null) => string;
 }) {
   const pessoa: Parlamentar | undefined = fotografia[casa].find(p => p.id === id);
-  const { indice, cota, periodo, anos, setPeriodo, erro } = useCotaDoAno(casa);
+  const { indice, cota, periodo, anos, setPeriodo, erro } = useCotaDoAno(casa, true);
+  const plenario = usePlenario(casa).dados;
+  const anosDoPerfil = [...new Set([...anos, ...(plenario?.anos ?? [])])].filter(a => indice?.totais[id]?.[anos.indexOf(a)] != null || !!plenario?.pessoas[id]?.[a]).sort((a, b) => a - b);
   if (!pessoa) return <div className={estilos.pagina}>
     <p className={estilos.aviso}>Este parlamentar não está na composição atual do Congresso. <Link href={linkCongresso(casa)} className="underline underline-offset-4">Ver quem está</Link>.</p>
   </div>;
@@ -45,7 +48,7 @@ export function PaginaParlamentar({ casa, id, dados, corDe }: {
       </ol>
     </nav>
     <TerminalParlamentar casa={casa} pessoa={pessoa} governos={dados.governos} ufs={dados.ufs} cor={corDe(pessoa.partido)} corDe={corDe}
-      indice={indice} cota={cota} erroCota={erro} periodo={periodo} anos={anos} aoEscolherPeriodo={setPeriodo}
+      indice={indice} cota={cota} erroCota={erro} periodo={periodo} anos={anosDoPerfil} aoEscolherPeriodo={setPeriodo}
       acoes={<>
         <Link href={maquete}>Ver na maquete</Link>
         <Compartilhar mensagem={`${pessoa.nome}: votações, cota parlamentar e perfil`} compacto />

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { agruparPor, caminhoParlamentar, comparadoAMedia, idade, intervaloDaCota, mesesDaCota, posicaoEntre, posicaoNaCota, posicaoNoAno, primeiroMesComNota, reaisCompactos, reaisInteiros, resumirRecorte, rotaParlamentar, situacaoDaCota, situacaoDosMeses, textoPercentual } from '../src/app/_painel/_dados/congressoModelo.ts';
 
 const indice = {
@@ -120,4 +121,21 @@ test("primeira nota e posição no período inteiro", () => {
   assert.deepEqual(primeiroMesComNota(cota, cota.pessoas[1]), { ano: 2023, mes: 6 }, "julho de 2023");
   assert.deepEqual(posicaoNaCota(cota, 1), { posicao: 2, de: 2 });
   assert.equal(posicaoNaCota(cota, 9), null);
+});
+
+test('a cota histórica soma todos os anos sem sobrepor a legislatura nem perder meses', () => {
+  const ler = nome => JSON.parse(readFileSync(new URL(`../public/painel/congresso/${nome}.json`, import.meta.url), 'utf8'));
+  for (const casa of ['deputados','senadores']) {
+    const indice = ler(`cota-${casa}`), historico = ler(`cota-${casa}-historico`);
+    const anuais = indice.anos.map(a => ler(`cota-${casa}-${a}`));
+    assert.equal(indice.anos[0], 2008); assert.ok(indice.anos.length > 4);
+    assert.equal(mesesDaCota(historico)[0].ano, 2008);
+    assert.equal(historico.mediaMes.length, indice.anos.length * 12);
+    for (const [id,gasto] of Object.entries(historico.pessoas)) {
+      const soma = anuais.reduce((s,a) => s + (a.pessoas[id]?.t ?? 0), 0);
+      assert.ok(Math.abs(gasto.t - soma) <= indice.anos.length / 2, `${casa}/${id}: total histórico duplicado`);
+      assert.equal(gasto.n, anuais.reduce((s,a) => s + (a.pessoas[id]?.n ?? 0), 0));
+      assert.deepEqual(gasto.m, anuais.flatMap(a => a.pessoas[id]?.m ?? Array(12).fill(0)));
+    }
+  }
 });

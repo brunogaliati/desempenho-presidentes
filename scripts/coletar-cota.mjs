@@ -1,7 +1,8 @@
 /**
- * Fotografia da cota parlamentar (CEAP na Câmara, CEAPS no Senado) da legislatura atual.
+ * Fotografia da cota parlamentar (CEAP na Câmara, CEAPS no Senado) desde 2008.
  *
  *     node scripts/coletar-cota.mjs
+ *     node scripts/coletar-cota.mjs --cache  # reutiliza os arquivos oficiais já baixados
  *
  * Grava em `public/painel/congresso/` um índice por casa (`cota-deputados.json`) e um arquivo
  * por ano (`cota-deputados-2026.json`), lidos
@@ -18,6 +19,7 @@
  */
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { inflateRawSync } from "node:zlib";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -25,7 +27,11 @@ import { fileURLToPath } from "node:url";
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SAIDA = join(RAIZ, "public", "painel", "congresso");
 const fotografia = JSON.parse(await readFile(join(RAIZ, "src", "app", "_painel", "_dados", "fotografia.json"), "utf8"));
-const ANOS = [2023, 2024, 2025, 2026];
+const ANOS = Array.from({ length: new Date().getFullYear() - 2008 + 1 }, (_, i) => 2008 + i);
+const INICIO_LEGISLATURA = 2023 + 4 * Math.floor((new Date().getFullYear() - 2023) / 4);
+const HISTORICO = "historico";
+const CACHE = join(RAIZ, ".cache", "cota");
+await mkdir(CACHE, { recursive: true });
 const AGENTE = { "user-agent": "desempenho-do-governo/coleta (dados abertos)" };
 const TOP_FORNECEDORES = 6;
 /** Soma de fevereiro de 2023 a janeiro de 2027, em 48 meses. */
@@ -35,11 +41,19 @@ const MESES_LEGISLATURA = 48;
 const TOP_FORNECEDORES_CASA = 30;
 
 async function baixar(url, tipo = "buffer", tentativas = 3) {
+  const caminho = join(CACHE, createHash("sha256").update(url).digest("hex"));
+  if (process.argv.includes("--cache")) {
+    try { const salvo = await readFile(caminho); return tipo === "json" ? JSON.parse(salvo) : salvo; }
+    catch (erro) { if (erro.code !== "ENOENT") throw erro; }
+  }
   for (let i = 1; ; i++) {
     try {
       const r = await fetch(url, { headers: AGENTE, signal: AbortSignal.timeout(180_000) });
       if (!r.ok) throw new Error(`${r.status} em ${url}`);
-      return tipo === "json" ? await r.json() : Buffer.from(await r.arrayBuffer());
+      const dados = Buffer.from(await r.arrayBuffer());
+      if (tipo === "json") JSON.parse(dados);
+      await writeFile(caminho, dados);
+      return tipo === "json" ? JSON.parse(dados) : dados;
     } catch (erro) {
       if (i >= tentativas) throw erro;
       await new Promise(ok => setTimeout(ok, 2000 * i));
@@ -144,8 +158,10 @@ function novoAcumulador(ids) {
         a.f.set(chave, f);
       };
       acumular(ano, 12, mes - 1);
+      acumular(HISTORICO, ANOS.length * 12, (ano - ANOS[0]) * 12 + mes - 1);
       // A 57ª legislatura começou em 1º de fevereiro de 2023: janeiro de 2023 ainda é a anterior.
-      if (mes >= 1 && mes <= 12 && (ano > ANOS[0] || mes >= 2)) acumular(LEGISLATURA, MESES_LEGISLATURA, (ano - ANOS[0]) * 12 + mes - 2);
+      if (mes >= 1 && mes <= 12 && ano >= INICIO_LEGISLATURA && ano <= INICIO_LEGISLATURA + 4
+        && (ano > INICIO_LEGISLATURA || mes >= 2) && (ano < INICIO_LEGISLATURA + 4 || mes === 1)) acumular(LEGISLATURA, MESES_LEGISLATURA, (ano - INICIO_LEGISLATURA) * 12 + mes - 2);
     },
     pessoas,
   };
@@ -163,12 +179,12 @@ function exportar(casa, acumulador, ultimoMes, fontes) {
   const totais = {};
   const media = {};
   const porAno = {};
-  for (const ano of [...ANOS, LEGISLATURA]) {
+  for (const ano of [...ANOS, LEGISLATURA, HISTORICO]) {
     const categorias = [];
     const indiceCategoria = c => { let i = categorias.indexOf(c); if (i < 0) { i = categorias.length; categorias.push(c); } return i; };
     const pessoas = {};
     const valores = [];
-    const meses = Array(ano === LEGISLATURA ? MESES_LEGISLATURA : 12).fill(0);
+    const meses = Array(ano === HISTORICO ? ANOS.length * 12 : ano === LEGISLATURA ? MESES_LEGISLATURA : 12).fill(0);
     const daCasa = new Map();
     for (const [id, anos] of acumulador.pessoas) {
       const a = anos.get(ano);
@@ -196,7 +212,7 @@ function exportar(casa, acumulador, ultimoMes, fontes) {
     // [nome, valor, notas, quantos parlamentares pagaram]
     const fornecedores = [...daCasa.values()].sort((x, y) => y.v - x.v).slice(0, TOP_FORNECEDORES_CASA)
       .map(c => [[...c.nomes].sort((x, y) => y[1] - x[1])[0][0], reais(c.v), c.n, c.pessoas]);
-    porAno[ano] = { casa, ano, ...(ano === LEGISLATURA ? { inicio: `${ANOS[0]}-02` } : {}), coletadoEm, ultimoMes: ultimoMes[ano] ?? ultimoMes[ANOS.at(-1)] ?? 0, categorias, mediaMes: meses.map(v => valores.length ? reais(v / valores.length) : 0), fornecedores, pessoas };
+    porAno[ano] = { casa, ano, ...(ano === LEGISLATURA ? { inicio: `${INICIO_LEGISLATURA}-02` } : ano === HISTORICO ? { inicio: `${ANOS[0]}-01` } : {}), coletadoEm, ultimoMes: ultimoMes[ano] ?? ultimoMes[ANOS.at(-1)] ?? 0, categorias, mediaMes: meses.map(v => valores.length ? reais(v / valores.length) : 0), fornecedores, pessoas };
   }
   for (const [id, anos] of acumulador.pessoas) if (anos.size) totais[id] = ANOS.map(ano => anos.has(ano) ? reais(anos.get(ano).t) : null);
   return { indice: { casa, coletadoEm, anos: ANOS, ultimoMes, fontes, media, totais }, porAno };
@@ -253,6 +269,6 @@ for (const [casa, acumulador, ultimoMes, fontes] of casasColetadas) {
     return `${nome} ${(json.length / 1024).toFixed(0)} KB`;
   };
   const linhas = [await gravar(`cota-${casa}.json`, indice)];
-  for (const ano of [...ANOS, LEGISLATURA]) linhas.push(await gravar(`cota-${casa}-${ano}.json`, porAno[ano]));
+  for (const ano of [...ANOS, LEGISLATURA, HISTORICO]) linhas.push(await gravar(`cota-${casa}-${ano}.json`, porAno[ano]));
   console.log(`${casa}: ${Object.keys(indice.totais).length} pessoas · ${linhas.join(" · ")}`);
 }

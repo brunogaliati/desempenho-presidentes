@@ -22,7 +22,8 @@ export type GastoNoAno = { t: number; n: number; m: number[]; c: [number, number
 
 /** Um ano, ou a legislatura inteira (de fevereiro de 2023 em diante, 48 meses). */
 export const LEGISLATURA = "legislatura" as const;
-export type PeriodoCota = number | typeof LEGISLATURA;
+export const HISTORICO = "historico" as const;
+export type PeriodoCota = number | typeof LEGISLATURA | typeof HISTORICO;
 
 /** `public/painel/congresso/cota-{casa}-{ano}.json` ou `cota-{casa}-legislatura.json`. */
 export type CotaDoAno = {
@@ -30,6 +31,7 @@ export type CotaDoAno = {
   ano: PeriodoCota;
   /** Primeiro mês da legislatura, "2023-02"; os anos começam em janeiro. */
   inicio?: string;
+  semCobertura?: boolean;
   coletadoEm: string;
   ultimoMes: number;
   categorias: string[];
@@ -179,7 +181,7 @@ export function situacaoDosMeses(ano: number, coletadoEm: string): SituacaoMes[]
 /** Mês do calendário de cada posição de `m` e de `mediaMes` (mes de 0 a 11). */
 export type MesDaCota = { ano: number; mes: number };
 export function mesesDaCota(cota: Pick<CotaDoAno, "ano" | "inicio" | "mediaMes">): MesDaCota[] {
-  const [ano0, mes0] = cota.ano === LEGISLATURA ? (cota.inicio ?? "2023-02").split("-").map(Number) : [cota.ano, 1];
+  const [ano0, mes0] = typeof cota.ano !== "number" ? (cota.inicio ?? (cota.ano === HISTORICO ? "2008-01" : "2023-02")).split("-").map(Number) : [cota.ano, 1];
   return cota.mediaMes.map((_, i) => { const k = ano0 * 12 + mes0 - 1 + i; return { ano: Math.floor(k / 12), mes: k % 12 }; });
 }
 export function situacaoDaCota(cota: Pick<CotaDoAno, "ano" | "inicio" | "mediaMes" | "coletadoEm">): SituacaoMes[] {
@@ -187,7 +189,7 @@ export function situacaoDaCota(cota: Pick<CotaDoAno, "ano" | "inicio" | "mediaMe
 }
 
 /** "em 2024" ou "na legislatura". */
-export const noPeriodo = (p: PeriodoCota) => (p === LEGISLATURA ? "na legislatura" : `em ${p}`);
+export const noPeriodo = (p: PeriodoCota) => (p === HISTORICO ? "no histórico disponível" : p === LEGISLATURA ? "na legislatura" : `em ${p}`);
 
 /** ", de fevereiro de 2023 a novembro de 2026"; num ano em curso, ", de janeiro a novembro"; num ano fechado, nada. */
 export function intervaloDaCota(cota: Pick<CotaDoAno, "ano" | "inicio" | "mediaMes" | "coletadoEm">): string {
@@ -195,7 +197,7 @@ export function intervaloDaCota(cota: Pick<CotaDoAno, "ano" | "inicio" | "mediaM
   const ultimo = situacao.findLastIndex(s => s !== "futuro");
   if (ultimo < 0) return "";
   const [inicio, fim] = [meses[0], meses[ultimo]];
-  if (cota.ano === LEGISLATURA) return `, de ${MESES_POR_EXTENSO[inicio.mes]} de ${inicio.ano} a ${MESES_POR_EXTENSO[fim.mes]} de ${fim.ano}`;
+  if (typeof cota.ano !== "number") return `, de ${MESES_POR_EXTENSO[inicio.mes]} de ${inicio.ano} a ${MESES_POR_EXTENSO[fim.mes]} de ${fim.ano}`;
   return situacao.includes("parcial") ? `, de janeiro a ${MESES_POR_EXTENSO[fim.mes]}` : "";
 }
 
@@ -269,6 +271,7 @@ export type LinhaPlenario = { s?: [number, number]; v: [number, number]; g: [num
 export type VotacaoPlenario = {
   id: string; data: string; titulo?: string; ementa?: string; descricao: string;
   aprovada: boolean; sim: number; nao: number; governo: "Sim" | "Não" | null;
+  placarInformado?: boolean;
 };
 /** `public/painel/congresso/plenario-{casa}.json`, gravado por `scripts/coletar-plenario.mjs`. */
 export type Plenario = {
@@ -286,6 +289,7 @@ export type Plenario = {
 };
 export const VOTO_POR_LETRA: Record<string, string> = {
   S: "Sim", N: "Não", A: "Abstenção", O: "Obstrução", P: "Presidiu", V: "Votou", J: "Ausência justificada", F: "Faltou", "-": "Não votou", " ": "Fora do cargo",
+  "?": "Voto não informado",
 };
 /** Fração de [parte, total]; null sem base. */
 export const taxa = ([parte, total]: [number, number]) => (total > 0 ? parte / total : null);

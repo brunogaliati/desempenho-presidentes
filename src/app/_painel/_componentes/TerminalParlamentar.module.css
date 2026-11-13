@@ -22,6 +22,22 @@
   --cor-emendas: light-dark(#1c8f97, #2ba99a);
   --cor-fornecedores: light-dark(#7c8a97, #96a4b0);
   --cor-fornecedores-outros: light-dark(#c9d1d8, #46525d);
+  /*
+   * Os selos de "Como votou", a única exceção ao verde = melhorou do site (ver `Selo`): o selo
+   * cheio usa o verde e o vermelho do placar, com texto branco; o leve, um fundo claro com a
+   * tinta mais escura no tema claro e mais clara no escuro, para o texto passar de 4,5:1.
+   */
+  --voto-sim: var(--placar-bom);
+  --voto-nao: var(--placar-ruim);
+  --voto-sim-tinta: light-dark(#256a4f, #7fcaa6);
+  --voto-nao-tinta: light-dark(#93392d, #eb9a8c);
+  --voto-outro: light-dark(#8d99a4, #6f7d89);
+  --voto-ausente: light-dark(#d4dbe1, #3a4651);
+  /* Altura das linhas da grade, por capítulo (ver `.grade`). */
+  --linha-cota: 330px;
+  --linha-listas: 504px;
+  --linha-plenario: 1040px;
+  --linha-emendas: 760px;
   display:grid; gap:12px; width:100%; max-width:1400px; margin:0 auto; min-width:0;
 }
 
@@ -44,43 +60,58 @@
 .fita { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,3fr) minmax(0,1fr); padding-top:14px; border-top:1px solid var(--borda); }
 .grupo { display:grid; align-content:start; gap:8px; min-width:0; }
 .grupo + .grupo { margin-left:20px; padding-left:20px; border-left:1px solid var(--borda); }
-.grupoNome { font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--tinta-3); }
+/* O nome do grupo leva o símbolo do capítulo e é o caminho até ele. */
+.grupoNome { display:inline-flex; align-items:center; gap:6px; justify-self:start; font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--tinta-2); text-decoration:none; }
+.grupoNome svg { flex:none; color:var(--tinta); }
+.grupoNome:hover { color:var(--tinta); text-decoration:underline; text-underline-offset:3px; }
+.grupoNome:focus-visible { outline:2px solid var(--serie); outline-offset:2px; border-radius:4px; }
 .celulas { display:grid; grid-template-columns:repeat(var(--n, 1), minmax(0,1fr)); gap:12px 18px; }
 .celula { min-width:0; }
 .celula dt { font-size:12px; line-height:1.3; color:var(--tinta-2); }
 .celula dd strong { display:block; margin-top:4px; font-size:28px; font-weight:650; letter-spacing:-.02em; line-height:1.05; }
 .celula dd span { display:block; margin-top:4px; font-size:11.5px; line-height:1.4; color:var(--tinta-2); }
 
+/* --- Capítulos -------------------------------------------------------------- */
+/*
+ * Cada assunto abre com o símbolo, o nome e uma frase do que é, no fundo da página, fora dos
+ * painéis. O que separa um capítulo do outro é esse título e o espaço em volta, nada de fio
+ * nem de cor. O `scroll-margin` deixa o título visível quando a fita leva até ele.
+ */
+.capitulo { display:grid; gap:12px; min-width:0; margin-top:22px; scroll-margin-top:calc(var(--altura-cabecalho-visivel, var(--altura-cabecalho, 112px)) + 16px); }
+.capituloCabeca { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:2px 12px; padding:0 6px; }
+.simbolo { grid-row:1 / span 2; display:grid; place-items:center; width:36px; height:36px; border-radius:11px; background:var(--faixa-a); color:var(--tinta); }
+.capituloCabeca h2 { font-size:20px; font-weight:650; letter-spacing:-.02em; line-height:1.2; }
+.capituloCabeca p { max-width:96ch; font-size:13px; line-height:1.45; color:var(--tinta-2); }
+
 /* --- Grade de painéis ------------------------------------------------------ */
 /*
- * Uma grade de linhas de altura fixa, em três colunas iguais:
- *   mês a mês (2 colunas)          | ano a ano
- *   categorias | fornecedores      | plenário ano a ano (a presença)
- *   como votou (2 colunas, 2 linhas) | bancada do estado
- *                                  | bancada do partido
- *   emendas por município (3 colunas; altura do conteúdo, até o teto)
- *   fontes (2 colunas)             | emendas
+ * Cada capítulo tem a sua grade de linhas de altura fixa, em três colunas iguais:
+ *   cota:      gasto por mês (2 colunas)       | gasto por ano
+ *              categorias | fornecedores       | bancada (estado ou partido)
+ *   plenário:  como votou (2 colunas)          | presença e votos por ano
+ *   emendas:   Emendas Pix por ano (faixa larga, um ano por célula: o resumo)
+ *              emendas por município (largura inteira: o detalhe)
  * Painéis da mesma linha têm a altura da linha, então as bordas sempre batem. Cada painel
  * (`.painel`) tem o cabeçalho fixo e o miolo rolando quando não cabe: "ver todos" abre uma
- * rolagem e não estica nada. As alturas foram medidas para o conteúdo padrão caber a 1440px.
- * Sem cota (ou sem a bancada do partido), a área fica vazia e o resto não se mexe.
+ * rolagem e não estica nada. As alturas (tokens em `.pagina`) foram medidas para o conteúdo
+ * padrão caber a 1440 e a 1200px. Sem cota (ou sem bancada), a área fica vazia e o resto não
+ * se mexe. As emendas, sozinhas na linha, têm a altura do conteúdo até o teto.
  */
-.grade {
-  --linha-cota: 330px;
-  --linha-listas: 490px;
-  --linha-bancada: 512px;
-  --linha-fim: 320px;
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  grid-template-rows:var(--linha-cota) var(--linha-listas) var(--linha-bancada) var(--linha-bancada) auto var(--linha-fim);
-  grid-template-areas:"mes mes ano" "cat for ple" "vot vot uf" "vot vot par" "mun mun mun" "fon fon eme";
-  gap:12px;
-}
-.aMes { grid-area:mes; } .aAno { grid-area:ano; } .aCat { grid-area:cat; } .aFor { grid-area:for; } .aPle { grid-area:ple; }
-.aVot { grid-area:vot; } .aUf { grid-area:uf; } .aPar { grid-area:par; } .aEme { grid-area:eme; } .aFon { grid-area:fon; }
-.aMun { grid-area:mun; max-height:680px; }
-/* Só uma bancada (sem partido, ou sozinho no partido): ela ocupa o lugar das duas. */
-.aBancada { grid-area:uf / uf / par / par; }
+.grade { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.gradeCota { grid-template-rows:var(--linha-cota) var(--linha-listas); grid-template-areas:"mes mes ano" "cat for ban"; }
+.gradePlenario { grid-template-rows:var(--linha-plenario); grid-template-areas:"vot vot ple"; }
+.gradeEmendas { grid-template-areas:"eme eme eme" "mun mun mun"; }
+.aMes { grid-area:mes; } .aAno { grid-area:ano; } .aCat { grid-area:cat; } .aFor { grid-area:for; } .aBan { grid-area:ban; }
+.aVot { grid-area:vot; } .aPle { grid-area:ple; } .aEme { grid-area:eme; } .aMun { grid-area:mun; max-height:var(--linha-emendas); }
+
+/* Emendas Pix por ano: um ano por célula, lado a lado, com a barra na escala do maior ano. */
+.anosEmendas { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px 24px; padding:2px 2px 4px; }
+.anosEmendas li { display:grid; gap:3px; min-width:0; }
+.anosEmendas span { font-size:12px; font-weight:600; color:var(--tinta-2); }
+.anosEmendas strong { font-size:22px; font-weight:650; letter-spacing:-.02em; line-height:1.1; }
+.anosEmendas small { font-size:11.5px; color:var(--tinta-2); }
+.anosEmendas i { display:block; height:6px; margin-top:4px; border-radius:3px; background:color-mix(in srgb, var(--cor-emendas) 16%, transparent); }
+.anosEmendas i b { display:block; height:100%; border-radius:3px; background:var(--cor-emendas); }
 
 /* O painel: cabeçalho fixo, miolo com rolagem. O respiro de 2px é para o anel de foco não ser cortado pela borda da rolagem. */
 .painel { display:flex; flex-direction:column; min-height:0; }
@@ -89,10 +120,6 @@
 .notaNaBase { display:flex; flex-direction:column; }
 .notaNaBase > .nota { margin-top:auto; padding-top:10px; }
 
-/* Entre 1100 e 1300px os cabeçalhos das bancadas quebram em duas linhas: a linha delas cresce para a lista caber sem rolar. */
-@media (min-width:1101px) and (max-width:1300px) {
-  .grade { --linha-bancada:540px; }
-}
 
 /*
  * A faixa do todo (por família de gasto; os maiores fornecedores e o resto) e a legenda com
@@ -113,8 +140,14 @@
 .linkPainel { display:inline-flex; align-items:center; min-height:32px; font-size:12.5px; font-weight:600; text-decoration:underline; text-underline-offset:3px; }
 .rodape { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; margin-top:6px; font-size:12px; color:var(--tinta-2); }
 .verTodas { margin-top:8px; }
-.fontes { display:grid; gap:10px; }
-.fontes > p:first-child { padding-top:0; border-top:0; }
+/* As fontes no rodapé da página, fora dos capítulos e sem painel: texto miúdo, um parágrafo por base. */
+.fontes { display:grid; gap:10px; margin-top:22px; padding:0 6px; }
+.fontes h2 { font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--tinta-3); }
+.fontes > h2 + p { padding-top:0; border-top:0; }
+
+/* A bancada: o seletor Estado | Partido e a posição da pessoa nela, numa linha antes da lista. */
+.bancadaTopo { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 12px; margin-bottom:8px; font-size:12px; color:var(--tinta-2); }
+.bancadaTopo b { font-weight:650; color:var(--tinta); }
 
 /*
  * Emendas: a tabela à esquerda e, à direita, o mapa do estado. Municípios que receberam ficam
@@ -197,14 +230,44 @@
 .proposicao strong { display:block; font-size:12.5px; font-weight:650; }
 .proposicao span { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; color:var(--tinta); }
 .resultado,.voto,.governo { width:1%; white-space:nowrap; }
+.resultado small { margin-top:3px; }
+
+/*
+ * Os selos: ✓ Sim / ✗ Não cheios, ✓ Aprovada / ✗ Rejeitada leves. O símbolo e a palavra
+ * dizem o mesmo que a cor. O que não é Sim nem Não (abstenção, obstrução, não votou, fora do
+ * cargo) fica num selo cinza de contorno, sem cor.
+ */
+.selo { display:inline-flex; align-items:center; gap:5px; min-height:24px; padding:0 9px 0 7px; border-radius:999px; background:var(--voto-nao); color:#fff; font-size:12.5px; font-weight:650; line-height:1; white-space:nowrap; }
+.selo[data-sim] { background:var(--voto-sim); }
+.selo[data-leve] { min-height:22px; background:color-mix(in srgb, var(--voto-nao) 13%, transparent); color:var(--voto-nao-tinta); font-size:12px; font-weight:600; }
+.selo[data-leve][data-sim] { background:color-mix(in srgb, var(--voto-sim) 13%, transparent); color:var(--voto-sim-tinta); }
+.selo svg { flex:none; }
+.seloNeutro { display:inline-flex; align-items:center; min-height:24px; padding:0 9px; border:1px solid var(--borda); border-radius:999px; font-size:12px; font-weight:500; line-height:1; white-space:nowrap; color:var(--tinta-2); }
+.seloNeutro[data-fora] { border-style:dashed; color:var(--tinta-3); }
+
+/* O placar no topo de "Como votou": os números e a faixa com a parte de cada voto. */
+.placarVotos { display:grid; gap:10px; margin:0 0 12px; padding:0 2px; }
+.placarVotos dl { display:flex; flex-wrap:wrap; gap:6px 28px; }
+.placarVotos dl > div { display:grid; gap:2px; }
+.placarVotos dd { font-size:26px; font-weight:650; letter-spacing:-.02em; line-height:1; }
+.placarVotos dt { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--tinta-2); }
+.placarVotos dt i { flex:none; width:9px; height:9px; border-radius:3px; background:var(--cor); }
+.placarVotos [data-parte="sim"] { --cor:var(--voto-sim); }
+.placarVotos [data-parte="nao"] { --cor:var(--voto-nao); }
+.placarVotos [data-parte="outro"] { --cor:var(--voto-outro); }
+.placarVotos [data-parte="ausente"] { --cor:var(--voto-ausente); }
+.placarVotos dl [data-parte="sim"] dd { color:var(--voto-sim-tinta); }
+.placarVotos dl [data-parte="nao"] dd { color:var(--voto-nao-tinta); }
+.faixaVotos { display:flex; gap:2px; height:8px; }
+.faixaVotos > span { flex-basis:0; min-width:3px; border-radius:3px; background:var(--cor); }
 
 /* Plenário ano a ano: os anos são botões que escolhem o período da página. */
 .anos { width:100%; border-collapse:collapse; }
 .anos thead th { padding:0 0 6px; text-align:right; }
-.anos thead button { min-height:28px; padding:0 9px; border:0; border-radius:999px; background:transparent; color:var(--tinta-2); font:inherit; font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; cursor:pointer; transition:background-color 140ms ease-out, color 140ms ease-out; }
-.anos thead button:hover { background:var(--faixa-a); color:var(--tinta); }
-.anos thead button[aria-pressed="true"] { background:var(--superficie); color:var(--tinta); box-shadow:0 1px 2px rgb(0 0 0 / .14); }
-.anos thead button:focus-visible { outline:2px solid var(--serie); outline-offset:1px; }
+.anos button { min-height:28px; padding:0 9px; border:0; border-radius:999px; background:transparent; color:var(--tinta-2); font:inherit; font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; cursor:pointer; transition:background-color 140ms ease-out, color 140ms ease-out; }
+.anos button:hover { background:var(--faixa-a); color:var(--tinta); }
+.anos button[aria-pressed="true"] { background:var(--superficie); color:var(--tinta); box-shadow:0 1px 2px rgb(0 0 0 / .14); }
+.anos button:focus-visible { outline:2px solid var(--serie); outline-offset:1px; }
 .anos tbody tr { border-top:1px solid var(--borda); }
 .anos tbody th { padding:9px 8px 9px 0; font-size:12.5px; font-weight:500; text-align:left; white-space:nowrap; color:var(--tinta-2); }
 .anos td { padding:8px 9px; text-align:right; }
@@ -213,9 +276,10 @@
 .anos td small { display:block; margin-top:1px; font-size:11px; color:var(--tinta-3); }
 
 /*
- * Numa coluna só, na ordem do HTML: a cota, o plenário (presença antes das bancadas), as
- * bancadas, as emendas e as fontes. Sem vizinho para alinhar, cada painel tem a altura do
- * conteúdo até um teto; o que passa disso (e o que se expande) rola dentro dele.
+ * Numa coluna só, na ordem do HTML, capítulo por capítulo: a cota (com a bancada no fim), o
+ * plenário (a presença antes de como votou), as emendas e as fontes. Sem vizinho para
+ * alinhar, cada painel tem a altura do conteúdo até um teto; o que passa disso (e o que se
+ * expande) rola dentro dele.
  */
 @media (max-width:1100px) {
   .grade { grid-template-columns:minmax(0,1fr); grid-template-rows:none; grid-template-areas:none; }
@@ -249,12 +313,12 @@
   .celula dd strong { font-size:24px; }
   /* A tabela de votações vira uma ficha por votação. */
   .votos thead { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
-  .votos tr { display:grid; grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"data resultado voto" "proposicao proposicao proposicao" "governo governo governo"; align-items:center; gap:4px 10px; padding:10px 2px; border-bottom:1px solid var(--borda); }
+  .votos tr { display:grid; grid-template-columns:auto auto minmax(0,1fr); grid-template-areas:"data voto resultado" "proposicao proposicao proposicao" "governo governo governo"; align-items:center; gap:6px 10px; padding:10px 2px; border-bottom:1px solid var(--borda); }
   .votos td { display:block; width:auto; padding:0; border:0; }
   .votos :is(th,td):first-child, .votos :is(th,td):last-child { padding:0; }
   .data { grid-area:data; }
-  .resultado { grid-area:resultado; display:flex !important; gap:6px; align-items:baseline; }
-  .resultado small { display:inline; }
+  .resultado { grid-area:resultado; display:flex !important; gap:6px; align-items:center; justify-content:flex-end; }
+  .resultado small { display:inline; margin-top:0; }
   .voto { grid-area:voto; }
   .proposicao { grid-area:proposicao; }
   .governo { grid-area:governo; display:flex !important; gap:6px; align-items:baseline; color:var(--tinta-2); font-size:12px; }

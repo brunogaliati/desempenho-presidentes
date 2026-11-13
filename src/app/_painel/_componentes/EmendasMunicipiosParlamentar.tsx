@@ -23,7 +23,7 @@ export function EmendasMunicipiosParlamentar({ casa, id, periodo, uf, className 
   const { dados, erro, carregando } = useJson<EmendasParlamentar>(`/api/painel/congresso/emendas?${new URLSearchParams({ casa, id: String(id), ano: String(periodo) })}`);
   return <Bloco id="emendas-municipios" titulo="Emendas para os municípios" detalhe={NOME_UF[uf] ?? uf} lustroFixo className={className} corpo={t.emendasMiolo}>
     {carregando ? <div aria-busy="true"><EsqueletoDetalhe /></div> : erro ? <p className={estilos.aviso}>Não foi possível carregar as emendas. Recarregue a página para tentar novamente.</p>
-      : dados ? <TabelaEmendas key={`${casa}-${id}-${periodo}`} dados={dados} /> : null}
+      : dados ? dados.ate < 2014 ? <p className={estilos.aviso}>A fonte nacional de emendas tem cobertura desde 2014. Não há cobertura para {dados.ate}; isso não significa ausência de emendas.</p> : <TabelaEmendas key={`${casa}-${id}-${periodo}`} dados={dados} /> : null}
   </Bloco>;
 }
 

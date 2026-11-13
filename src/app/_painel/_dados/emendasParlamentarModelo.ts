@@ -71,7 +71,7 @@ export function municipiosPrevistosDosPlanos(planos: PlanoEmenda[], uf: string):
 export function anosDasEmendas(periodo: PeriodoCota, hoje = new Date()) {
   const ano = hoje.getFullYear();
   const inicio = 2023 + 4 * Math.floor((ano - 2023) / 4);
-  return typeof periodo === "number" ? { desde: periodo, ate: periodo } : { desde: inicio, ate: Math.min(inicio + 3, ano) };
+  return typeof periodo === "number" ? { desde: periodo, ate: periodo } : { desde: periodo === "historico" ? 2014 : inicio, ate: Math.min(inicio + 3, ano) };
 }
 
 export type OrdemEmendas = "nome" | "destinado" | "pago";

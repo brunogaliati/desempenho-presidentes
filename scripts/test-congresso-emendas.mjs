@@ -24,6 +24,7 @@ const { anosDasEmendas, municipiosDasEmendas, planosDasEmendas, municipiosPrevis
 const { TabelaEmendas } = require('../src/app/_painel/_componentes/EmendasMunicipiosParlamentar.tsx');
 const { PlanosEmendasParlamentar } = require('../src/app/_painel/_componentes/PlanosEmendasParlamentar.tsx');
 const { SemMunicipioEmendasParlamentar } = require('../src/app/_painel/_componentes/SemMunicipioEmendasParlamentar.tsx');
+const { SeletorAnoCota } = require('../src/app/_painel/_componentes/GraficosCota.tsx');
 const { renderToStaticMarkup } = require('react-dom/server');
 const CarregandoPainel = require('../src/app/_painel/_componentes/CarregandoPainel.tsx').default;
 test('perfil tem skeleton de identidade e painéis, enquanto o diretório mantém o plenário', () => {
@@ -50,6 +51,15 @@ const dados = {
 test('o período usa o ano da emenda e mantém a legislatura do perfil', () => {
   assert.deepEqual(anosDasEmendas('legislatura', new Date('2026-11-13T12:00:00Z')), { desde: 2023, ate: 2026 });
   assert.deepEqual(anosDasEmendas(2025), { desde: 2025, ate: 2025 });
+  assert.deepEqual(anosDasEmendas('historico', new Date('2026-11-13T12:00:00Z')), { desde: 2014, ate: 2026 });
+});
+
+test('o seletor oferece histórico, legislatura e todos os anos com um controle acessível', () => {
+  const html = renderToStaticMarkup(require('react').createElement(SeletorAnoCota, { anos: [2011,2015,2019,2023,2026], periodo: 'historico', aoEscolher() {} }));
+  assert.match(html, /<select[^>]+aria-label="Período dos números"/);
+  assert.match(html, /value="historico" selected=""/);
+  assert.match(html, /value="legislatura"/);
+  for (const ano of [2011,2015,2019,2023,2026]) assert.ok(html.includes(`value="${ano}"`));
 });
 
 test('documentos sem município mostram favorecido, localidade e fases sem inventar pagamentos', () => {
@@ -160,10 +170,15 @@ if (process.env.EMENDAS_BASE_URL) {
       assert.ok([...d.aplicacao, ...d.prefeituras].every(m => m.codigo.startsWith(uf === 'MG' ? '31' : '16')));
       const legislatura = await (await fetch(`${base}?casa=${casa}&id=${id}`)).json();
       assert.equal(legislatura.desde, 2023); assert.equal(legislatura.ate, 2026);
+      const historico = await (await fetch(`${base}?casa=${casa}&id=${id}&ano=historico`)).json();
+      assert.equal(historico.desde, 2014);
+      const [somaHistorica] = await sql`select sum(valor) filter(where fase='Empenho')::float8 as destinado from mart.emendas_municipios
+        where casa=${casaBanco} and parlamentar_id=${id} and ano_emenda between 2014 and 2026`;
+      assert.ok(Math.abs(historico.cobertura.destinadoTotal - (somaHistorica.destinado ?? 0)) < .005);
     });
   }
   test('API rejeita casa, id e ano inválidos e não inventa parlamentar', async () => {
-    for (const query of ['casa=prefeitos&id=1', 'casa=deputados&id=-1', 'casa=senadores&id=5012&ano=2013', 'casa=senadores&id=5012&ano=banana']) {
+    for (const query of ['casa=prefeitos&id=1', 'casa=deputados&id=-1', 'casa=senadores&id=5012&ano=1990', 'casa=senadores&id=5012&ano=banana']) {
       assert.equal((await fetch(`${base}?${query}`)).status, 400);
     }
     assert.equal((await fetch(`${base}?casa=deputados&id=999999999`)).status, 404);

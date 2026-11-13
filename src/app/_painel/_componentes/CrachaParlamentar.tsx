@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import {
   type CasaCongresso, type CotaDoAno, type IndiceCota, type PerfilParlamentar, type PeriodoCota,
-  LEGISLATURA, MESES_POR_EXTENSO, caminhoParlamentar, comparadoAMedia, idade, inteiro, intervaloDaCota, mesesDaCota, noPeriodo, percentual, posicaoNaCota,
+  HISTORICO, LEGISLATURA, MESES_POR_EXTENSO, caminhoParlamentar, comparadoAMedia, idade, inteiro, intervaloDaCota, mesesDaCota, noPeriodo, percentual, posicaoNaCota,
   primeiroMesComNota, reaisCompactos, reaisInteiros, situacaoDaCota, situacaoDosMeses,
 } from "../_dados/congressoModelo";
 import type { DadosPainel } from "../_dados/tipos";
@@ -16,6 +16,7 @@ import { AnoAAno, Barras, EsqueletoDetalhe, FonteCota, MesAMes, Numero } from ".
 import { IdentidadePartido } from "./PainelEconomia";
 import { ComoVotou, NumerosPlenario } from "./PlenarioParlamentar";
 import { titulo } from "./formatos";
+import { anosDasEmendas } from "../_dados/emendasParlamentarModelo";
 import estilos from "./Parlamentares.module.css";
 
 const semAcento = (t: string) => t.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR").replace(/\s+/g, " ").trim();
@@ -53,9 +54,10 @@ export function useFichaParlamentar({ casa, pessoa, periodo, indice, cota }: {
     ? `https://www.camara.leg.br/transparencia/gastos-parlamentares?legislatura=${legislaturaDoAno(anoDasNotas)}&ano=${anoDasNotas}&mes=&por=deputado&deputado=${pessoa.id}&uf=&partido=`
     : `https://www6g.senado.leg.br/transparencia/sen/${pessoa.id}/?ano=${anoDasNotas}`;
 
-  const linkPagina = `${caminhoParlamentar(casa, pessoa)}${typeof periodo === "number" ? `?r.congresso.ano=${periodo}` : ""}`;
+  const linkPagina = `${caminhoParlamentar(casa, pessoa)}${periodo !== HISTORICO ? `?r.congresso.ano=${periodo}` : ""}`;
 
-  const emendas = p?.emendas;
+  const intervalo = anosDasEmendas(periodo);
+  const emendas = p?.emendas ? { ...p.emendas, anos: p.emendas.anos.filter(a => a.ano >= intervalo.desde && a.ano <= intervalo.ate) } : null;
   const totalEmendas = emendas?.anos.reduce((s, a) => s + a.valor, 0) ?? 0;
   const planosEmendas = emendas?.anos.reduce((s, a) => s + a.planos, 0) ?? 0;
   const anoDasEmendas = emendas?.anos.reduce((m, a) => (a.valor > m.valor ? a : m), emendas.anos[0])?.ano;
@@ -112,7 +114,7 @@ export function CrachaParlamentar({ modo = "lista", casa, pessoa, governos, ufs,
 
   const frases: string[] = [];
   if (gasto && cota) {
-    frases.push(`${legislatura ? "Na legislatura" : `Em ${cota.ano}`}${intervaloDaCota(cota)}, ${pessoa.nome} gastou ${reaisInteiros(gasto.t)} da cota parlamentar, em ${notas(gasto.n)} fiscais.`);
+    frases.push(`${quando.charAt(0).toLocaleUpperCase("pt-BR") + quando.slice(1)}${intervaloDaCota(cota)}, ${pessoa.nome} gastou ${reaisInteiros(gasto.t)} da cota parlamentar, em ${notas(gasto.n)} fiscais.`);
     if (comparacao && media && posicao) frases.push(`O valor fica ${comparacao.texto} dos ${rotuloCasa} (${reaisCompactos(media.media)}) e é o ${posicao.posicao === 1 ? "" : `${posicao.posicao}º `}maior gasto entre ${posicao.de}.`);
     if (chegouDepois) frases.push(`As notas começam em ${MESES_POR_EXTENSO[chegouDepois.mes]} de ${chegouDepois.ano}: por isso, a comparação com quem está desde 2023 é desigual.`);
     const [categoria, valorCategoria] = gasto.c[0] ?? [];
@@ -154,7 +156,7 @@ export function CrachaParlamentar({ modo = "lista", casa, pessoa, governos, ufs,
 
     {/* Um período só para o plenário e para a cota: a legislatura ou um ano. */}
     <div className={estilos.periodoTopo}>
-      <p>{typeof periodo === "number" ? `Números de ${periodo}` : "Números da legislatura, desde fevereiro de 2023"}</p>
+      <p>{typeof periodo === "number" ? `Números de ${periodo}` : periodo === HISTORICO ? "Números do histórico disponível" : "Números da legislatura, desde fevereiro de 2023"}</p>
       {seletorAno}
     </div>
     <section className={estilos.bloco} aria-labelledby="cracha-plenario">

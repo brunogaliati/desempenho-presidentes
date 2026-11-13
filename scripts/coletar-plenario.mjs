@@ -1,7 +1,8 @@
 /**
- * Fotografia do plenário na legislatura atual: presença, votações nominais e voto com o governo.
+ * Histórico do plenário: Câmara desde 2001, Senado desde 1991, além da legislatura atual.
  *
  *     node scripts/coletar-plenario.mjs
+ *     node scripts/coletar-plenario.mjs --cache  # reutiliza os arquivos oficiais já baixados
  *
  * Grava `public/painel/congresso/plenario-deputados.json` e `plenario-senadores.json`, lidos pela
  * aba Congresso. Como `coletar-cota.mjs`, não toca no banco.
@@ -27,25 +28,39 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SAIDA = join(RAIZ, "public", "painel", "congresso");
 const fotografia = JSON.parse(await readFile(join(RAIZ, "src", "app", "_painel", "_dados", "fotografia.json"), "utf8"));
-const ANOS = [2023, 2024, 2025, 2026];
+const ANOS = Array.from({ length: new Date().getFullYear() - 1991 + 1 }, (_, i) => 1991 + i);
+const ANOS_CAMARA = ANOS.filter(a => a >= 2001);
+const HISTORICO = "historico";
+const CACHE = join(RAIZ, ".cache", "plenario");
+await mkdir(CACHE, { recursive: true });
 /** A 57ª legislatura começou em 1º de fevereiro de 2023. */
 const INICIO = "2023-02-01";
 const LEGISLATURA = "legislatura";
 const ULTIMAS_VOTACOES = 30;
 const AGENTE = { "user-agent": "desempenho-do-governo/coleta (dados abertos)", accept: "application/json" };
+const coberturaCamara = {};
 
 async function baixar(url, tipo = "text", tentativas = 3) {
+  const caminho = join(CACHE, createHash("sha256").update(url).digest("hex"));
+  if (process.argv.includes("--cache")) {
+    try { const salvo = await readFile(caminho, "utf8"); return tipo === "json" ? JSON.parse(salvo) : salvo; }
+    catch (erro) { if (erro.code !== "ENOENT") throw erro; }
+  }
   for (let i = 1; ; i++) {
     try {
-      const r = await fetch(url, { headers: AGENTE });
-      if (!r.ok) throw new Error(`${r.status} em ${url}`);
-      return tipo === "json" ? await r.json() : await r.text();
+      const r = await fetch(url, { headers: AGENTE, signal: AbortSignal.timeout(180_000) });
+      if (!r.ok) throw Object.assign(new Error(`${r.status} em ${url}`), { status: r.status });
+      const texto = await r.text();
+      if (tipo === "json") JSON.parse(texto);
+      await writeFile(caminho, texto);
+      return tipo === "json" ? JSON.parse(texto) : texto;
     } catch (e) {
-      if (i >= tentativas) throw e;
+      if (e.status === 404 || i >= tentativas) throw e;
       await new Promise(ok => setTimeout(ok, 1500 * i));
     }
   }
@@ -68,7 +83,10 @@ function* linhasCsv(texto) {
 
 /** Lê um arquivo anual da Câmara e chama `cada` com um leitor de colunas por nome. */
 async function arquivoCamara(nome, ano, cada) {
-  const texto = (await baixar(`https://dadosabertos.camara.leg.br/arquivos/${nome}/csv/${nome}-${ano}.csv`)).replace(/^﻿/, "");
+  let texto;
+  try { texto = (await baixar(`https://dadosabertos.camara.leg.br/arquivos/${nome}/csv/${nome}-${ano}.csv`)).replace(/^﻿/, ""); }
+  catch (e) { if (e.status !== 404) throw e; console.log(`Câmara ${ano}: arquivo ${nome} não publicado (404)`); return null; }
+  (coberturaCamara[nome] ??= []).push(ano);
   let cabecalho = null, n = 0;
   for (const linha of linhasCsv(texto)) {
     if (!cabecalho) { cabecalho = new Map(linha.map((c, i) => [c, i])); continue; }
@@ -90,7 +108,7 @@ async function emLotes(lista, quantas, tarefa) {
 }
 
 const mediana = xs => { const s = [...xs].sort((a, b) => a - b); const m = s.length >> 1; return s.length ? (s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2) : null; };
-const periodosDe = data => (data >= INICIO ? [LEGISLATURA, Number(data.slice(0, 4))] : []);
+const periodosDe = data => [HISTORICO, Number(data.slice(0, 4)), ...(data >= INICIO ? [LEGISLATURA] : [])];
 
 /**
  * Por pessoa e período: s = [presente, sessões], v = [votou, votações], g = [com o governo, comparáveis],
@@ -110,7 +128,7 @@ function novoPlacar() {
 
 /** Taxas por período, com a mediana da casa; só entra na mediana quem tem base para a taxa. */
 function exportarPlacar(placar, ids, comSessoes, totais) {
-  const periodos = [LEGISLATURA, ...ANOS];
+  const periodos = [HISTORICO, LEGISLATURA, ...ANOS];
   const pessoas = {};
   const casa = {};
   for (const periodo of periodos) {
@@ -138,7 +156,7 @@ let semHistorico = 0;
 await emLotes(idsDeputados, 8, async id => {
   try {
     const { dados } = await baixar(`https://dadosabertos.camara.leg.br/api/v2/deputados/${id}/historico`, "json");
-    const eventos = dados.filter(e => e.idLegislatura === 57 && e.situacao).sort((a, b) => a.dataHora.localeCompare(b.dataHora));
+    const eventos = dados.filter(e => e.situacao).sort((a, b) => a.dataHora.localeCompare(b.dataHora));
     const intervalos = [];
     for (const e of eventos) {
       const aberto = intervalos.at(-1) && intervalos.at(-1)[1] === null;
@@ -150,22 +168,26 @@ await emLotes(idsDeputados, 8, async id => {
     semHistorico++;
   }
 });
-console.log(`Câmara: histórico de ${exercicio.size} deputados${semHistorico ? `, ${semHistorico} sem histórico (contam a legislatura inteira)` : ""}`);
+console.log(`Câmara: histórico de ${exercicio.size} deputados${semHistorico ? `, ${semHistorico} sem histórico de exercício (só entram participações explícitas)` : ""}`);
 const emExercicio = (id, dataHora) => {
   const intervalos = exercicio.get(id);
-  if (!intervalos) return true;
+  if (!intervalos) return false;
   return intervalos.some(([a, b]) => dataHora >= a && (b === null || dataHora < b));
 };
 
 const camara = novoPlacar();
-const totaisCamara = Object.fromEntries([LEGISLATURA, ...ANOS].map(p => [p, { sessoes: 0, votacoes: 0, governo: 0 }]));
+const totaisCamara = Object.fromEntries([HISTORICO, LEGISLATURA, ...ANOS].map(p => [p, { sessoes: 0, votacoes: 0, governo: 0 }]));
 const naFoto = new Set(idsDeputados);
 /** As votações de mérito mais recentes, para a lista de votos. */
 let meritoCamara = [];
-for (const ano of ANOS) {
+for (const ano of ANOS_CAMARA) {
+  const eventosDoPlenario = new Set();
+  await arquivoCamara("eventosOrgaos", ano, c => {
+    if (c("siglaOrgao") === "PLEN") eventosDoPlenario.add(c("idEvento"));
+  });
   const sessoes = new Map();
   await arquivoCamara("eventos", ano, c => {
-    if (c("localCamara.nome") === "Plenário da Câmara dos Deputados" && c("descricaoTipo") === "Sessão Deliberativa" && c("situacao").startsWith("Encerrada") && c("dataHoraInicio") >= INICIO) {
+    if ((eventosDoPlenario.has(c("id")) || c("localCamara.nome") === "Plenário da Câmara dos Deputados") && c("descricaoTipo") === "Sessão Deliberativa" && c("situacao").startsWith("Encerrada")) {
       sessoes.set(c("id"), c("dataHoraInicio"));
     }
   });
@@ -176,6 +198,7 @@ for (const ano of ANOS) {
     if (!naFoto.has(id)) return;
     (presencas.get(id) ?? presencas.set(id, new Set()).get(id)).add(c("idEvento"));
   });
+  if (!coberturaCamara.eventosPresencaDeputados?.includes(ano)) sessoes.clear();
   for (const [idEvento, data] of sessoes) {
     for (const periodo of periodosDe(data)) totaisCamara[periodo].sessoes++;
     for (const id of idsDeputados) {
@@ -188,7 +211,7 @@ for (const ano of ANOS) {
   const votacoes = new Map();
   await arquivoCamara("votacoes", ano, c => {
     const total = Number(c("votosSim")) + Number(c("votosNao")) + Number(c("votosOutros"));
-    if (c("siglaOrgao") !== "PLEN" || !(total > 0) || c("data") < INICIO) return;
+    if (c("siglaOrgao") !== "PLEN" || !(total > 0)) return;
     votacoes.set(c("id"), { data: c("dataHoraRegistro") || c("data"), descricao: c("descricao"), aprovada: c("aprovacao") === "1", sim: Number(c("votosSim")), nao: Number(c("votosNao")), governo: null });
   });
   await arquivoCamara("votacoesOrientacoes", ano, c => {
@@ -202,6 +225,7 @@ for (const ano of ANOS) {
     if (!naFoto.has(id)) return;
     (votos.get(c("idVotacao")) ?? votos.set(c("idVotacao"), new Map()).get(c("idVotacao"))).set(id, c("voto"));
   });
+  if (linhasVotos === null) votacoes.clear();
   for (const [idVotacao, v] of votacoes) {
     const periodos = periodosDe(v.data.slice(0, 10));
     for (const periodo of periodos) { totaisCamara[periodo].votacoes++; if (v.governo) totaisCamara[periodo].governo++; }
@@ -222,7 +246,14 @@ for (const ano of ANOS) {
   }
   console.log(`Câmara ${ano}: ${sessoes.size} sessões deliberativas, ${votacoes.size} votações nominais (${[...votacoes.values()].filter(v => v.governo).length} com orientação do governo), ${linhasVotos} linhas de voto lidas`);
 }
-meritoCamara = meritoCamara.sort((a, b) => b.data.localeCompare(a.data)).slice(0, ULTIMAS_VOTACOES);
+function ultimasPorAno(votacoes) {
+  const contagens = new Map();
+  return votacoes.sort((a, b) => b.data.localeCompare(a.data)).filter(v => {
+    const ano = v.data.slice(0, 4), n = contagens.get(ano) ?? 0;
+    contagens.set(ano, n + 1); return n < ULTIMAS_VOTACOES;
+  });
+}
+meritoCamara = ultimasPorAno(meritoCamara);
 // O que estava em votação, pela API: tipo, número e ementa da proposição.
 await emLotes(meritoCamara, 6, async v => {
   try {
@@ -238,7 +269,7 @@ const naFotoSenado = new Set(idsSenadores);
 const VOTOU = new Set(["Sim", "Não", "Abstenção", "Votou", "Presidente (art. 51 RISF)", "Obstrução", "P-OD"]);
 const JUSTIFICADA = new Set(["AP", "MIS", "LS", "LP", "LAP", "LC", "LG", "LA", "REP"]);
 const senado = novoPlacar();
-const totaisSenado = Object.fromEntries([LEGISLATURA, ...ANOS].map(p => [p, { votacoes: 0, governo: 0 }]));
+const totaisSenado = Object.fromEntries([HISTORICO, LEGISLATURA, ...ANOS].map(p => [p, { votacoes: 0, governo: 0 }]));
 let meritoSenado = [];
 const codigos = {};
 /** O placar vem nulo nas votações mais novas; a lista de votos tem a contagem. */
@@ -246,7 +277,7 @@ const contarVoto = (v, sigla) => (v.votos ?? []).filter(x => x.siglaVotoParlamen
 for (const ano of ANOS) {
   // `?ano=` filtra pelo ano da matéria (a PEC 18/2024, votada em 2025, fica de fora); o intervalo de datas pega o que foi votado no ano.
   const lista = await baixar(`https://legis.senado.leg.br/dadosabertos/votacao?dataInicio=${ano}-01-01&dataFim=${ano}-12-31`, "json");
-  const votacoes = (Array.isArray(lista) ? lista : Object.values(lista)[0] ?? []).filter(v => (v.casaSessao ?? "SF") === "SF" && v.dataSessao >= INICIO);
+  const votacoes = (Array.isArray(lista) ? lista : Object.values(lista)[0] ?? []).filter(v => (v.casaSessao ?? "SF") === "SF");
   let orientacoes = [];
   try {
     const r = await baixar(`https://legis.senado.leg.br/dadosabertos/plenario/votacao/orientacaoBancada/${ano}0101/${ano}1231`, "json");
@@ -283,11 +314,11 @@ for (const ano of ANOS) {
     }
     // Mérito: fora requerimentos, destaques e votações de um artigo só.
     const merito = !secreta && v.sigla !== "RQS" && !/requerimento|destaque|votação nominal d[oa]s? (art\.|§|inciso)/i.test(v.descricaoVotacao ?? "");
-    if (merito) meritoSenado.push({ id: String(v.codigoSessaoVotacao ?? v.sequencialVotacao), data: v.dataSessao, titulo: v.identificacao ?? "", ementa: v.ementa ?? "", descricao: v.descricaoVotacao ?? "", aprovada: v.resultadoVotacao === "A", sim: Number(v.totalVotosSim) || contarVoto(v, "Sim"), nao: Number(v.totalVotosNao) || contarVoto(v, "Não"), governo, votos: desta });
+    if (merito) meritoSenado.push({ id: String(v.codigoSessaoVotacao ?? v.sequencialVotacao), data: v.dataSessao, titulo: v.identificacao ?? "", ementa: v.ementa ?? "", descricao: v.descricaoVotacao ?? "", aprovada: v.resultadoVotacao === "A", sim: Number(v.totalVotosSim) || contarVoto(v, "Sim"), nao: Number(v.totalVotosNao) || contarVoto(v, "Não"), placarInformado: (v.totalVotosSim != null && v.totalVotosNao != null) || Array.isArray(v.votos), votosInformados: Array.isArray(v.votos), governo, votos: desta });
   }
   console.log(`Senado ${ano}: ${votacoes.length} votações nominais (${votacoes.filter(v => v.votacaoSecreta === "S").length} secretas), ${orientacoes.length} com orientação publicada, ${comGoverno} ligadas ao voto do governo`);
 }
-meritoSenado = meritoSenado.sort((a, b) => b.data.localeCompare(a.data)).slice(0, ULTIMAS_VOTACOES);
+meritoSenado = ultimasPorAno(meritoSenado);
 console.log("Senado, códigos de voto:", Object.entries(codigos).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(" · "));
 
 // ── Gravação ──────────────────────────────────────────────────────────────
@@ -321,9 +352,9 @@ const casas = [
 for (const [casa, placar, ids, comSessoes, totais, merito, emCargo, fontes] of casas) {
   const { periodos, casa: daCasa, pessoas } = exportarPlacar(placar, ids, comSessoes, totais);
   // Os votos de cada votação vão em `votos`, por pessoa; a lista leva só o que se lê.
-  const votacoes = merito.map(v => ({ id: v.id, data: v.data, titulo: v.titulo, ementa: cortar(v.ementa ?? "", 320), descricao: cortar(v.descricao, 260), aprovada: v.aprovada, sim: v.sim, nao: v.nao, governo: v.governo }));
-  const votos = Object.fromEntries(ids.map(id => [id, merito.map(v => letra(v.votos.get(id), emCargo(id, v))).join("")]));
-  const json = JSON.stringify({ casa, coletadoEm, anos: ANOS, periodos, fontes, totais: daCasa, pessoas, votacoes, votos });
+  const votacoes = merito.map(v => ({ id: v.id, data: v.data, titulo: v.titulo, ementa: cortar(v.ementa ?? "", 320), descricao: cortar(v.descricao, 260), aprovada: v.aprovada, sim: v.sim, nao: v.nao, placarInformado: v.placarInformado, governo: v.governo }));
+  const votos = Object.fromEntries(ids.map(id => [id, merito.map(v => v.votosInformados === false ? "?" : letra(v.votos.get(id), emCargo(id, v))).join("")]));
+  const json = JSON.stringify({ casa, coletadoEm, anos: casa === "deputados" ? ANOS_CAMARA : ANOS, periodos, fontes, cobertura: casa === "deputados" ? coberturaCamara : undefined, totais: daCasa, pessoas, votacoes, votos });
   await writeFile(join(SAIDA, `plenario-${casa}.json`), `${json}\n`);
   console.log(`plenario-${casa}.json ${(json.length / 1024).toFixed(0)} KB · ${Object.keys(pessoas).length} pessoas · ${votacoes.length} votações na lista`);
 }

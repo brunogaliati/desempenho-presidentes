@@ -5,9 +5,9 @@ import Link from "next/link";
 
 import {
   type CasaCongresso, type CotaDoAno, type IndiceCota, type MesDaCota, type PeriodoCota, type SituacaoMes,
-  LEGISLATURA, MESES, MESES_POR_EXTENSO, reaisCompactos, reaisInteiros, situacaoDaCota, textoPercentual,
+  HISTORICO, LEGISLATURA, MESES, MESES_POR_EXTENSO, reaisCompactos, reaisInteiros, situacaoDaCota, textoPercentual,
 } from "../_dados/congressoModelo";
-import { Segmentos, useEscolhaImediata } from "./Vidro";
+import { useEscolhaImediata } from "./Vidro";
 import estilos from "./Parlamentares.module.css";
 
 /** Topo do eixo num número redondo: 45.200 vira 50.000. */
@@ -79,7 +79,7 @@ export function MesAMes({ valores, media, situacao, meses, rotuloSerie, rotuloMe
           </span>}
         </div>
         {/* Na legislatura, só o ano marca a virada; num ano, o nome de cada mês. */}
-        <span className={estilos.rotuloMes}>{!longo ? MESES[meses[i].mes] : i === 0 || meses[i].mes === 0 ? meses[i].ano : ""}</span>
+        <span className={estilos.rotuloMes}>{!longo ? MESES[meses[i].mes] : i === 0 || (meses[i].mes === 0 && (meses.length <= 96 || meses[i].ano % 4 === 0)) ? meses[i].ano : ""}</span>
       </div>)}
     </div>
     <p className="sr-only" aria-live="polite">{ativo === null ? "" : texto(ativo)}</p>
@@ -174,15 +174,20 @@ export function Barras({ itens, total, limite = 6, rotuloLista, nomeDoMais, femi
 
 /** A legislatura inteira e os anos, lado a lado; vale para a cota e para o plenário, e um ano escolhido vai no link. */
 export function SeletorAnoCota({ anos, periodo, aoEscolher }: { anos: number[]; periodo: PeriodoCota; aoEscolher: (periodo: PeriodoCota) => void }) {
-  const opcoes = [{ id: LEGISLATURA as string, rotulo: "Legislatura" }, ...anos.map(a => ({ id: String(a), rotulo: String(a) }))];
-  return <Segmentos opcoes={opcoes} ativo={String(periodo)} aoEscolher={id => aoEscolher(id === LEGISLATURA ? LEGISLATURA : Number(id))} rotulo="Período dos números" className={estilos.anosCota} classeBotao="px-3 py-1" />;
+  return <label className={estilos.anosCota}><span className="sr-only">Período dos números</span>
+    <select aria-label="Período dos números" value={String(periodo)} onChange={e => aoEscolher(e.target.value === HISTORICO || e.target.value === LEGISLATURA ? e.target.value : Number(e.target.value))}>
+      <option value={HISTORICO}>Histórico disponível</option><option value={LEGISLATURA}>Legislatura atual</option>
+      {[...anos].reverse().map(a => <option key={a} value={a}>{a}</option>)}
+    </select>
+  </label>;
 }
 
 /** De onde vem a cota, o que o valor quer dizer e onde ver cada nota. */
 export function FonteCota({ casa, indice, cota, linkNotas }: { casa: CasaCongresso; indice: IndiceCota; cota: CotaDoAno; linkNotas?: string }) {
+  if (cota.semCobertura) return <p className={estilos.fonte}>A fonte de cota parlamentar tem cobertura a partir de {indice.anos[0]}. O ano escolhido não está coberto.</p>;
   const coleta = new Date(cota.coletadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
   const parcial = situacaoDaCota(cota).includes("parcial");
-  const arquivos = cota.ano === LEGISLATURA ? `arquivos de ${indice.anos[0]} a ${indice.anos.at(-1)} baixados` : `arquivo de ${cota.ano} baixado`;
+  const arquivos = typeof cota.ano !== "number" ? `arquivos de ${indice.anos[0]} a ${indice.anos.at(-1)} baixados` : `arquivo de ${cota.ano} baixado`;
   return <p className={estilos.fonte}>
     Fonte: <a href={indice.fontes.dados} target="_blank" rel="noreferrer">{casa === "deputados" ? "Câmara dos Deputados, CEAP" : "Senado Federal, CEAPS"}</a>, {arquivos} em {coleta}.{cota.ano === LEGISLATURA ? " A legislatura começou em 1º de fevereiro de 2023: janeiro de 2023 fica fora da soma." : ""}{" "}
     {casa === "deputados" ? "Valor líquido de cada nota, já sem as glosas" : "Valor reembolsado de cada nota"}; estornos entram negativos.{" "}

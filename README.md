@@ -456,3 +456,17 @@ no início. O fallback da rota e o carregamento do módulo do Congresso distingu
 o perfil individual (retrato, fita e grade de painéis) do diretório com plenário.
 Regressão: 25 testes aprovados, TypeScript/ESLint e detector de design; chegada por
 âncora e atalho interno conferidos no navegador a 1280 e 390 px.
+
+Os perfis individuais abrem em **Histórico disponível**, com soma de todos os
+anos coletados na mesma casa, e permitem selecionar a legislatura atual ou um
+ano. Cota: 2008–2026; plenário: Câmara 2001–2026 e Senado 1991–2026; emendas:
+2014–2026. Os coletores `coletar-cota.mjs` e `coletar-plenario.mjs` mantêm os
+arquivos oficiais em `.cache/` e aceitam `--cache`. O acumulado histórico não
+soma a legislatura novamente; taxas usam a soma dos numeradores e denominadores.
+Ausência de cobertura, orientação, voto individual e placar permanece explícita.
+Os planos Pix usam a identidade exata da emenda/parlamentar e seguem o período
+escolhido. Comparações usam a composição atual; os valores são nominais.
+
+Validação do histórico: 23 testes de dados e componentes, quatro de SEO e 11
+checks de API/Neon aprovados, incluindo somas anuais e vínculos de deputados e
+senadores. Troca de período e cobertura antiga conferidas a 1280 e 390 px.

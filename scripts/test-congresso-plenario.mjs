@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { LEGISLATURA, VOTO_POR_LETRA, porcento, taxa } from '../src/app/_painel/_dados/congressoModelo.ts';
+import { HISTORICO, LEGISLATURA, VOTO_POR_LETRA, porcento, taxa } from '../src/app/_painel/_dados/congressoModelo.ts';
 
 const ler = casa => JSON.parse(readFileSync(new URL(`../public/painel/congresso/plenario-${casa}.json`, import.meta.url), 'utf8'));
 const fotografia = JSON.parse(readFileSync(new URL('../src/app/_painel/_dados/fotografia.json', import.meta.url), 'utf8'));
@@ -18,11 +18,12 @@ for (const casa of ['deputados', 'senadores']) {
   test(`plenário dos ${casa}: períodos, pessoas e votos batem entre si`, () => {
     const p = ler(casa);
     assert.equal(p.casa, casa);
-    const periodos = [...p.anos.map(String), LEGISLATURA];
+    const periodos = [...p.anos.map(String), LEGISLATURA, HISTORICO];
     for (const periodo of periodos) assert.ok(p.totais[periodo], `falta o total de ${periodo}`);
     // A legislatura soma os anos.
     const somaAnos = p.anos.reduce((s, a) => s + p.totais[a].votacoes, 0);
-    assert.equal(p.totais[LEGISLATURA].votacoes, somaAnos);
+    assert.equal(p.totais[HISTORICO].votacoes, somaAnos);
+    assert.ok(p.totais[HISTORICO].votacoes > p.totais[LEGISLATURA].votacoes);
 
     const ids = fotografia[casa].map(x => String(x.id));
     assert.deepEqual(Object.keys(p.votos).sort(), [...ids].sort(), 'uma linha de votos por pessoa da fotografia');
@@ -31,6 +32,11 @@ for (const casa of ['deputados', 'senadores']) {
       for (const l of letras) assert.ok(l in VOTO_POR_LETRA, `letra desconhecida "${l}" em ${id}`);
     }
     for (const [id, porPeriodo] of Object.entries(p.pessoas)) {
+      for (const chave of ['s','v','g']) {
+        if (!porPeriodo[HISTORICO]?.[chave]) continue;
+        const soma = p.anos.reduce((s,a) => s.map((v,i) => v + (porPeriodo[a]?.[chave]?.[i] ?? 0)), [0,0]);
+        assert.deepEqual(porPeriodo[HISTORICO][chave], soma, `${id}: soma histórica de ${chave}`);
+      }
       for (const [periodo, x] of Object.entries(porPeriodo)) {
         assert.ok(periodos.includes(periodo), `${id}: período ${periodo}`);
         for (const par of [x.s, x.v, x.g].filter(Boolean)) assert.ok(par[0] >= 0 && par[0] <= par[1], `${id} ${periodo}: ${par}`);
@@ -43,7 +49,7 @@ for (const casa of ['deputados', 'senadores']) {
     assert.deepEqual(datas, [...datas].sort().reverse());
     for (const v of p.votacoes) {
       assert.ok(v.governo === null || v.governo === 'Sim' || v.governo === 'Não');
-      assert.ok(v.sim + v.nao > 0, `votação ${v.id} sem placar`);
+      assert.ok(v.sim + v.nao > 0 || v.placarInformado === false, `votação ${v.id}: falta indicar ausência de placar`);
       assert.ok(v.ementa.length <= 321 && v.descricao.length <= 261, `votação ${v.id}: texto longo demais`);
     }
   });
