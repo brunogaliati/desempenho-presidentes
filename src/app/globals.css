@@ -6,7 +6,7 @@
 .analytics-aviso[hidden],.analytics-preferencias[hidden] { display:none; }
 .analytics-preferencias :is(a,button) { min-height:44px; display:inline-flex; align-items:center; text-underline-offset:3px; }
 .analytics-preferencias :is(a,button):hover { text-decoration:underline; }
-.analytics-aviso { position:fixed; z-index:70; bottom:12px; left:12px; right:12px; max-width:960px; margin-inline:auto; padding:20px; display:flex; align-items:center; gap:24px; border:1px solid var(--borda); border-radius:16px; background:var(--plano); color:var(--tinta); box-shadow:0 8px 32px #0002; }
+.analytics-aviso { position:fixed; z-index:70; bottom:12px; left:12px; right:12px; max-width:960px; margin-inline:auto; padding:20px; display:flex; align-items:center; gap:24px; border:1px solid var(--borda); border-radius:16px; background:var(--plano); color:var(--tinta); font-family:system-ui,sans-serif; box-shadow:0 8px 32px #0002; }
 .analytics-aviso h2 { font-size:16px; font-weight:600; margin-bottom:6px; }
 .analytics-aviso p { font-size:13px; line-height:1.6; max-width:65ch; }
 .analytics-aviso a { text-decoration:underline; text-underline-offset:3px; }
