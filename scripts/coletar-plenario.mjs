@@ -29,6 +29,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
+import { orientacaoDoGoverno } from "./congresso-coleta-modelo.mjs";
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SAIDA = join(RAIZ, "public", "painel", "congresso");
@@ -216,7 +217,8 @@ for (const ano of ANOS_CAMARA) {
   });
   await arquivoCamara("votacoesOrientacoes", ano, c => {
     const v = votacoes.get(c("idVotacao"));
-    if (v && c("siglaBancada") === "Governo") v.governo = c("orientacao") === "Sim" ? "Sim" : c("orientacao") === "Não" ? "Não" : null;
+    const orientacao = orientacaoDoGoverno(c("siglaBancada"), c("orientacao"));
+    if (v && orientacao) v.governo = orientacao;
   });
   const votos = new Map();
   const linhasVotos = await arquivoCamara("votacoesVotos", ano, c => {
@@ -285,8 +287,8 @@ for (const ano of ANOS) {
   } catch (e) { console.log(`Senado ${ano}: sem orientações (${e.message})`); }
   const governoPorSequencia = new Map();
   for (const o of orientacoes) {
-    const g = o.orientacoesLideranca?.find(l => l.partido === "Governo")?.voto;
-    if (g === "SIM" || g === "NÃO") governoPorSequencia.set(o.sequencialVotacao, g === "SIM" ? "Sim" : "Não");
+    const g = o.orientacoesLideranca?.map(l => orientacaoDoGoverno(l.partido, l.voto)).find(Boolean);
+    if (g) governoPorSequencia.set(o.sequencialVotacao, g);
   }
   let comGoverno = 0;
   for (const v of votacoes) {

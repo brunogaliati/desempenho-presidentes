@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { orientacaoDoGoverno } from './congresso-coleta-modelo.mjs';
 import { HISTORICO, LEGISLATURA, VOTO_POR_LETRA, porcento, taxa } from '../src/app/_painel/_dados/congressoModelo.ts';
 
 const ler = casa => JSON.parse(readFileSync(new URL(`../public/painel/congresso/plenario-${casa}.json`, import.meta.url), 'utf8'));
@@ -14,6 +15,16 @@ test('taxa sem base fica nula e porcentagem arredonda', () => {
   assert.equal(porcento(0.814), '81%');
 });
 
+test('orientação do governo reconhece as siglas históricas sem incluir partidos ou voto liberado', () => {
+  for (const nome of ['Governo','GOV.','GOV',' governo ']) {
+    assert.equal(orientacaoDoGoverno(nome,'SIM'),'Sim');
+    assert.equal(orientacaoDoGoverno(nome,'Não'),'Não');
+    assert.equal(orientacaoDoGoverno(nome,'Liberado'),null);
+  }
+  assert.equal(orientacaoDoGoverno('PT','Sim'),null);
+  assert.equal(orientacaoDoGoverno(null,null),null);
+});
+
 for (const casa of ['deputados', 'senadores']) {
   test(`plenário dos ${casa}: períodos, pessoas e votos batem entre si`, () => {
     const p = ler(casa);
@@ -24,6 +35,7 @@ for (const casa of ['deputados', 'senadores']) {
     const somaAnos = p.anos.reduce((s, a) => s + p.totais[a].votacoes, 0);
     assert.equal(p.totais[HISTORICO].votacoes, somaAnos);
     assert.ok(p.totais[HISTORICO].votacoes > p.totais[LEGISLATURA].votacoes);
+    if (casa === 'deputados') assert.ok(p.totais[2019].governo > 0, 'orientações GOV. do Plenário de 2019 entram no histórico');
 
     const ids = fotografia[casa].map(x => String(x.id));
     assert.deepEqual(Object.keys(p.votos).sort(), [...ids].sort(), 'uma linha de votos por pessoa da fotografia');

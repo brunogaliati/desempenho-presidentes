@@ -467,6 +467,6 @@ Ausência de cobertura, orientação, voto individual e placar permanece explíc
 Os planos Pix usam a identidade exata da emenda/parlamentar e seguem o período
 escolhido. Comparações usam a composição atual; os valores são nominais.
 
-Validação do histórico: 23 testes de dados e componentes, quatro de SEO e 11
+Validação do histórico: 24 testes de dados e componentes, quatro de SEO e 11
 checks de API/Neon aprovados, incluindo somas anuais e vínculos de deputados e
 senadores. Troca de período e cobertura antiga conferidas a 1280 e 390 px.
