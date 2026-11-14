@@ -193,7 +193,8 @@ function Marca() {
         <path d={CONTORNO_MARCA} fill={TINTA_MARCA} fillRule="evenodd" />
       </svg>
       <g className="marca-escrita" clipPath={`url(#${recorteEscrita})`}>
-        <image href="/marca/desempenho-do-governo.png" width="2172" height="724" />
+        {/* 760 px de largura (o desenho tem uns 220 px na tela, então serve até tela 3×); o PNG original, de 2172 px, pesava 679 KB em toda página. */}
+        <image href="/marca/desempenho-do-governo.webp" width="2172" height="724" />
       </g>
     </svg>
   );
