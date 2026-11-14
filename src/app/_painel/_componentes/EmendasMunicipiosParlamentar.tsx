@@ -1,9 +1,10 @@
 "use client";
 
 import { memo, useMemo, useState } from "react";
-import { type CasaCongresso, type PeriodoCota, NOME_UF, inteiro } from "../_dados/congressoModelo";
+import { type CasaCongresso, type PeriodoCota, NOME_UF, inteiro, reaisCompactos } from "../_dados/congressoModelo";
 import { municipiosDasEmendas, municipiosPrevistosDosPlanos, planosDasEmendas, type EmendasParlamentar, type OrdemEmendas } from "../_dados/emendasParlamentarModelo";
 import { useJson } from "../_dados/useJson";
+import { Ajuda } from "./Ajuda";
 import { Bloco, Opcoes } from "./Bloco";
 import { EsqueletoDetalhe } from "./GraficosCota";
 import { MapaEmendasEstado } from "./MapaEmendasEstado";
@@ -60,18 +61,34 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
         <input type="search" value={busca} onChange={e => { setBusca(e.target.value); setTodos(false); }} placeholder={buscaRotulo} />
       </label>
     </div>
-    <p className={t.emendasContexto}>
-      Emendas de {periodo} · {semMunicipio ? "Documentos sem município de aplicação identificado, com favorecido e localidade publicados pela CGU."
-        : planos ? "Destinação prevista nos planos. Aprovação e empenho vinculado não comprovam realização da obra ou serviço."
-        : prefeituras ? "Valores recebidos pelas prefeituras e fundos municipais, pelo endereço do favorecido." : "Execução financeira registrada: empenhado e pago, incluindo restos a pagar. Pagamento comprova repasse, não entrega da obra ou serviço."}
-    </p>
-    {!prefeituras && !planos && <p className={t.emendasCobertura}>
-      {cobertura.destinadoTotal === null ? "O total destinado não está informado integralmente para este período." : <>Dos {dinheiro(cobertura.destinadoTotal)} destinados, {dinheiro(cobertura.destinadoNoEstado)} têm município identificado em {NOME_UF[dados.uf] ?? dados.uf}.</>}
-      {cobertura.destinadoSemMunicipio === null ? <> <strong>A cobertura municipal está incompleta: há valores não informados.</strong></>
-        : cobertura.destinadoSemMunicipio !== 0 ? <> <strong>{dinheiro(cobertura.destinadoSemMunicipio)} ainda sem município definido.</strong></> : null}
-      {cobertura.destinadoForaEstado !== null && cobertura.destinadoForaEstado !== 0 && <> Outros {dinheiro(cobertura.destinadoForaEstado)} têm município em outra UF.</>}
-      {cobertura.pagoSemMunicipio !== null && cobertura.pagoSemMunicipio !== 0 && <> Nos pagamentos, {dinheiro(cobertura.pagoSemMunicipio)} ainda sem município definido.</>}
-    </p>}
+    {/*
+      À vista, uma linha: o período e, quando há, quanto ainda está sem município. O resto (o que a
+      visão mede, a cobertura em centavos e como ler a tabela) fica no "?", a pedido do dono:
+      texto demais em volta da tabela escondia os números.
+    */}
+    <div className={t.emendasContexto}>
+      <span>
+        Emendas de {periodo}
+        {!prefeituras && !planos && (cobertura.destinadoSemMunicipio === null ? " · cobertura municipal incompleta"
+          : cobertura.destinadoSemMunicipio !== 0 ? <> · <strong>{reaisCompactos(cobertura.destinadoSemMunicipio)} ainda sem município</strong></> : null)}
+      {" "}<Ajuda rotulo="Como ler estes números">
+        <p>{semMunicipio ? "Documentos sem município de aplicação identificado, com favorecido e localidade publicados pela CGU."
+          : planos ? "Destinação prevista nos planos. Aprovação e empenho vinculado não comprovam realização da obra ou serviço."
+          : prefeituras ? "Valores recebidos pelas prefeituras e fundos municipais, pelo endereço do favorecido." : "Execução financeira registrada: empenhado e pago, incluindo restos a pagar. Pagamento comprova repasse, não entrega da obra ou serviço."}</p>
+        {!prefeituras && !planos && <p>
+          {cobertura.destinadoTotal === null ? "O total destinado não está informado integralmente para este período." : <>Dos {dinheiro(cobertura.destinadoTotal)} destinados, {dinheiro(cobertura.destinadoNoEstado)} têm município identificado em {NOME_UF[dados.uf] ?? dados.uf}.</>}
+          {cobertura.destinadoSemMunicipio === null ? <> <strong>A cobertura municipal está incompleta: há valores não informados.</strong></>
+            : cobertura.destinadoSemMunicipio !== 0 ? <> <strong>{dinheiro(cobertura.destinadoSemMunicipio)} ainda sem município definido.</strong></> : null}
+          {cobertura.destinadoForaEstado !== null && cobertura.destinadoForaEstado !== 0 && <> Outros {dinheiro(cobertura.destinadoForaEstado)} têm município em outra UF.</>}
+          {cobertura.pagoSemMunicipio !== null && cobertura.pagoSemMunicipio !== 0 && <> Nos pagamentos, {dinheiro(cobertura.pagoSemMunicipio)} ainda sem município definido.</>}
+        </p>}
+        {!planos && !semMunicipio && <p>{prefeituras
+          ? "A fonte não informa o valor destinado nesta visão. O endereço de quem recebeu não comprova o local de aplicação. Estes pagamentos não se somam aos da outra visão."
+          : "A tabela mostra apenas os valores com município identificado. Localidades estaduais, nacionais ou múltiplas não são rateadas. Valores acumulados pelo ano da emenda, mesmo quando o pagamento ocorreu depois."}
+          {" "}Somente autoria individual identificada. Ausência de registro não significa R$ 0; — indica valor não informado.</p>}
+      </Ajuda>
+      </span>
+    </div>
     </div>
     <div className={t.emendasLista}>
     {semMunicipio ? <SemMunicipioEmendasParlamentar key={busca} documentos={dados.semMunicipio} busca={busca} coletadoEm={dados.coletadoEmSemMunicipio} />
@@ -96,11 +113,6 @@ export function TabelaEmendas({ dados }: { dados: EmendasParlamentar }) {
     </> : <p className={estilos.aviso} role="status">{busca.trim() ? "Nenhum município encontrado para esta busca." : prefeituras
       ? "Não há recebimentos de prefeituras e fundos municipais identificados para este parlamentar e período."
       : "Não há municípios de aplicação identificados para este parlamentar e período. Consulte também Prefeituras e fundos."}</p>}
-    <p className={t.nota}>{prefeituras
-      ? "A fonte não informa o valor destinado nesta visão. O endereço de quem recebeu não comprova o local de aplicação. Estes pagamentos não se somam aos da outra visão."
-      : "A tabela mostra apenas os valores com município identificado. Localidades estaduais, nacionais ou múltiplas não são rateadas. Valores acumulados pelo ano da emenda, mesmo quando o pagamento ocorreu depois."}
-      {" "}Somente autoria individual identificada. Ausência de registro não significa R$ 0; — indica valor não informado.
-    </p>
     {!prefeituras && <details className={t.nota}>
       <summary className={t.linkPainel}>Como identificamos os municípios</summary>
       <p>Usamos o município de aplicação publicado nos documentos de empenho e pagamento da CGU, sem inferir o destino pelo endereço de fornecedores.

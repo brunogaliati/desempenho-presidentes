@@ -24,8 +24,18 @@
 .trilhoLinha { display:block; width:100%; height:4px; border-radius:0 2px 2px 0; background:color-mix(in oklab,var(--serie) 12%,transparent); }
 .trilhoLinha > span { display:block; height:100%; border-radius:0 2px 2px 0; background:var(--serie); }
 .maisLinhas { padding:8px 0 4px; }
-.maisLinhas button,.verTodos { min-height:36px; padding:0 8px; border-radius:10px; font-size:12px; font-weight:600; color:var(--serie); transition:background-color 140ms ease-out; }
-.maisLinhas button:hover,.verTodos:hover { background:var(--faixa-a); }
+.maisLinhas button { min-height:36px; padding:0 8px; border-radius:10px; font-size:12px; font-weight:600; color:var(--serie); transition:background-color 140ms ease-out; }
+.maisLinhas button:hover { background:var(--faixa-a); }
+/*
+ * "Ver todos" abre a lista ali mesmo: um botão de verdade, em pílula com contorno, e a seta ⌄
+ * que vira ⌃ com a lista aberta. Como texto azul solto, passava por legenda. O gêmeo para
+ * os botões que levam a outra aba (com →) é `.irPara`, em TerminalParlamentar.module.css.
+ */
+.verTodos { display:inline-flex; align-items:center; gap:9px; min-height:32px; padding:0 14px; border:1px solid color-mix(in srgb, var(--tinta) 16%, transparent); border-radius:999px; background:var(--superficie); box-shadow:0 1px 2px rgb(0 0 0 / .06); font-size:12.5px; font-weight:600; white-space:nowrap; color:var(--tinta); cursor:pointer; transition:background-color 140ms ease-out, border-color 140ms ease-out; }
+.verTodos::after { content:""; flex:none; width:6px; height:6px; margin-top:-3px; border-right:1.6px solid currentColor; border-bottom:1.6px solid currentColor; transform:rotate(45deg); transition:transform 160ms ease-out, margin 160ms ease-out; }
+.verTodos[aria-expanded="true"]::after { margin-top:3px; transform:rotate(-135deg); }
+.verTodos:hover { background:var(--faixa-a); border-color:color-mix(in srgb, var(--tinta) 30%, transparent); }
+.verTodos:focus-visible { outline:2px solid var(--serie); outline-offset:2px; }
 .vazio { padding:24px 8px; font-size:13px; line-height:1.6; }
 .vazio p + p { margin-top:8px; color:var(--tinta-2); }
 
@@ -74,7 +84,8 @@
 .eixoTopo,.eixoMeio { position:absolute; left:0; right:0; display:flex; justify-content:flex-end; padding-bottom:3px; border-bottom:1px solid var(--grade); font-size:10.5px; line-height:1; color:var(--tinta-3); transform:translateY(-100%); pointer-events:none; }
 .eixoTopo { top:var(--folga); }
 .eixoMeio { top:calc(var(--folga) + (100% - var(--folga) - var(--rotulos)) / 2); }
-.mes { position:relative; z-index:1; display:grid; grid-template-rows:minmax(0,1fr) var(--rotulos); min-width:0; height:100%; }
+/* A coluna de dentro é `minmax(0,1fr)`: sem isso, o rótulo do ano ("2020", sem quebra) alarga o mês de janeiro, e a barra dele engorda no gráfico longo. */
+.mes { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) var(--rotulos); min-width:0; height:100%; }
 .areaMes { position:relative; display:flex; align-items:flex-end; justify-content:center; border-bottom:1px solid var(--eixo); border-radius:6px 6px 0 0; transition:background-color 120ms ease-out; }
 /* A coluna ativa sobe, para a caixa do mês ficar por cima das marcas das colunas seguintes. */
 .mes[data-ativo="true"] { z-index:2; }
@@ -131,7 +142,7 @@ button.barra:hover,a.barra:hover { background:var(--faixa-a); }
 .trilho > span { display:block; height:100%; border-radius:0 4px 4px 0; background:var(--cor-barra,var(--serie)); }
 .pessoaBarra { display:inline-flex; align-items:center; gap:8px; font-weight:550; }
 .partidoMini { display:inline-flex; align-items:center; gap:4px; vertical-align:middle; }
-.verTodos { justify-self:start; margin-top:4px; }
+.verTodos { justify-self:start; margin-top:8px; }
 
 .fonte { padding-top:12px; border-top:1px solid var(--borda); font-size:11px; line-height:1.65; color:var(--tinta-2); }
 .fonte a { text-decoration:underline; text-underline-offset:3px; }

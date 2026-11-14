@@ -11,9 +11,22 @@ import type { DadosPainel } from "../_dados/tipos";
 import { useCotaDoAno } from "../_dados/useCota";
 import { usePlenario } from "./PlenarioParlamentar";
 import type { Parlamentar } from "./DiretorioCongresso";
+import { NavTerminal } from "./NavTerminal";
 import { TerminalParlamentar, linkCongresso } from "./TerminalParlamentar";
 import estilos from "./Parlamentares.module.css";
 import t from "./TerminalParlamentar.module.css";
+
+/**
+ * A faixa de seções, a mesma das abas de tema (`NavTerminal`): o crachá, os três capítulos e as
+ * fontes. Entra quando o capítulo da cota chega à metade da tela, para não cobrir a trilha.
+ */
+const SECOES = [
+  { id: "resumo-parlamentar", rotulo: "Resumo" },
+  { id: "capitulo-cota", rotulo: "Cota parlamentar" },
+  { id: "capitulo-plenario", rotulo: "No plenário" },
+  { id: "capitulo-emendas", rotulo: "Emendas" },
+  { id: "fontes-parlamentar", rotulo: "Fontes" },
+] as const;
 
 /**
  * A página de um deputado ou senador: a trilha até a bancada e o terminal da pessoa
@@ -40,6 +53,7 @@ export function PaginaParlamentar({ casa, id, dados, corDe }: {
   const maquete = linkCongresso(casa, [["r.congresso.pessoa", String(pessoa.id)]]);
 
   return <div className={t.pagina}>
+    <NavTerminal secoes={SECOES} rotulo={`Seções da página de ${pessoa.nome}`} mostrarDesde="capitulo-cota" />
     <nav aria-label="Você está em" className={estilos.trilhaPagina}>
       <ol>
         <li><Link href="/congresso">Congresso</Link></li>

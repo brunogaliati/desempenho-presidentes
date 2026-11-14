@@ -36,10 +36,22 @@
   /* Altura das linhas da grade, por capítulo (ver `.grade`). */
   --linha-cota: 330px;
   --linha-listas: 504px;
-  --linha-plenario: 1040px;
+  --linha-plenario: 900px;
+  --linha-resumo-votos: 208px;
   --linha-emendas: 760px;
+  /*
+   * Onde o salto para uma seção para: abaixo do cabeçalho e da faixa de seções (`NavTerminal`,
+   * em PaginaParlamentar.tsx). A altura visível, porque no celular o cabeçalho encolhe ao rolar.
+   */
+  --pouso: calc(var(--altura-cabecalho-visivel, var(--altura-cabecalho, 112px)) + 56px);
   display:grid; gap:12px; width:100%; max-width:1400px; margin:0 auto; min-width:0;
 }
+/*
+ * As seções da faixa e o painel "Emendas para os municípios", aonde o link do crachá leva. O
+ * seletor é pesado de propósito: `.painel-governo [id]`, em globals.css, só desconta o cabeçalho
+ * e ganhava de uma classe só, e o título caía embaixo da faixa.
+ */
+.pagina :is(.cabeca, .capitulo, .fontes)[id], .pagina :global(#emendas-municipios) { scroll-margin-top:var(--pouso); }
 
 /* --- Faixa do crachá ------------------------------------------------------- */
 /* Sem fio nem degradê na cor do partido: a sigla e o símbolo ao lado do nome já dizem o partido. */
@@ -75,9 +87,9 @@
 /*
  * Cada assunto abre com o símbolo, o nome e uma frase do que é, no fundo da página, fora dos
  * painéis. O que separa um capítulo do outro é esse título e o espaço em volta, nada de fio
- * nem de cor. O `scroll-margin` deixa o título visível quando a fita leva até ele.
+ * nem de cor. O título fica à vista quando a fita ou a faixa de seções leva até ele (ver `--pouso`).
  */
-.capitulo { display:grid; gap:12px; min-width:0; margin-top:22px; scroll-margin-top:calc(var(--altura-cabecalho-visivel, var(--altura-cabecalho, 112px)) + 16px); }
+.capitulo { display:grid; gap:12px; min-width:0; margin-top:22px; }
 .capituloCabeca { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:2px 12px; padding:0 6px; }
 .simbolo { grid-row:1 / span 2; display:grid; place-items:center; width:36px; height:36px; border-radius:11px; background:var(--faixa-a); color:var(--tinta); }
 .capituloCabeca h2 { font-size:20px; font-weight:650; letter-spacing:-.02em; line-height:1.2; }
@@ -88,7 +100,8 @@
  * Cada capítulo tem a sua grade de linhas de altura fixa, em três colunas iguais:
  *   cota:      gasto por mês (2 colunas)       | gasto por ano
  *              categorias | fornecedores       | bancada (estado ou partido)
- *   plenário:  como votou (2 colunas)          | presença e votos por ano
+ *   plenário:  como votou (2 colunas, 2 linhas) | resumo dos votos
+ *                                              | presença e votos por ano
  *   emendas:   Emendas Pix por ano (faixa larga, um ano por célula: o resumo)
  *              emendas por município (largura inteira: o detalhe)
  * Painéis da mesma linha têm a altura da linha, então as bordas sempre batem. Cada painel
@@ -99,10 +112,10 @@
  */
 .grade { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
 .gradeCota { grid-template-rows:var(--linha-cota) var(--linha-listas); grid-template-areas:"mes mes ano" "cat for ban"; }
-.gradePlenario { grid-template-rows:var(--linha-plenario); grid-template-areas:"vot vot ple"; }
+.gradePlenario { grid-template-rows:var(--linha-resumo-votos) calc(var(--linha-plenario) - var(--linha-resumo-votos) - 12px); grid-template-areas:"vot vot res" "vot vot ple"; }
 .gradeEmendas { grid-template-areas:"eme eme eme" "mun mun mun"; }
 .aMes { grid-area:mes; } .aAno { grid-area:ano; } .aCat { grid-area:cat; } .aFor { grid-area:for; } .aBan { grid-area:ban; }
-.aVot { grid-area:vot; } .aPle { grid-area:ple; } .aEme { grid-area:eme; } .aMun { grid-area:mun; max-height:var(--linha-emendas); }
+.aVot { grid-area:vot; } .aRes { grid-area:res; } .aPle { grid-area:ple; } .aEme { grid-area:eme; } .aMun { grid-area:mun; max-height:var(--linha-emendas); }
 
 /* Emendas Pix por ano: um ano por célula, lado a lado, com a barra na escala do maior ano. */
 .anosEmendas { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px 24px; padding:2px 2px 4px; }
@@ -138,6 +151,18 @@
 .nota { margin-top:10px; font-size:11.5px; line-height:1.5; color:var(--tinta-2); }
 .apagado { color:var(--tinta-3); }
 .linkPainel { display:inline-flex; align-items:center; min-height:32px; font-size:12.5px; font-weight:600; text-decoration:underline; text-underline-offset:3px; }
+/*
+ * Os botões de ação, em pílula, com o que fazem no símbolo: → leva a outra aba (`.irPara`);
+ * ⌄ abre a lista ali mesmo (os `.linkPainel` com `aria-expanded`, nas emendas, ficam iguais ao
+ * `.verTodos` de Parlamentares.module.css). Texto sublinhado solto passava por legenda.
+ */
+.irPara,.linkPainel[aria-expanded] { display:inline-flex; align-items:center; gap:9px; min-height:32px; padding:0 14px; border:1px solid color-mix(in srgb, var(--tinta) 16%, transparent); border-radius:999px; background:var(--superficie); box-shadow:0 1px 2px rgb(0 0 0 / .06); font-size:12.5px; font-weight:600; white-space:nowrap; color:var(--tinta); text-decoration:none; cursor:pointer; transition:background-color 140ms ease-out, border-color 140ms ease-out; }
+.irPara:hover,.linkPainel[aria-expanded]:hover { background:var(--faixa-a); border-color:color-mix(in srgb, var(--tinta) 30%, transparent); }
+.irPara:focus-visible,.linkPainel[aria-expanded]:focus-visible { outline:2px solid var(--serie); outline-offset:2px; }
+.irPara::after { content:"→"; flex:none; font-weight:500; transition:transform 160ms ease-out; }
+.irPara:hover::after { transform:translateX(2px); }
+.linkPainel[aria-expanded]::after { content:""; flex:none; width:6px; height:6px; margin-top:-3px; border-right:1.6px solid currentColor; border-bottom:1.6px solid currentColor; transform:rotate(45deg); transition:transform 160ms ease-out, margin 160ms ease-out; }
+.linkPainel[aria-expanded="true"]::after { margin-top:3px; transform:rotate(-135deg); }
 .rodape { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; margin-top:6px; font-size:12px; color:var(--tinta-2); }
 .verTodas { margin-top:8px; }
 /* As fontes no rodapé da página, fora dos capítulos e sem painel: texto miúdo, um parágrafo por base. */
@@ -204,9 +229,9 @@
 .emendasBusca input { min-height:36px; width:100%; padding:7px 10px; border:1px solid var(--borda); border-radius:8px; background:var(--superficie); color:var(--tinta); font:inherit; caret-color:var(--serie); }
 .emendasBusca input::placeholder { color:var(--tinta-2); }
 .emendasBusca input:focus-visible,.emendasRolagem:focus-visible { outline:2px solid var(--serie); outline-offset:2px; }
-.emendasContexto { margin:12px 0; font-size:12px; line-height:1.5; color:var(--tinta-2); }
-.emendasCobertura { margin:0; max-width:100ch; font-size:12px; line-height:1.6; color:var(--tinta-2); }
-.emendasCobertura strong { font-weight:600; color:var(--tinta); }
+.emendasContexto { margin:12px 0; font-size:12.5px; line-height:1.6; color:var(--tinta-2); }
+.emendasContexto > span > button { margin-left:5px; }
+.emendasContexto strong { font-weight:600; color:var(--tinta); }
 .emendasRolagem { max-height:365px; overflow:auto; scrollbar-width:thin; scrollbar-color:var(--eixo) transparent; }
 .emendasTabela { width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; }
 .emendasTabela thead th { position:sticky; top:0; z-index:1; background:var(--superficie); }
@@ -245,9 +270,9 @@
 .seloNeutro { display:inline-flex; align-items:center; min-height:24px; padding:0 9px; border:1px solid var(--borda); border-radius:999px; font-size:12px; font-weight:500; line-height:1; white-space:nowrap; color:var(--tinta-2); }
 .seloNeutro[data-fora] { border-style:dashed; color:var(--tinta-3); }
 
-/* O placar no topo de "Como votou": os números e a faixa com a parte de cada voto. */
-.placarVotos { display:grid; gap:10px; margin:0 0 12px; padding:0 2px; }
-.placarVotos dl { display:flex; flex-wrap:wrap; gap:6px 28px; }
+/* O resumo dos votos, ao lado de "Como votou": os números, dois a dois, e a faixa com a parte de cada voto. */
+.placarVotos { display:grid; gap:12px; margin:0; padding:0 2px; }
+.placarVotos dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 20px; }
 .placarVotos dl > div { display:grid; gap:2px; }
 .placarVotos dd { font-size:26px; font-weight:650; letter-spacing:-.02em; line-height:1; }
 .placarVotos dt { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--tinta-2); }
@@ -262,8 +287,20 @@
 .faixaVotos > span { flex-basis:0; min-width:3px; border-radius:3px; background:var(--cor); }
 
 /* Plenário ano a ano: os anos são botões que escolhem o período da página. */
-.anos { width:100%; border-collapse:collapse; }
-.anos thead th { padding:0 0 6px; text-align:right; }
+/*
+ * Presença e votos por ano. A rolagem envolve a tabela e ocupa o meio do painel. A tabela
+ * estica até essa altura: o navegador reparte a sobra entre as linhas, e as células ficam
+ * centradas. O teto é `--linha-ano-max` por linha, para um ou dois anos não virarem faixas
+ * enormes. Cada número tem uma barra de 0 a 100% com o traço da mediana.
+ */
+.anosRolagem { --linha-ano-max:150px; flex:1 1 auto; min-height:0; overflow-y:auto; scrollbar-width:thin; }
+.anos { width:100%; height:min(100%, calc(var(--linhas, 1) * var(--linha-ano-max) + 26px)); border-collapse:collapse; table-layout:fixed; }
+.anos thead th:first-child { width:52px; }
+.anosNumeros { display:flex; justify-content:flex-end; align-items:baseline; gap:6px; }
+.anosNumeros small { margin:0 !important; }
+.legendaMediana { display:inline-block; width:2px; height:10px; margin:0 3px -1px 1px; border-radius:1px; background:var(--tinta-2); }
+.anos thead th { height:26px; padding:0 9px 6px; font-size:11px; font-weight:500; line-height:1.3; text-align:right; vertical-align:bottom; color:var(--tinta-3); }
+.anos thead th:first-child { padding-left:0; text-align:left; }
 .anos button { min-height:28px; padding:0 9px; border:0; border-radius:999px; background:transparent; color:var(--tinta-2); font:inherit; font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; cursor:pointer; transition:background-color 140ms ease-out, color 140ms ease-out; }
 .anos button:hover { background:var(--faixa-a); color:var(--tinta); }
 .anos button[aria-pressed="true"] { background:var(--superficie); color:var(--tinta); box-shadow:0 1px 2px rgb(0 0 0 / .14); }
@@ -274,10 +311,14 @@
 .anos td[data-ativo] { background:color-mix(in oklab, var(--serie) 9%, transparent); }
 .anos td b { display:block; font-size:15px; font-weight:650; line-height:1.2; }
 .anos td small { display:block; margin-top:1px; font-size:11px; color:var(--tinta-3); }
+.anosBarra { position:relative; display:block; height:4px; margin:6px 0 4px; border-radius:0 2px 2px 0; background:color-mix(in oklab,var(--serie) 12%,transparent); }
+.anosBarra i { position:absolute; inset:0 auto 0 0; border-radius:0 2px 2px 0; background:var(--serie); }
+.anosBarra u { position:absolute; top:-3px; width:2px; height:10px; margin-left:-1px; border-radius:1px; background:var(--tinta-2); box-shadow:0 0 0 1px var(--superficie); }
 
 /*
  * Numa coluna só, na ordem do HTML, capítulo por capítulo: a cota (com a bancada no fim), o
- * plenário (a presença antes de como votou), as emendas e as fontes. Sem vizinho para
+ * plenário (a presença por ano, o resumo dos votos e como votou), as emendas (o resumo por ano
+ * antes dos municípios) e as fontes. Sem vizinho para
  * alinhar, cada painel tem a altura do conteúdo até um teto; o que passa disso (e o que se
  * expande) rola dentro dele.
  */

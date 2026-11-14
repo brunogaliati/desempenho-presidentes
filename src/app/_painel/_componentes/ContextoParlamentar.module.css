@@ -1,14 +1,37 @@
-.contexto { max-width:72ch; margin:32px auto 0; min-width:0; font-size:14px; line-height:1.65; }
-.contexto h2 { margin-bottom:12px; font-size:22px; line-height:1.25; font-weight:650; letter-spacing:-.02em; text-wrap:balance; }
-.contexto h3 { margin:24px 0 8px; font-size:16px; font-weight:600; line-height:1.4; }
-.contexto table { width:100%; margin:20px 0 12px; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; }
-.contexto caption { padding-bottom:8px; text-align:left; color:var(--tinta-2); }
-.contexto th,.contexto td { padding:10px 6px; border-bottom:1px solid var(--borda); text-align:right; vertical-align:top; }
-.contexto th:first-child { padding-left:0; text-align:left; }
-.contexto th { font-weight:600; }
-.contexto small { display:block; font-size:11px; font-weight:400; color:var(--tinta-2); }
-.fonte { font-size:12px; color:var(--tinta-2); }
-.contexto a { color:var(--serie); text-decoration:underline; text-underline-offset:3px; }
+/*
+ * O texto para quem chega pela busca, no fim da página do parlamentar, logo depois das Fontes e
+ * no mesmo tom delas (`.fontes` em TerminalParlamentar.module.css): rótulo miúdo em maiúsculas,
+ * texto de 12 px, sem painel. Antes era um artigo centralizado de 72ch, com título de 22 px, que
+ * destoava da página. Em três colunas: o texto e os links, a tabela por ano e as duas perguntas.
+ */
+.contexto { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr); grid-template-areas:"titulo titulo titulo" "texto tabela perguntas"; gap:10px 32px; margin-top:28px; padding:16px 6px 0; border-top:1px solid var(--borda); min-width:0; font-size:12px; line-height:1.6; color:var(--tinta-2); }
+.contexto h2 { grid-area:titulo; font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--tinta-3); }
+.contexto h3 { margin:0 0 2px; font-size:12px; font-weight:600; line-height:1.45; color:var(--tinta); }
+.contexto p { margin:0; }
+.contexto a { text-decoration:underline; text-underline-offset:3px; }
+.contexto a:hover { color:var(--tinta); }
 .contexto a:focus-visible { outline:2px solid var(--serie); outline-offset:3px; }
-.contexto nav { display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:20px; }
-@media (max-width:480px) { .contexto { font-size:13px; } .contexto table { font-size:12px; } }
+
+.texto { grid-area:texto; display:grid; align-content:start; gap:10px; }
+.texto nav { display:flex; flex-wrap:wrap; gap:4px 16px; }
+
+.contexto table, .tabela { grid-area:tabela; align-self:start; }
+.contexto table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+.contexto caption { padding-bottom:4px; text-align:left; font-weight:600; color:var(--tinta); }
+.contexto th, .contexto td { padding:5px 0 5px 10px; border-bottom:1px solid var(--borda); text-align:right; vertical-align:baseline; white-space:nowrap; }
+.contexto thead th { font-size:11px; font-weight:500; color:var(--tinta-3); }
+.contexto th:first-child { padding-left:0; text-align:left; }
+.contexto tbody th { font-weight:600; color:var(--tinta); }
+.contexto tbody td { color:var(--tinta); }
+.contexto td[data-vazio] { color:var(--tinta-3); }
+.contexto small { margin-left:6px; font-size:11px; font-weight:400; color:var(--tinta-3); }
+
+.perguntas { grid-area:perguntas; display:grid; align-content:start; gap:4px; }
+.perguntas p + h3 { margin-top:10px; }
+
+@media (max-width:1000px) {
+  .contexto { grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-areas:"titulo titulo" "texto tabela" "perguntas perguntas"; }
+}
+@media (max-width:640px) {
+  .contexto { grid-template-columns:minmax(0,1fr); grid-template-areas:"titulo" "texto" "tabela" "perguntas"; gap:14px; }
+}

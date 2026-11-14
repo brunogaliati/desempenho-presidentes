@@ -9,6 +9,8 @@ import {
 } from "../_dados/congressoModelo";
 import fotografia from "../_dados/fotografia.json";
 import type { DadosPainel } from "../_dados/tipos";
+import { Ajuda } from "./Ajuda";
+import { TrocarParlamentar } from "./TrocarParlamentar";
 import { Bloco, Opcoes } from "./Bloco";
 import { useEscolhaImediata } from "./Vidro";
 import { useFichaParlamentar } from "./CrachaParlamentar";
@@ -57,8 +59,8 @@ type Familia = (typeof FAMILIAS)[number];
 const familiaDe = (categoria: string): Familia => FAMILIAS.find(f => f.teste.test(categoria)) ?? FAMILIAS[FAMILIAS.length - 1];
 const corDaFamilia = (f: Familia) => `var(--familia-${f.chave})`;
 
-/** Quantas cabem em "Como votou" sem rolar, abaixo do placar, na altura da linha do plenário. */
-const VOTOS_VISIVEIS = 11;
+/** Quantas cabem em "Como votou" sem rolar, na altura do resumo e da presença por ano, ao lado. */
+const VOTOS_VISIVEIS = 10;
 /** Junta as partes que existem com " · ". */
 const junta = (...partes: (string | null | undefined | false)[]) => partes.filter(Boolean).join(" · ");
 const notas = (n: number) => `${inteiro(n)} ${n === 1 ? "nota" : "notas"}`;
@@ -102,12 +104,12 @@ export function TerminalParlamentar({ casa, pessoa, governos, ufs, cor, corDe, i
   ].filter((x): x is string => Boolean(x));
 
   return <article id="cracha-parlamentar" className={t.pagina} aria-labelledby="cracha-nome" style={{ "--cor-partido": cor } as CSSProperties}>
-    <header className={`vidro ${t.cabeca}`} data-lustro="fixo">
+    <header id="resumo-parlamentar" className={`vidro ${t.cabeca}`} data-lustro="fixo">
       <div className={t.identidade}>
         <FotoParlamentar casa={casa} id={pessoa.id} nome={pessoa.nome} tamanho={84} altura={112} prioridade />
         <div className={t.quem}>
           <p className={t.sobre}>{camara ? "Câmara dos Deputados" : "Senado Federal"} · {uf?.nome ?? pessoa.uf}</p>
-          <h1 id="cracha-nome">{pessoa.nome}</h1>
+          <TrocarParlamentar id="cracha-nome" casa={casa} pessoa={pessoa} rotuloBancada={`${camara ? "Deputados" : "Senadores"} ${uf?.deNome ?? `de ${uf?.nome ?? pessoa.uf}`}`} />
           <div className={t.partido}>
             <IdentidadePartido governos={governos} sigla={pessoa.partido === "S/Partido" ? "SEM" : pessoa.partido} />
             {ficha.nomeCivil && <span>{ficha.nomeCivil}</span>}
@@ -182,6 +184,7 @@ export function TerminalParlamentar({ casa, pessoa, governos, ufs, cor, corDe, i
       frase={`O que ${camara ? "a Câmara" : "o Senado"} registra nas votações: ${camara ? "a presença nas sessões, " : "as ausências, "}se o ${singular} votou e como votou nas votações de mérito, ao lado do que o governo orientou.`}>
       <div className={`${t.grade} ${t.gradePlenario}`}>
         <PainelPlenarioAnos casa={casa} pessoa={pessoa} periodo={periodo} aoEscolher={aoEscolherPeriodo} className={`${t.painel} ${t.aPle}`} />
+        <PainelResumoVotos casa={casa} pessoa={pessoa} periodo={periodo} className={`${t.painel} ${t.aRes}`} />
         <PainelVotacoes casa={casa} pessoa={pessoa} periodo={periodo} className={`${t.painel} ${t.aVot}`} />
       </div>
     </Capitulo>
@@ -330,6 +333,14 @@ function Grupo({ nome, icone, ancora, celulas }: { nome: string; icone: Icone; a
   </section>;
 }
 
+type Plenario = NonNullable<ReturnType<typeof usePlenario>["dados"]>;
+
+/** As últimas 30 votações de mérito do período, com a letra do voto da pessoa em cada uma (" " = fora do cargo). */
+function ultimasVotacoes(p: Plenario, pessoa: Parlamentar, periodo: PeriodoCota) {
+  const letras = p.votos[pessoa.id] ?? "";
+  return p.votacoes.map((v, i) => ({ v, letra: letras[i] ?? " " })).filter(({ v }) => typeof periodo === "number" ? Number(v.data.slice(0, 4)) === periodo : periodo === LEGISLATURA ? v.data >= "2023-02-01" : true).slice(0, 30);
+}
+
 /** As últimas votações de mérito numa tabela: uma linha por votação, o voto e o que o governo orientou. */
 function PainelVotacoes({ casa, pessoa, periodo, className }: { casa: CasaCongresso; pessoa: Parlamentar; periodo: PeriodoCota; className: string }) {
   const plenario = usePlenario(casa);
@@ -340,13 +351,11 @@ function PainelVotacoes({ casa, pessoa, periodo, className }: { casa: CasaCongre
   if (plenario.erro) return <Bloco titulo={titulo} lustroFixo className={className}><Aviso>Não deu para carregar as votações agora.</Aviso></Bloco>;
   if (!p) return <Bloco titulo={titulo} lustroFixo className={className}><EsqueletoDetalhe /></Bloco>;
 
-  const letras = p.votos[pessoa.id] ?? "";
-  const lista = p.votacoes.map((v, i) => ({ v, letra: letras[i] ?? " " })).filter(({ v }) => typeof periodo === "number" ? Number(v.data.slice(0, 4)) === periodo : periodo === LEGISLATURA ? v.data >= "2023-02-01" : true).slice(0, 30);
+  const lista = ultimasVotacoes(p, pessoa, periodo);
   const noCargo = lista.filter(x => x.letra !== " ");
   const visiveis = todas ? lista : lista.slice(0, VOTOS_VISIVEIS);
   return <Bloco titulo={titulo} detalhe={`últimas ${lista.length} votações de mérito ${camara ? "da Câmara" : "do Senado"}`} lustroFixo className={className}>
     {!noCargo.length ? <Aviso>Não estava no cargo em nenhuma das últimas {lista.length} votações de mérito.</Aviso> : <>
-      <PlacarVotos letras={noCargo.map(x => x.letra)} />
       <table className={t.votos}>
         <thead>
           <tr><th scope="col">Data</th><th scope="col">Voto</th><th scope="col">Proposição</th><th scope="col">Resultado</th><th scope="col">Governo</th></tr>
@@ -392,26 +401,39 @@ function Selo({ sim, leve = false, children }: { sim: boolean; leve?: boolean; c
   </span>;
 }
 
-/** No topo de "Como votou": quantas vezes votou Sim, Não, outra coisa ou não votou, em número e numa faixa. */
-function PlacarVotos({ letras }: { letras: string[] }) {
+/**
+ * O resumo de "Como votou", ao lado dele: nas mesmas votações da tabela, quantas vezes votou
+ * Sim, Não, outra coisa ou não votou, em número e numa faixa. Sem a conta de "seguiu o governo":
+ * essa está na fita, sobre todas as votações do período, e cada número aparece uma vez.
+ */
+function PainelResumoVotos({ casa, pessoa, periodo, className }: { casa: CasaCongresso; pessoa: Parlamentar; periodo: PeriodoCota; className: string }) {
+  const plenario = usePlenario(casa);
+  const p = plenario.dados;
+  const titulo = "Resumo dos votos";
+  if (plenario.erro) return <Bloco titulo={titulo} lustroFixo className={className}><Aviso>Não deu para carregar as votações agora.</Aviso></Bloco>;
+  if (!p) return <Bloco titulo={titulo} lustroFixo className={className}><EsqueletoDetalhe /></Bloco>;
+  const lista = ultimasVotacoes(p, pessoa, periodo);
+  const letras = lista.map(x => x.letra).filter(l => l !== " ");
   const conta = (teste: (l: string) => boolean) => letras.filter(teste).length;
   const partes = [
     { chave: "sim", nome: "Sim", n: conta(l => l === "S") },
     { chave: "nao", nome: "Não", n: conta(l => l === "N") },
     { chave: "outro", nome: "Abstenção e outros", n: conta(l => !"SN-FJ".includes(l)) },
     { chave: "ausente", nome: "Não votou", n: conta(l => "-FJ".includes(l)) },
-  ].filter(p => p.n > 0 || p.chave === "sim" || p.chave === "nao");
-  return <figure className={t.placarVotos}>
-    <dl>
-      {partes.map(p => <div key={p.chave} data-parte={p.chave}>
-        <dd className="tabular">{inteiro(p.n)}</dd>
-        <dt><i aria-hidden="true" />{p.nome}</dt>
-      </div>)}
-    </dl>
-    <div className={t.faixaVotos} aria-hidden="true">
-      {partes.filter(p => p.n > 0).map(p => <span key={p.chave} data-parte={p.chave} style={{ flexGrow: p.n }} />)}
-    </div>
-  </figure>;
+  ];
+  return <Bloco titulo={titulo} detalhe={`últimas ${inteiro(lista.length)}`} lustroFixo className={className}>
+    {!letras.length ? <Aviso>Fora do cargo nas últimas votações de mérito do período.</Aviso> : <figure className={t.placarVotos}>
+      <dl>
+        {partes.map(x => <div key={x.chave} data-parte={x.chave}>
+          <dd className="tabular">{inteiro(x.n)}</dd>
+          <dt><i aria-hidden="true" />{x.nome}</dt>
+        </div>)}
+      </dl>
+      <div className={t.faixaVotos} aria-hidden="true">
+        {partes.filter(x => x.n > 0).map(x => <span key={x.chave} data-parte={x.chave} style={{ flexGrow: x.n }} />)}
+      </div>
+    </figure>}
+  </Bloco>;
 }
 
 /** Presença, voto e voto com o governo em cada ano, com a mediana da casa embaixo. O ano escolhido acende. */
@@ -433,14 +455,30 @@ function PainelPlenarioAnos({ casa, pessoa, periodo, aoEscolher, className }: {
 
   const daPessoa = p.pessoas[pessoa.id] ?? {};
   const anos = p.anos.filter(a => !!daPessoa[a]).toReversed();
-  const medidas: { chave: string; rotulo: string; valor: (a: number) => string; mediana: (a: number) => string | null }[] = [
-    camara
-      ? { chave: "s", rotulo: "Presença", valor: a => porcento(taxaComBase(daPessoa[a]?.s)), mediana: a => porcento(p.totais[a]?.mediana.s) }
+  // `taxa` e `taxaMediana` são as frações (0 a 1) da barra; as ausências do Senado são contagem e ficam sem barra.
+  type Medida = { chave: string; rotulo: string; valor: (a: number) => string; mediana: (a: number) => string | null; taxa?: (a: number) => number | null; taxaMediana?: (a: number) => number | null };
+  const porTaxa = (chave: "s" | "v" | "g", rotulo: string): Medida => ({
+    chave, rotulo,
+    taxa: a => taxaComBase(daPessoa[a]?.[chave]), taxaMediana: a => p.totais[a]?.mediana[chave] ?? null,
+    valor: a => porcento(taxaComBase(daPessoa[a]?.[chave])), mediana: a => porcento(p.totais[a]?.mediana[chave]),
+  });
+  const medidas: Medida[] = [
+    camara ? porTaxa("s", "Presença")
       : { chave: "a", rotulo: "Ausências", valor: a => (daPessoa[a] ? inteiro((daPessoa[a].j ?? 0) + (daPessoa[a].n ?? 0)) : "—"), mediana: () => null },
-    { chave: "v", rotulo: "Votou", valor: a => porcento(taxaComBase(daPessoa[a]?.v)), mediana: a => porcento(p.totais[a]?.mediana.v) },
-    { chave: "g", rotulo: "Com o governo", valor: a => porcento(taxaComBase(daPessoa[a]?.g)), mediana: a => porcento(p.totais[a]?.mediana.g) },
+    porTaxa("v", "Votou"),
+    porTaxa("g", "Com o governo"),
   ];
-  return <Bloco titulo={titulo} lustroFixo className={className} corpo={t.notaNaBase}>
+  // O painel tem altura fixa (o vizinho é a lista de votações). Com poucos anos, as linhas crescem
+  // até ocupar a altura, no máximo `--linha-ano-max` cada; com muitos, a tabela rola por dentro.
+  const casaDe = camara ? "da Câmara" : "do Senado";
+  const ajuda = <Ajuda rotulo="Como ler esta tabela">
+    <p>{camara ? "Conta só o tempo no cargo; o arquivo aberto da Câmara não separa a ausência justificada da falta." : "Conta só o tempo no cargo; em votação secreta, entra se votou, mas não o voto."}</p>
+    <p>Com o governo: votações em que o líder do governo orientou Sim ou Não e {camara ? "o deputado" : "o senador"} votou Sim ou Não.</p>
+    <p>Arquivos antigos podem ter lacunas de presença, orientação e votos individuais. O histórico soma contagens; porcentagens não são somadas nem calculadas pela média dos anos.</p>
+    <p>Clique num ano para ver a página só daquele ano.</p>
+  </Ajuda>;
+  return <Bloco titulo={titulo} detalhe={ajuda} lustroFixo className={className} corpo={t.notaNaBase}>
+    <div className={t.anosRolagem} style={{ "--linhas": anos.length } as CSSProperties}>
     <table className={t.anos}>
       <thead>
         <tr>
@@ -454,20 +492,23 @@ function PainelPlenarioAnos({ casa, pessoa, periodo, aoEscolher, className }: {
             aria-label={escolhido === a ? `${a}, escolhido; tocar volta ao histórico` : `Ver ${a}`}>{a}</button></th>
           {medidas.map(m => {
             const mediana = m.mediana(a);
+            const taxa = m.taxa?.(a) ?? null, taxaMediana = m.taxaMediana?.(a) ?? null;
             return <td key={m.chave} data-ativo={escolhido === a || undefined}>
-              <b className="tabular">{m.valor(a)}</b>
-              {mediana && <small className="tabular">{mediana}</small>}
+              <span className={t.anosNumeros}>
+                {mediana && <small className="tabular" aria-label={`mediana ${casaDe}: ${mediana}`}>{mediana}</small>}
+                <b className="tabular">{m.valor(a)}</b>
+              </span>
+              {m.taxa && <span className={t.anosBarra} aria-hidden="true">
+                {taxa !== null && <i style={{ width: `${taxa * 100}%` }} />}
+                {taxaMediana !== null && <u style={{ left: `${taxaMediana * 100}%` }} />}
+              </span>}
             </td>;
           })}
         </tr>)}
       </tbody>
     </table>
-    <p className={t.nota}>
-      Embaixo de cada número, em cinza, a mediana {camara ? "da Câmara" : "do Senado"}.{" "}
-      {camara ? "Conta só o tempo no cargo; o arquivo aberto da Câmara não separa a ausência justificada da falta." : "Conta só o tempo no cargo; em votação secreta, entra se votou, mas não o voto."}
-      {" "}Com o governo: votações em que o líder do governo orientou Sim ou Não e {camara ? "o deputado" : "o senador"} votou Sim ou Não.
-      {" "}Arquivos antigos podem ter lacunas de presença, orientação e votos individuais. O histórico soma contagens; porcentagens não são somadas nem calculadas pela média dos anos.
-    </p>
+    </div>
+    <p className={t.nota}><span className={t.legendaMediana} aria-hidden="true" /> Em cinza, ao lado do número, e no traço da barra: a mediana {casaDe}.</p>
   </Bloco>;
 }
 
@@ -480,7 +521,7 @@ function PainelEmendas({ ficha, carregando, erro, className }: { ficha: Ficha; c
   const e = ficha.emendas;
   const anos = e ? [...e.anos].sort((a, b) => a.ano - b.ano) : [];
   const maximo = Math.max(1, ...anos.map(a => a.valor));
-  const acao = !carregando && !erro && anos.length && ficha.linkEmendas ? <Link href={ficha.linkEmendas} className={t.linkPainel}>Ver os planos na aba Orçamento</Link> : null;
+  const acao = !carregando && !erro && anos.length && ficha.linkEmendas ? <Link href={ficha.linkEmendas} className={t.irPara}>Ver os planos na aba Orçamento</Link> : null;
   return <Bloco titulo="Emendas Pix por ano" detalhe="Transferegov" acao={acao} lustroFixo className={className}>
     {carregando ? <EsqueletoDetalhe /> : erro ? <Aviso>As emendas não carregaram agora.</Aviso>
       : !anos.length ? <Aviso>Nenhum plano de Emenda Pix identificado {ficha.quando}.</Aviso>
@@ -544,7 +585,7 @@ function PainelBancada({ casa, pessoa, cota, corDe, nomeUf, className }: {
       : <Aviso>Ninguém desta bancada apresentou nota {quando}.</Aviso>}
     <div className={t.rodape}>
       <span>{comNotas.length ? `Média: ${reaisCompactos(soma / comNotas.length)} por ${singular}` : ""}{semNotas ? `${comNotas.length ? "; " : ""}${semNotas} sem notas` : ""}</span>
-      <Link href={b.link} className={t.linkPainel}>Ver no Congresso</Link>
+      <Link href={b.link} className={t.irPara}>Ver no Congresso</Link>
     </div>
   </Bloco>;
 }
@@ -554,7 +595,7 @@ function Fontes({ casa, indice, cota, linkNotas }: { casa: CasaCongresso; indice
   const plenario = usePlenario(casa);
   const p = plenario.dados;
   const camara = casa === "deputados";
-  return <footer className={t.fontes} aria-labelledby="fontes-titulo">
+  return <footer id="fontes-parlamentar" className={t.fontes} aria-labelledby="fontes-titulo">
     <h2 id="fontes-titulo">Fontes</h2>
     {indice && cota && <FonteCota casa={casa} indice={indice} cota={cota} linkNotas={linkNotas} />}
     {p && <p className={estilos.fonte}>
