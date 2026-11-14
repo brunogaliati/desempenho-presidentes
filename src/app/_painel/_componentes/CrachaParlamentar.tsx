@@ -77,11 +77,17 @@ export function useFichaParlamentar({ casa, pessoa, periodo, indice, cota }: {
   // Na legislatura, quem assumiu depois de abril de 2023 soma menos meses que os outros.
   const comeco = legislatura && cota && gasto ? primeiroMesComNota(cota, gasto) : null;
   const chegouDepois = comeco && meses[0] && (comeco.ano * 12 + comeco.mes) - (meses[0].ano * 12 + meses[0].mes) >= 3 ? comeco : null;
+  // No histórico, as duas séries começam na primeira nota da pessoa: antes dela, o gráfico
+  // mostraria só a média da casa. Um mês sem nota não comprova ausência do cargo.
+  // O recorte não altera os totais nem os períodos de um ano ou da legislatura.
+  const primeiraNota = cota?.ano === HISTORICO && gasto ? gasto.m.findIndex(v => v !== 0) : -1;
+  const corte = Math.max(0, primeiraNota);
+  const serieMes = { valores: gasto?.m.slice(corte) ?? [], media: cota?.mediaMes.slice(corte) ?? [], situacao: situacao.slice(corte), meses: meses.slice(corte) };
 
   return {
     perfil, p, rotuloCasa, anos, nomeCivil, trajetoria, textoTrajetoria, linkPerfil, anoDasNotas, linkNotas, linkPagina,
     emendas, totalEmendas, planosEmendas, anoDasEmendas, linkEmendas,
-    gasto, media, posicao, comparacao, situacao, meses, legislatura, quando, ultimoParcial, anoParcial, comeco, chegouDepois,
+    gasto, media, posicao, comparacao, situacao, meses, serieMes, legislatura, quando, ultimoParcial, anoParcial, comeco, chegouDepois,
   };
 }
 
@@ -109,7 +115,7 @@ export function CrachaParlamentar({ modo = "lista", casa, pessoa, governos, ufs,
   const uf = ufs.find(u => u.sigla === pessoa.uf);
   const {
     perfil, p, rotuloCasa, anos, nomeCivil, textoTrajetoria, linkPerfil, linkNotas, linkPagina, emendas, totalEmendas, planosEmendas, linkEmendas,
-    gasto, media, posicao, comparacao, situacao, meses, legislatura, quando, ultimoParcial, anoParcial, chegouDepois,
+    gasto, media, posicao, comparacao, meses, serieMes, legislatura, quando, ultimoParcial, anoParcial, chegouDepois,
   } = useFichaParlamentar({ casa, pessoa, periodo, indice, cota });
 
   const frases: string[] = [];
@@ -181,7 +187,7 @@ export function CrachaParlamentar({ modo = "lista", casa, pessoa, governos, ufs,
           <section className={estilos.resumoCracha} aria-labelledby="cracha-resumo"><Titulo id="cracha-resumo">Em resumo</Titulo><p>{frases.join(" ")}</p></section>
           <section className={estilos.secaoCota} aria-labelledby="cracha-meses">
             <Titulo id="cracha-meses">Mês a mês</Titulo>
-            <MesAMes valores={gasto.m} media={cota.mediaMes} situacao={situacao} meses={meses} rotuloSerie={pessoa.nome} rotuloMedia={`média dos ${rotuloCasa}`} />
+            <MesAMes valores={serieMes.valores} media={serieMes.media} situacao={serieMes.situacao} meses={serieMes.meses} rotuloSerie={pessoa.nome} rotuloMedia={`média dos ${rotuloCasa}`} />
           </section>
           <section className={estilos.secaoCota} aria-labelledby="cracha-anos">
             <div className={estilos.secaoCabecalho}>

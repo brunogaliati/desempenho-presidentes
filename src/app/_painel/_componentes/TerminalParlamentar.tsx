@@ -143,7 +143,7 @@ export function TerminalParlamentar({ casa, pessoa, governos, ufs, cor, corDe, i
             : cota.semCobertura ? <Aviso>A fonte de cota não cobre {String(periodo)}. Os dados começam em 2008.</Aviso>
             : !gasto ? <Aviso>Nenhuma nota de cota {quando}. Quem assumiu depois, se licenciou ou não usou a cota no período não aparece no arquivo.</Aviso>
             : <>
-              <MesAMes valores={gasto.m} media={cota.mediaMes} situacao={ficha.situacao} meses={ficha.meses} rotuloSerie={pessoa.nome} rotuloMedia={`média dos ${ficha.rotuloCasa}`} />
+              <MesAMes valores={ficha.serieMes.valores} media={ficha.serieMes.media} situacao={ficha.serieMes.situacao} meses={ficha.serieMes.meses} rotuloSerie={pessoa.nome} rotuloMedia={`média dos ${ficha.rotuloCasa}`} />
               {ficha.chegouDepois && <p className={t.nota}>As notas começam em {MESES_POR_EXTENSO[ficha.chegouDepois.mes]} de {ficha.chegouDepois.ano}: a comparação com quem está desde 2023 é desigual.</p>}
             </>}
         </Bloco>

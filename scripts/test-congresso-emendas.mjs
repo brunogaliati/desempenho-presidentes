@@ -30,6 +30,38 @@ const CarregandoPainel = require('../src/app/_painel/_componentes/CarregandoPain
 const { GET: malhaDoEstado } = require('../src/app/api/painel/congresso/malha/route.ts');
 const { FotoParlamentar } = require('../src/app/_painel/_componentes/FotoParlamentar.tsx');
 const { Analytics } = require('../src/components/Analytics.tsx');
+const { useFichaParlamentar } = require('../src/app/_painel/_componentes/CrachaParlamentar.tsx');
+const { MesAMes } = require('../src/app/_painel/_componentes/GraficosCota.tsx');
+
+test('o histórico mensal começa na primeira nota da pessoa e recorta a média junto, sem alterar totais', () => {
+  const React = require('react');
+  const fotografia = JSON.parse(fs.readFileSync(new URL('../src/app/_painel/_dados/fotografia.json', import.meta.url), 'utf8'));
+  for (const [casa, id, anoInicial] of [['deputados', 209787, 2023], ['senadores', 739, 2011]]) {
+    for (const periodo of ['historico', 'legislatura', 2025]) {
+      const cota = JSON.parse(fs.readFileSync(new URL(`../public/painel/congresso/cota-${casa}-${periodo}.json`, import.meta.url), 'utf8'));
+      const pessoa = fotografia[casa].find(p => p.id === id);
+      let ficha;
+      const html = renderToStaticMarkup(React.createElement(function Grafico() {
+        ficha = useFichaParlamentar({ casa, pessoa, periodo, indice: null, cota });
+        const serie = ficha.serieMes;
+        return React.createElement(MesAMes, { ...serie, rotuloSerie: pessoa.nome });
+      }));
+      const corte = periodo === 'historico' ? cota.pessoas[id].m.findIndex(v => v !== 0) : 0;
+      assert.deepEqual(ficha.serieMes.valores, cota.pessoas[id].m.slice(corte));
+      assert.deepEqual(ficha.serieMes.media, cota.mediaMes.slice(corte));
+      assert.equal(ficha.serieMes.meses.length, ficha.serieMes.valores.length);
+      assert.equal(ficha.serieMes.situacao.length, ficha.serieMes.valores.length);
+      assert.equal(ficha.gasto, cota.pessoas[id], 'o recorte não modifica os gastos da pessoa');
+      if (periodo === 'historico') {
+        assert.deepEqual(ficha.serieMes.meses[0], { ano: anoInicial, mes: 1 });
+        assert.match(html, new RegExp(`Gasto por mês de fevereiro de ${anoInicial}`));
+        assert.doesNotMatch(html, />2008</);
+      } else {
+        assert.equal(ficha.serieMes.valores.length, cota.pessoas[id].m.length);
+      }
+    }
+  }
+});
 
 test('o perfil usa retrato local vertical com prioridade, e a lista conserva a miniatura', () => {
   const React = require('react');
