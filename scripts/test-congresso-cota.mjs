@@ -139,3 +139,26 @@ test('a cota histórica soma todos os anos sem sobrepor a legislatura nem perder
     }
   }
 });
+
+test('os arquivos por pessoa e os resumos refazem o arquivo inteiro de cada período', () => {
+  const ler = nome => JSON.parse(readFileSync(new URL(`../public/painel/congresso/${nome}.json`, import.meta.url), 'utf8'));
+  const fotografia = JSON.parse(readFileSync(new URL('../src/app/_painel/_dados/fotografia.json', import.meta.url), 'utf8'));
+  for (const casa of ['deputados','senadores']) {
+    const indice = ler(`cota-${casa}`);
+    const proprias = new Map(fotografia[casa].map(p => [String(p.id), ler(`cota/${casa}/${p.id}`)]));
+    for (const periodo of [...indice.anos, 'legislatura', 'historico']) {
+      const { pessoas, categorias, fornecedores: _, ...resto } = ler(`cota-${casa}-${periodo}`);
+      const { totais, ...doResumo } = ler(`cota-${casa}-${periodo}-resumo`);
+      assert.deepEqual(doResumo, resto, `${casa} ${periodo}: o resumo perdeu algum campo`);
+      assert.deepEqual(totais, Object.fromEntries(Object.entries(pessoas).map(([id, g]) => [id, g.t])));
+      for (const [id, propria] of proprias) {
+        const original = pessoas[id], dela = propria.periodos[periodo];
+        if (!original) { assert.equal(dela, undefined, `${casa}/${id} ${periodo}: período que não existe`); continue; }
+        const { categorias: nomes, c, ...igual } = dela;
+        const { c: cOriginal, ...igualOriginal } = original;
+        assert.deepEqual(igual, igualOriginal, `${casa}/${id} ${periodo}`);
+        assert.deepEqual(c.map(([i, v]) => [nomes[i], v]), cOriginal.map(([i, v]) => [categorias[i], v]), `${casa}/${id} ${periodo}: categorias`);
+      }
+    }
+  }
+});

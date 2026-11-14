@@ -8,7 +8,7 @@ import { ContextoParlamentar } from "./ContextoParlamentar";
 import { type CasaCongresso, NOME_UF, caminhoParlamentar } from "../_dados/congressoModelo";
 import fotografia from "../_dados/fotografia.json";
 import type { DadosPainel } from "../_dados/tipos";
-import { useCotaDoAno } from "../_dados/useCota";
+import { useCotaDaPessoa } from "../_dados/useCota";
 import { usePlenario } from "./PlenarioParlamentar";
 import type { Parlamentar } from "./DiretorioCongresso";
 import { NavTerminal } from "./NavTerminal";
@@ -40,7 +40,7 @@ export function PaginaParlamentar({ casa, id, dados, corDe }: {
   corDe: (partido: string | null) => string;
 }) {
   const pessoa: Parlamentar | undefined = fotografia[casa].find(p => p.id === id);
-  const { indice, cota, periodo, anos, setPeriodo, erro } = useCotaDoAno(casa, true);
+  const { indice, cota, periodo, anos, setPeriodo, erro } = useCotaDaPessoa(casa, id);
   const plenario = usePlenario(casa).dados;
   const anosDoPerfil = [...new Set([...anos, ...(plenario?.anos ?? [])])].filter(a => indice?.totais[id]?.[anos.indexOf(a)] != null || !!plenario?.pessoas[id]?.[a]).sort((a, b) => a - b);
   if (!pessoa) return <div className={estilos.pagina}>

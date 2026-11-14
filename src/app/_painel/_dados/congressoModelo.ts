@@ -42,6 +42,12 @@ export type CotaDoAno = {
   pessoas: Record<string, GastoNoAno>;
 };
 
+/** `cota-{casa}-{periodo}-resumo.json` (`scripts/dividir-cota.mjs`): o período com o total de cada um, sem o detalhe. */
+export type ResumoCota = Omit<CotaDoAno, "pessoas" | "categorias" | "fornecedores"> & { totais: Record<string, number> };
+
+/** `cota/{casa}/{id}.json`: uma pessoa em cada período com nota. O `c` de cada período aponta para a lista `categorias` dele. */
+export type CotaDaPessoa = { casa: CasaCongresso; id: number; coletadoEm: string; periodos: Record<string, GastoNoAno & { categorias: string[] }> };
+
 /** Resposta de `/api/painel/congresso`: o que o backend já coletou da pessoa. */
 export type PerfilParlamentar = {
   nomeCivil: string | null;

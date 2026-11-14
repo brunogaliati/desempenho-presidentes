@@ -6,7 +6,8 @@
  *
  * Grava em `public/painel/congresso/` um índice por casa (`cota-deputados.json`) e um arquivo
  * por ano (`cota-deputados-2026.json`), lidos
- * pela aba Congresso só quando alguém abre a seção. Como `coletar-prototipo.mjs`, não
+ * pela aba Congresso só quando alguém abre a seção. No fim, `dividir-cota.mjs` corta esses
+ * arquivos por pessoa, para a página de cada parlamentar. Como `coletar-prototipo.mjs`, não
  * toca no banco: a carga definitiva é trabalho do backend.
  *
  * - Câmara: arquivo anual oficial (Ano-AAAA.csv.zip, UTF-8, separado por ";"),
@@ -23,6 +24,7 @@ import { createHash } from "node:crypto";
 import { inflateRawSync } from "node:zlib";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { dividirCota } from "./dividir-cota.mjs";
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SAIDA = join(RAIZ, "public", "painel", "congresso");
@@ -272,3 +274,5 @@ for (const [casa, acumulador, ultimoMes, fontes] of casasColetadas) {
   for (const ano of [...ANOS, LEGISLATURA, HISTORICO]) linhas.push(await gravar(`cota-${casa}-${ano}.json`, porAno[ano]));
   console.log(`${casa}: ${Object.keys(indice.totais).length} pessoas · ${linhas.join(" · ")}`);
 }
+
+await dividirCota();
