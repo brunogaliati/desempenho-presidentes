@@ -18,7 +18,7 @@
 /* Compacto: uma pílula dentro de uma frase ("513 deputados · Brasil ▾"). Sem posição própria,
    o menu se ancora no bloco posicionado em volta da frase, e não na pílula, que pode estar no meio da linha. */
 .compacto { position:static; flex:none; width:auto; }
-.compacto .rotulo { position:absolute; width:1px; height:1px; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.compacto .rotulo, .rotulo.rotuloOculto { position:absolute; width:1px; height:1px; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 .compacto .gatilho { justify-content:flex-start; gap:6px; min-height:32px; padding:4px 10px 4px 12px; border-radius:999px; font-size:13px; font-weight:600; }
 .compacto .menu { width:min(18rem,100%); }
 @media(pointer:coarse) { .compacto .gatilho { min-height:44px; } }

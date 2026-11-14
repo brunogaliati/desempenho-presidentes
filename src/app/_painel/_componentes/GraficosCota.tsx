@@ -3,6 +3,7 @@
 import { useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
 
+import { SeletorDados } from "@/components/SeletorDados";
 import {
   type CasaCongresso, type CotaDoAno, type IndiceCota, type MesDaCota, type PeriodoCota, type SituacaoMes,
   HISTORICO, LEGISLATURA, MESES, MESES_POR_EXTENSO, reaisCompactos, reaisInteiros, situacaoDaCota, textoPercentual,
@@ -172,14 +173,16 @@ export function Barras({ itens, total, limite = 6, rotuloLista, nomeDoMais, femi
   </>;
 }
 
-/** A legislatura inteira e os anos, lado a lado; vale para a cota e para o plenário, e um ano escolhido vai no link. */
+/**
+ * O histórico, a legislatura e os anos, no menu do resto do site (`SeletorDados`), e não na lista
+ * nativa do sistema. Vale para a cota e para o plenário, e um ano escolhido vai no link.
+ */
 export function SeletorAnoCota({ anos, periodo, aoEscolher }: { anos: number[]; periodo: PeriodoCota; aoEscolher: (periodo: PeriodoCota) => void }) {
-  return <label className={estilos.anosCota}><span className="sr-only">Período dos números</span>
-    <select aria-label="Período dos números" value={String(periodo)} onChange={e => aoEscolher(e.target.value === HISTORICO || e.target.value === LEGISLATURA ? e.target.value : Number(e.target.value))}>
-      <option value={HISTORICO}>Histórico disponível</option><option value={LEGISLATURA}>Legislatura atual</option>
-      {[...anos].reverse().map(a => <option key={a} value={a}>{a}</option>)}
-    </select>
-  </label>;
+  const opcoes = [{ valor: HISTORICO, rotulo: "Histórico disponível" }, { valor: LEGISLATURA, rotulo: "Legislatura atual" }, ...[...anos].reverse().map(a => ({ valor: String(a), rotulo: String(a) }))];
+  return <div className={estilos.anosCota}>
+    <SeletorDados rotulo="Período dos números" rotuloOculto valor={String(periodo)} opcoes={opcoes} placeholderBusca="Buscar ano"
+      aoEscolher={v => aoEscolher(v === HISTORICO || v === LEGISLATURA ? v : Number(v))} />
+  </div>;
 }
 
 /** De onde vem a cota, o que o valor quer dizer e onde ver cada nota. */
