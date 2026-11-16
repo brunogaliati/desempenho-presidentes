@@ -75,6 +75,6 @@ async function emendasSemCache(casa: CasaCongresso, id: number, periodo: Periodo
     aplicacao: municipios(aplicacao as Linha[]), prefeituras: municipios(prefeituras as Linha[]) };
 }
 
-export const carregarEmendasParlamentar = unstable_cache(emendasSemCache, ["congresso-emendas-municipios-v4"], {
+export const carregarEmendasParlamentar = unstable_cache(emendasSemCache, ["congresso-emendas-municipios-v5"], {
   revalidate: 3600, tags: ["painel-congresso", "painel-economia"],
 });

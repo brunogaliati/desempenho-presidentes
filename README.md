@@ -470,3 +470,18 @@ escolhido. Comparações usam a composição atual; os valores são nominais.
 Validação do histórico: 24 testes de dados e componentes, quatro de SEO e 11
 checks de API/Neon aprovados, incluindo somas anuais e vínculos de deputados e
 senadores. Troca de período e cobertura antiga conferidas a 1280 e 390 px.
+
+Auditoria de autoria em 16/11/2026: os 594 perfis cadastrados (513 deputados e
+81 senadores) conferem com o banco, por município/fase e centavo, cobertura,
+recebimentos municipais, quantidade de planos e documentos sem município.
+Execute `node --env-file=.env.local scripts/validar-emendas-perfis.mjs` com o
+servidor na porta 3000; uma origem pode ser passada como argumento. `--falhas`
+repete somente os casos reprovados e conserva o resultado dos demais.
+O relatório local fica em `.cache/validacao-emendas-perfis.json`.
+
+Os 14 perfis sem execução vinculada à casa foram auditados no ETL e listados no
+README do backend. A ausência continua distinta de zero. As chaves de cache
+de emendas e perfil foram renovadas após a carga; o webhook agora também
+invalida `painel-congresso`. Checks aprovados: 13 testes de emendas,
+TypeScript, ESLint e build OpenNext. Uma indisponibilidade transitória gerou
+56 respostas 503 na primeira rodada; todos esses casos passaram na repetição.

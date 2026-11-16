@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     revalidatePath('/');
     revalidateTag('painel-economia');
+    revalidateTag('painel-congresso');
     revalidateTag('painel-resumo');
     revalidateTag('painel-saude');
     revalidateTag('painel-votacoes');

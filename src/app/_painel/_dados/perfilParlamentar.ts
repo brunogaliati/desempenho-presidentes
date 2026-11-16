@@ -39,4 +39,4 @@ async function perfilSemCache(casa: CasaCongresso, id: number): Promise<PerfilPa
   };
 }
 
-export const carregarPerfilParlamentar = unstable_cache(perfilSemCache, ["congresso-perfil-v3"], { revalidate: 3600, tags: ["painel-congresso"] });
+export const carregarPerfilParlamentar = unstable_cache(perfilSemCache, ["congresso-perfil-v4"], { revalidate: 3600, tags: ["painel-congresso"] });

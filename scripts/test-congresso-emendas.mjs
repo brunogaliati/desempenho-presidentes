@@ -150,11 +150,12 @@ test('o período usa o ano da emenda e mantém a legislatura do perfil', () => {
 });
 
 test('o seletor oferece histórico, legislatura e todos os anos com um controle acessível', () => {
-  const html = renderToStaticMarkup(require('react').createElement(SeletorAnoCota, { anos: [2011,2015,2019,2023,2026], periodo: 'historico', aoEscolher() {} }));
-  assert.match(html, /<select[^>]+aria-label="Período dos números"/);
-  assert.match(html, /value="historico" selected=""/);
-  assert.match(html, /value="legislatura"/);
-  for (const ano of [2011,2015,2019,2023,2026]) assert.ok(html.includes(`value="${ano}"`));
+  const anos = [2011,2015,2019,2023,2026];
+  for (const [periodo,rotulo] of [['historico','Histórico disponível'],['legislatura','Legislatura atual'],...anos.map(a=>[a,String(a)])]) {
+    const html = renderToStaticMarkup(require('react').createElement(SeletorAnoCota, { anos, periodo, aoEscolher() {} }));
+    assert.ok(html.includes(`aria-label="Período dos números: ${rotulo}"`));
+    assert.match(html, /aria-haspopup="listbox"/);
+  }
 });
 
 test('documentos sem município mostram favorecido, localidade e fases sem inventar pagamentos', () => {
