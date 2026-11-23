@@ -23,6 +23,7 @@
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["DOQueueHandler", "DOShardedTagCache"] }],
   "vars": {
     "SITE_URL": "https://desempenhodogoverno.com.br",
+    "NEON_AUTH_BASE_URL": "https://ep-dry-rain-axoxahoa.neonauth.c-4.us-east-2.aws.neon.tech/neondb/auth",
     "SEO_INDEXING": "true",
     "NEXTJS_ENV": "production"
   },

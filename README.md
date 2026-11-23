@@ -265,6 +265,19 @@ Este projeto apresenta uma análise visual dos principais indicadores econômico
 
 5. Acesse `http://localhost:3000` no seu navegador.
 
+### Contas
+
+Ative o Managed Better Auth na branch do ambiente. Copie a URL da área
+**Auth → Configuration** para `NEON_AUTH_BASE_URL` em `.env.local`. A URL de
+produção está em `wrangler.jsonc`. Para outra branch, use a URL dela e configure
+os domínios em **Auth → Domains**. Na branch usada para desenvolvimento, permita
+`http://localhost:3000`. Habilite o acesso por e-mail e senha.
+
+O painel é público. `/login` e `/conta` usam a API HTTP do Neon Auth, que gerencia
+credenciais e sessões. O cadastro aceita confirmação de e-mail por link quando
+essa opção estiver ativa na branch.
+Consulte o [guia de autenticação do Neon](https://neon.com/docs/auth/authentication-flow).
+
 ## 📝 Contribuindo
 
 Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar pull requests com melhorias.

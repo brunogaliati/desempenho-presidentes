@@ -1,0 +1,23 @@
+/* O botão é a ação principal entre os links do crachá: pílula na cor da série. */
+.seguir {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 13px 0 10px;
+  border: 1px solid color-mix(in srgb, var(--serie) 35%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--serie) 9%, transparent);
+  color: var(--serie);
+  font-size: 12.5px;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: background-color 150ms, border-color 150ms, color 150ms;
+}
+.seguir:hover:not(:disabled) { background: color-mix(in srgb, var(--serie) 16%, transparent); }
+.seguir[data-seguindo] { border-color: var(--borda); background: var(--faixa-ativa); color: var(--tinta); }
+.seguir:disabled { opacity: 0.6; cursor: default; }
+/* Os links do crachá são sublinhados; o botão em forma de link (sem sessão), não. */
+a.seguir.seguir { text-decoration: none; }
+.conta { font-size: 12.5px; }
+.erro { font-size: 12px; color: var(--ruim); }

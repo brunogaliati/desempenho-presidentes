@@ -1,0 +1,230 @@
+/*
+ * Entrar, criar conta e minha conta: um cartão de vidro sobre a paisagem da
+ * Economia, com o topo e o rodapé do site. Os seletores, o botão líquido e a
+ * paleta são os do painel (`globals.css`); aqui fica só o que é do cartão.
+ */
+.pagina:global(.painel-governo) {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding-inline: 12px;
+  padding-bottom: 40px;
+}
+
+.conteudo {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding-block: clamp(28px, 8vh, 88px);
+}
+
+/* A página da conta é larga e começa no alto, não centrada como o cartão de entrar. */
+.conteudo:has(> [data-largura="painel"]) { padding-block: 18px 40px; }
+
+.cartao {
+  --vidro-tinta: light-dark(rgba(255, 255, 255, 0.66), rgba(23, 35, 45, 0.7));
+  width: min(100%, 432px);
+  padding: 28px 32px 24px;
+  border-radius: 28px;
+  animation: cartao-entrada 420ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes cartao-entrada {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+}
+
+.cartao h1 {
+  margin-top: 6px;
+  font-size: clamp(26px, 4vw, 30px);
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.sobretitulo {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+}
+
+.ajuda {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--tinta-2);
+}
+
+/* Entrar | Criar conta: o mesmo seletor das abas do topo, em superfície simples (vidro sobre vidro apaga os rótulos). */
+.modos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 26px;
+  padding: 4px;
+  background: light-dark(rgba(255, 255, 255, 0.72), rgba(15, 24, 32, 0.6));
+}
+
+.modos a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding-inline: 12px;
+  text-decoration: none;
+}
+
+.aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--faixa-ativa);
+  color: var(--tinta);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.aviso svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--serie);
+}
+
+.formulario {
+  display: grid;
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.campo {
+  display: grid;
+  gap: 7px;
+}
+
+.rotulo {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tinta-2);
+}
+
+.campo input {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 14px;
+  font: inherit;
+  font-size: 16px;
+  color: var(--tinta);
+  background: light-dark(rgba(255, 255, 255, 0.86), rgba(15, 24, 32, 0.55));
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 2px light-dark(rgba(38, 55, 70, 0.06), rgba(0, 0, 0, 0.25));
+  transition: border-color 150ms, box-shadow 150ms;
+}
+
+.campo input::placeholder { color: var(--tinta-3); }
+.campo input:hover { border-color: var(--eixo); }
+
+/* O anel azul faz o papel do contorno; o contorno transparente reaparece no modo de alto contraste. */
+.campo input:focus {
+  outline: 2px solid transparent;
+  border-color: var(--serie);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--serie) 22%, transparent);
+}
+
+.senha { position: relative; }
+.senha input { padding-right: 52px; }
+.senha input::-ms-reveal,
+.senha input::-ms-clear { display: none; }
+
+.olho {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 40px;
+  border-radius: 10px;
+  color: var(--tinta-3);
+  transform: translateY(-50%);
+  transition: color 150ms, background-color 150ms;
+}
+
+.olho:hover { color: var(--tinta); background: var(--faixa-a); }
+.olho[aria-pressed="true"] { color: var(--serie); }
+
+.regra {
+  font-size: 12px;
+  color: var(--tinta-3);
+}
+
+/* A cor acompanha o texto ("✓ …", "não são iguais"); sozinha não diz nada. */
+.regra[data-estado="ok"] { color: var(--bom); }
+.regra[data-estado="erro"] { color: var(--ruim); }
+.campo input[aria-invalid="true"] { border-color: var(--ruim); }
+/* A região de aviso fica na árvore (aria-live precisa existir antes do texto), só sem o espaço. */
+.regra:empty { margin-top: -7px; }
+
+.erro {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ruim) 10%, transparent);
+  color: var(--ruim);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.cartao > .erro { margin-top: 18px; }
+
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: transform 150ms ease-out, background-color 150ms;
+}
+
+.botao span { transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1); }
+.botao:hover:not(:disabled) span { transform: translateX(3px); }
+.botao:active:not(:disabled) { transform: translateY(1px); }
+.botao:disabled { opacity: 0.72; cursor: progress; }
+
+.nota {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--borda);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--tinta-3);
+}
+
+.nota a {
+  color: var(--serie);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .conteudo { place-items: start center; padding-block: 20px 32px; }
+  .cartao { padding: 20px 18px 18px; border-radius: 24px; }
+  .modos { margin-bottom: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cartao { animation: none; }
+  .botao span { transition: none; }
+}

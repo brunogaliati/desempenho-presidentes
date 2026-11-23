@@ -1,0 +1,500 @@
+/*
+ * "Minha conta": cabeçalho da conta, quem a pessoa segue (cartões), como votaram (feed) e, na
+ * lateral, a busca e quem vota junto. Vidro e tokens do painel; verde e vermelho só no Sim e no
+ * Não, como na página do parlamentar (--voto-*, iguais aos do placar).
+ */
+.painel {
+  --voto-sim: var(--placar-bom);
+  --voto-nao: var(--placar-ruim);
+  --voto-sim-tinta: light-dark(#256a4f, #7fcaa6);
+  --voto-nao-tinta: light-dark(#93392d, #eb9a8c);
+  --interno: light-dark(rgba(255, 255, 255, 0.64), rgba(15, 24, 32, 0.46));
+  display: grid;
+  gap: 18px;
+  width: min(100%, 1240px);
+  min-width: 0;
+  align-self: start;
+}
+
+.sobretitulo {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+}
+
+/* Cabeçalho da conta */
+.cabeca {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "avatar saudacao resumo sair";
+  align-items: center;
+  gap: 16px 22px;
+  padding: 20px 22px 20px 20px;
+  border-radius: 28px;
+}
+
+.avatar {
+  grid-area: avatar;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--serie-fraca);
+  color: var(--serie);
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  box-shadow: inset 0 0 0 1px var(--borda), 0 0 0 4px var(--interno);
+}
+
+.saudacao { grid-area: saudacao; min-width: 0; }
+.saudacao h1 { margin-top: 2px; font-size: clamp(24px, 3vw, 30px); line-height: 1.15; font-weight: 600; letter-spacing: -0.03em; }
+.email { margin-top: 3px; font-size: 13px; color: var(--tinta-2); overflow-wrap: anywhere; }
+
+.resumo { grid-area: resumo; display: flex; gap: 6px; }
+.resumo > div {
+  display: grid;
+  gap: 2px;
+  min-width: 96px;
+  padding: 9px 14px 10px;
+  border-radius: 16px;
+  background: var(--interno);
+  box-shadow: inset 0 0 0 1px var(--borda);
+}
+.resumo dt { font-size: 11.5px; color: var(--tinta-3); white-space: nowrap; }
+.resumo dd { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+
+.sair { grid-area: sair; display: grid; justify-items: end; }
+.botaoSair {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: var(--interno);
+  color: var(--tinta-2);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color 150ms, color 150ms;
+}
+.botaoSair:hover:not(:disabled) { background: var(--faixa-ativa); color: var(--tinta); }
+.botaoSair:disabled { opacity: 0.7; cursor: progress; }
+
+.erro {
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ruim) 10%, transparent);
+  color: var(--ruim);
+  font-size: 14px;
+}
+.erroPequeno { margin-top: 6px; color: var(--ruim); font-size: 12px; }
+
+/* Quem veio do botão "Seguir" de um parlamentar */
+.sugestao {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px 10px 10px;
+  border-radius: 999px;
+}
+.sugestao p { flex: 1; min-width: 0; font-size: 14px; line-height: 1.45; }
+.sugestao .onde { margin-left: 4px; vertical-align: middle; }
+
+/* Colunas: o principal e a lateral fixa com a busca */
+.colunas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 18px;
+  align-items: start;
+}
+.principal { display: grid; gap: 30px; min-width: 0; }
+.lateral {
+  position: sticky;
+  top: calc(var(--altura-cabecalho, 112px) + 12px);
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.capitulo { display: grid; gap: 4px; margin: 2px 6px 14px; }
+.capitulo h2 { font-size: 21px; line-height: 1.25; font-weight: 600; letter-spacing: -0.025em; }
+.capitulo p { max-width: 72ch; font-size: 14px; line-height: 1.5; color: var(--tinta-2); }
+
+.bloco { min-width: 0; padding: 20px; border-radius: 24px; }
+.tituloBloco { font-size: 16px; font-weight: 600; letter-spacing: -0.015em; }
+.detalheBloco { margin-top: 4px; font-size: 12.5px; line-height: 1.5; color: var(--tinta-3); }
+.dica { margin-top: 2px; font-size: 13px; line-height: 1.55; color: var(--tinta-2); }
+.exemplo {
+  padding: 0 7px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: var(--interno);
+  color: var(--serie);
+  font: inherit;
+  font-weight: 650;
+}
+.exemplo:hover { background: var(--faixa-ativa); }
+
+.indisponivel h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
+.indisponivel p { margin-top: 6px; font-size: 14px; color: var(--tinta-2); }
+
+/* Etiqueta do partido e a linha "Câmara · SP" */
+.partido {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.partido[data-vazado] { box-shadow: inset 0 0 0 1px var(--borda); color: var(--tinta-2); }
+.onde { display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: 12.5px; color: var(--tinta-2); white-space: nowrap; }
+
+/* Seguir: "Seguindo" vira "Deixar de seguir" no mouse; os dois textos dividem a mesma célula para o botão não mudar de largura. */
+.seguir {
+  display: inline-grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: none;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: var(--interno);
+  color: var(--tinta);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 150ms, color 150ms, border-color 150ms;
+}
+.seguir:hover { background: var(--faixa-ativa); }
+.seguir[data-destaque] { min-height: 42px; padding: 0 18px; border-color: transparent; background: var(--acao); color: var(--acao-tinta); font-size: 14px; }
+.seguir[data-destaque]:hover { background: color-mix(in srgb, var(--acao) 86%, black); }
+/* "✓ Seguindo" e "Deixar de seguir" dividem a mesma célula: o botão tem a largura do maior e não pula no hover. */
+.seguir[data-seguindo] {
+  grid-template-areas: "texto";
+  border-color: color-mix(in srgb, var(--serie) 28%, transparent);
+  background: var(--faixa-ativa);
+  color: var(--serie);
+}
+.seguindoTexto, .deixarTexto { grid-area: texto; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.deixarTexto { visibility: hidden; }
+@media (hover: hover) {
+  .seguir[data-seguindo]:hover { border-color: var(--borda); background: var(--faixa-a); color: var(--tinta); }
+  .seguir[data-seguindo]:hover .seguindoTexto { visibility: hidden; }
+  .seguir[data-seguindo]:hover .deixarTexto { visibility: visible; }
+}
+
+/* Busca */
+.busca { display: grid; gap: 10px; margin-top: 12px; }
+.campoBusca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  background: light-dark(rgba(255, 255, 255, 0.88), rgba(15, 24, 32, 0.6));
+  color: var(--tinta-3);
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.campoBusca:focus-within { border-color: var(--serie); box-shadow: 0 0 0 3px color-mix(in srgb, var(--serie) 22%, transparent); }
+.campoBusca input {
+  flex: 1;
+  min-width: 0;
+  min-height: 46px;
+  border: 0;
+  background: transparent;
+  color: var(--tinta);
+  font: inherit;
+  font-size: 16px;
+}
+.campoBusca input:focus-visible { outline: 2px solid transparent; }
+.campoBusca input::placeholder { color: var(--tinta-3); }
+.casas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 3px; background: var(--interno); }
+.casas button { min-height: 34px; }
+.resultados { display: grid; gap: 2px; margin: 0 -8px; }
+.resultados[data-rola] { max-height: 440px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.resultado { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 14px; transition: background-color 150ms; }
+.resultado:hover { background: var(--faixa-a); }
+.resultadoTexto { display: grid; gap: 3px; flex: 1; min-width: 0; }
+.resultadoTexto a { overflow: hidden; font-size: 14px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+.resultadoTexto a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Cartões de quem a pessoa segue: lado a lado, a mesma altura, o último voto no pé */
+.cartoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 14px; }
+.cartao {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px 16px 14px;
+  border-radius: 22px;
+}
+.quem { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.quem > span:first-child,
+.votos li > span:first-child,
+.sugestao > span:first-child { outline: 2px solid var(--cor-partido, var(--borda)); outline-offset: 2px; }
+.quemTexto { display: grid; gap: 5px; flex: 1; min-width: 0; }
+.nome { overflow: hidden; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+.nome:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.numeros {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+  padding: 12px 2px;
+  border-block: 1px solid var(--borda);
+}
+.numero { display: grid; align-content: start; gap: 1px; min-width: 0; }
+.numero dt { overflow: hidden; font-size: 11.5px; color: var(--tinta-3); text-overflow: ellipsis; white-space: nowrap; }
+.numero dd { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+.numero dd.numeroDetalhe { overflow: hidden; font-size: 11px; font-weight: 400; letter-spacing: 0; line-height: 1.35; color: var(--tinta-3); text-overflow: ellipsis; white-space: nowrap; }
+
+.ultimo { display: flex; align-items: center; align-self: end; gap: 8px; min-width: 0; font-size: 12.5px; color: var(--tinta-2); }
+.ultimoRotulo { flex: none; font-size: 11px; color: var(--tinta-3); }
+.ultimoTitulo { flex: 1; min-width: 0; overflow: hidden; font-weight: 550; color: var(--tinta); text-overflow: ellipsis; white-space: nowrap; }
+.ultimo time { flex: none; font-size: 11.5px; color: var(--tinta-3); }
+
+/* Selos de voto e resultado, como em "Como votou" na página do parlamentar */
+.selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  min-height: 22px;
+  padding: 0 8px 0 6px;
+  border-radius: 999px;
+  background: var(--voto-nao);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+}
+.selo[data-sim] { background: var(--voto-sim); }
+.selo[data-leve] { min-height: 20px; background: color-mix(in srgb, var(--voto-nao) 13%, transparent); color: var(--voto-nao-tinta); font-size: 11.5px; font-weight: 600; }
+.selo[data-leve][data-sim] { background: color-mix(in srgb, var(--voto-sim) 13%, transparent); color: var(--voto-sim-tinta); }
+.selo svg { flex: none; }
+.seloNeutro {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  min-height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  color: var(--tinta-2);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+.seloNeutro[data-ausente] { border-style: dashed; color: var(--tinta-3); }
+
+/* Como votaram */
+.filtros { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; background: var(--interno); }
+.filtros button { min-height: 34px; padding: 0 12px; }
+.filtros button span { margin-left: 3px; color: var(--tinta-3); font-weight: 500; }
+.notaFiltro { margin-top: 10px; font-size: 12.5px; line-height: 1.5; color: var(--tinta-3); }
+.feed { margin-top: 8px; }
+.item { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 16px; padding: 16px 0; border-top: 1px solid var(--borda); }
+.quando { display: grid; justify-items: center; align-content: start; gap: 6px; }
+.quando time {
+  display: grid;
+  justify-items: center;
+  width: 56px;
+  padding: 6px 0 5px;
+  border-radius: 14px;
+  background: var(--interno);
+  box-shadow: inset 0 0 0 1px var(--borda);
+  color: var(--tinta-2);
+  font-size: 11px;
+  line-height: 1.15;
+}
+.quando time strong { font-size: 20px; font-weight: 650; letter-spacing: -0.02em; color: var(--tinta); }
+.quando time small { font-size: 10px; color: var(--tinta-3); }
+.casa { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tinta-3); }
+.materia { display: grid; gap: 6px; min-width: 0; }
+.materiaTopo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.materiaTopo > strong { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.placar { font-size: 12px; color: var(--tinta-2); }
+.orientacao { font-size: 12px; color: var(--tinta-3); }
+.ementa {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--tinta-2);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.votos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.votos li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 36px;
+  padding: 4px 6px 4px 5px;
+  border-radius: 999px;
+  background: var(--interno);
+  box-shadow: inset 0 0 0 1px var(--borda);
+}
+.votoNome { max-width: 170px; overflow: hidden; font-size: 12.5px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+.votoNome:hover { text-decoration: underline; text-underline-offset: 3px; }
+.contrario { padding-right: 4px; font-size: 11px; color: var(--tinta-3); white-space: nowrap; }
+.mais {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 6px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: var(--interno);
+  color: var(--tinta-2);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color 150ms, color 150ms;
+}
+.mais:hover { background: var(--faixa-ativa); color: var(--tinta); }
+
+/* Quem vota junto */
+.pares { display: grid; margin-top: 10px; }
+.pares li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "fotos nomes taxa" "fotos barra barra" "fotos base base";
+  align-items: center;
+  gap: 3px 10px;
+  padding: 11px 0;
+  border-top: 1px solid var(--borda);
+}
+.duasFotos { grid-area: fotos; display: flex; }
+.duasFotos > span + span { margin-left: -10px; border-radius: 50%; box-shadow: 0 0 0 2px var(--superficie); }
+.parNomes { grid-area: nomes; overflow: hidden; font-size: 13px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+.parNomes span { font-weight: 400; color: var(--tinta-3); }
+.pares strong { grid-area: taxa; font-size: 16px; font-weight: 650; }
+.parBarra { grid-area: barra; height: 6px; overflow: hidden; border-radius: 999px; background: var(--faixa-a); }
+.parBarra i { display: block; height: 100%; border-radius: inherit; background: var(--serie); }
+.pares small { grid-area: base; font-size: 11px; color: var(--tinta-3); }
+
+/* Sem ninguém seguido ainda */
+.vazio {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 32px;
+  padding: 32px;
+  border-radius: 28px;
+}
+.vazioTexto h2 { margin-top: 6px; font-size: clamp(26px, 3.2vw, 34px); line-height: 1.12; font-weight: 600; letter-spacing: -0.03em; }
+.vazioFrase { margin-top: 8px; font-size: 15px; color: var(--tinta-2); }
+.beneficios { display: grid; gap: 16px; margin-top: 24px; }
+.beneficios li { display: flex; gap: 12px; }
+.beneficios svg { flex: none; width: 38px; height: 38px; padding: 9px; border-radius: 12px; background: var(--faixa-ativa); color: var(--serie); }
+.beneficios span { display: grid; gap: 2px; font-size: 13.5px; line-height: 1.45; color: var(--tinta-2); }
+.beneficios strong { font-size: 14.5px; font-weight: 600; color: var(--tinta); }
+.vazioBusca { align-self: start; padding: 18px; border-radius: 22px; background: var(--interno); box-shadow: inset 0 0 0 1px var(--borda); }
+.vazioBusca .busca { margin-top: 0; }
+
+/* Enquanto as votações chegam */
+.ossoNumeros, .ossoFeed, .ossoPares { border-radius: 14px; background: var(--grade); animation: osso 1.6s ease-in-out infinite alternate; }
+.ossoNumeros { height: 104px; }
+.ossoFeed { height: 420px; }
+.ossoPares { height: 120px; margin-top: 12px; }
+@keyframes osso { from { opacity: 0.55; } to { opacity: 1; } }
+
+@media (max-width: 1080px) {
+  .colunas { grid-template-columns: minmax(0, 1fr); }
+  .lateral { position: static; order: -1; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); align-items: start; }
+}
+
+@media (max-width: 760px) {
+  /* No celular, uma coluna só: a busca, quem você segue, o desafio, as votações e quem vota junto. */
+  .colunas { display: flex; flex-direction: column; gap: 26px; }
+  .principal, .lateral { display: contents; }
+  .principal > :first-child { order: 1; }
+  .convite { order: 2; }
+  .principal > :last-child { order: 3; }
+  .lateral > :last-child { order: 4; }
+  .cabeca { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "avatar saudacao sair" "resumo resumo resumo"; padding: 16px; border-radius: 24px; }
+  .avatar { width: 48px; height: 48px; font-size: 17px; }
+  .resumo > div { flex: 1; min-width: 0; padding: 8px 10px; }
+  .resumo dd { font-size: 18px; }
+  .sugestao { flex-wrap: wrap; border-radius: 22px; }
+  .vazio { grid-template-columns: minmax(0, 1fr); gap: 22px; padding: 20px 18px; border-radius: 24px; }
+  .bloco { padding: 16px; }
+  .item { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .quando { display: flex; align-items: center; gap: 8px; }
+  .quando time { display: flex; align-items: baseline; gap: 4px; width: auto; padding: 4px 10px; }
+  .quando time strong { font-size: 14px; }
+  .quando time small { font-size: 11px; }
+  .filtros { display: grid; grid-auto-flow: column; grid-auto-columns: auto; width: 100%; }
+  /* Rótulo em cima, contagem embaixo: no celular "Contra o governo 128" não cabe numa linha. */
+  .filtros button { display: grid; justify-items: center; align-content: center; padding: 5px 4px; font-size: 12px; line-height: 1.25; white-space: nowrap; }
+}
+
+/* Entradas da montagem: pela bancada (sob a busca) e o desafio. */
+.peloMapa {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--serie);
+}
+.peloMapa:hover { text-decoration: underline; text-underline-offset: 4px; }
+.convite {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px 14px;
+}
+.convite .detalheBloco { margin-top: 2px; }
+.convite .botaoConvite { grid-column: 2; justify-self: start; }
+.conviteIcone {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #efff00;
+  color: #0b0b0b;
+  transform: rotate(-6deg);
+  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.convite:hover .conviteIcone { transform: rotate(8deg) scale(1.08); }
+.botaoConvite {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--acao);
+  color: var(--acao-tinta);
+  font-size: 13.5px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.botaoConvite:hover { background: color-mix(in srgb, var(--acao) 86%, black); }
+.vazioMapa { justify-self: start; margin-top: 18px; }
+.ossoMontagem { min-height: 560px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ossoNumeros, .ossoFeed, .ossoPares { animation: none; }
+}

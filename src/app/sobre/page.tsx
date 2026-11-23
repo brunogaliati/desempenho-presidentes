@@ -12,6 +12,8 @@ export default async function Sobre(){
     <section id="privacidade" className="vidro scroll-mt-64" data-lustro="fixo">
       <h2>Privacidade e estatísticas de acesso</h2>
       <div className="mt-4 max-w-prose space-y-4 leading-relaxed">
+        <p>Usamos o nome e o e-mail para identificar sua conta. O Neon Auth gerencia o cadastro, as credenciais e a sessão. Ao entrar, o navegador recebe um cookie necessário para manter a sessão. Você pode encerrá-la em <Link href="/conta">Minha conta</Link>.</p>
+        <p>Se você seguir deputados ou senadores, guardamos a lista junto da sua conta para montar a página Minha conta. Deixar de seguir apaga o registro.</p>
         <p>Usamos o Google Analytics 4 para entender o acesso às páginas, os canais de origem e o uso em diferentes dispositivos. A medição começa apenas quando você escolhe permitir estatísticas. Recusar não limita os dados ou as ferramentas do site.</p>
         <p>Com sua permissão, o Google pode gravar cookies <code>_ga</code> e <code>_ga_*</code>, associados a identificadores de navegação, com duração configurada de até 180 dias. Não ativamos recursos de publicidade, Google Signals ou personalização de anúncios.</p>
         <p>Nas visualizações, enviamos o caminho e o título da página e a referência de navegação, sem os parâmetros de filtros, buscas ou fragmentos do endereço. Alterar um filtro na mesma página não conta como outra visualização.</p>

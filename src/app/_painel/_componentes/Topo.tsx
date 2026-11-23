@@ -162,11 +162,14 @@ export function Cabecalho({
         </nav>
         {mandato}
         <div className="cabecalho-acoes">
-          <Link href="/explorar" className={`acao-cabecalho ${styles.explorar}`} aria-current={explorarAtivo ? "page" : undefined}>
+          <Link href="/explorar" className={`acao-cabecalho ${styles.explorar}`} aria-label="Explorar dados" aria-current={explorarAtivo ? "page" : undefined}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
               <rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/>
             </svg>
             <span>Explorar dados</span>
+          </Link>
+          <Link href="/conta" className={`acao-cabecalho ${styles.conta}`} prefetch={false}>
+            Conta
           </Link>
           <button type="button" role="switch" aria-checked={escuro} onClick={alternarTema} className="tema-interruptor" aria-label="Alternar tema claro e escuro" title={escuro ? "Ativar tema claro" : "Ativar tema escuro"}>
             <span className="tema-marcador" aria-hidden />

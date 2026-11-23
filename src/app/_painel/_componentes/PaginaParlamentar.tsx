@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { Compartilhar } from "@/components/Compartilhar";
+import { BotaoSeguir } from "./BotaoSeguir";
 import { ContextoParlamentar } from "./ContextoParlamentar";
 
 import { type CasaCongresso, NOME_UF, caminhoParlamentar } from "../_dados/congressoModelo";
@@ -64,6 +65,7 @@ export function PaginaParlamentar({ casa, id, dados, corDe }: {
     <TerminalParlamentar casa={casa} pessoa={pessoa} governos={dados.governos} ufs={dados.ufs} cor={corDe(pessoa.partido)} corDe={corDe}
       indice={indice} cota={cota} erroCota={erro} periodo={periodo} anos={anosDoPerfil} aoEscolherPeriodo={setPeriodo}
       acoes={<>
+        <BotaoSeguir casa={casa} id={pessoa.id} nome={pessoa.nome} />
         <Link href={maquete}>Ver na maquete</Link>
         <Compartilhar mensagem={`${pessoa.nome}: votações, cota parlamentar e perfil`} compacto />
       </>} />
